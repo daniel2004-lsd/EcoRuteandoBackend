@@ -1,0 +1,63 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EcoRuteando.Shared", "src\shared\EcoRuteando.Shared\EcoRuteando.Shared.csproj", "{5F1D43B4-B051-415B-BBAB-007BCA74F4A8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Security", "Security", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EcoRuteando.Modules.Security.Domain", "src\Modules\Security\EcoRuteando.Modules.Security.Domain\EcoRuteando.Modules.Security.Domain.csproj", "{FE87360C-869D-7B35-363D-DE203D3FFE0C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EcoRuteando.Modules.Security.Application", "src\Modules\Security\EcoRuteando.Modules.Security.Application\EcoRuteando.Modules.Security.Application.csproj", "{6E239B35-68A5-A176-E5CF-ACBF55B90BA6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EcoRuteando.Modules.Security.Infrastructure", "src\Modules\Security\EcoRuteando.Modules.Security.Infrastructure\EcoRuteando.Modules.Security.Infrastructure.csproj", "{8FDC2EAD-6F3F-781C-BF71-A09948590D8E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EcoRuteando.Modules.Security.Presentation", "src\Modules\Security\EcoRuteando.Modules.Security.Presentation\EcoRuteando.Modules.Security.Presentation.csproj", "{B356D0F1-35C3-EFCA-1E60-EF8AAFCDF444}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EcoRuteando.Api", "src\Api\EcoRuteando.Api\EcoRuteando.Api.csproj", "{ECC26E35-60D0-72FF-B30C-EDC242333F01}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5F1D43B4-B051-415B-BBAB-007BCA74F4A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F1D43B4-B051-415B-BBAB-007BCA74F4A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F1D43B4-B051-415B-BBAB-007BCA74F4A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F1D43B4-B051-415B-BBAB-007BCA74F4A8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FE87360C-869D-7B35-363D-DE203D3FFE0C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE87360C-869D-7B35-363D-DE203D3FFE0C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE87360C-869D-7B35-363D-DE203D3FFE0C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE87360C-869D-7B35-363D-DE203D3FFE0C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6E239B35-68A5-A176-E5CF-ACBF55B90BA6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6E239B35-68A5-A176-E5CF-ACBF55B90BA6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6E239B35-68A5-A176-E5CF-ACBF55B90BA6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6E239B35-68A5-A176-E5CF-ACBF55B90BA6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8FDC2EAD-6F3F-781C-BF71-A09948590D8E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8FDC2EAD-6F3F-781C-BF71-A09948590D8E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8FDC2EAD-6F3F-781C-BF71-A09948590D8E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8FDC2EAD-6F3F-781C-BF71-A09948590D8E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B356D0F1-35C3-EFCA-1E60-EF8AAFCDF444}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B356D0F1-35C3-EFCA-1E60-EF8AAFCDF444}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B356D0F1-35C3-EFCA-1E60-EF8AAFCDF444}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B356D0F1-35C3-EFCA-1E60-EF8AAFCDF444}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ECC26E35-60D0-72FF-B30C-EDC242333F01}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ECC26E35-60D0-72FF-B30C-EDC242333F01}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ECC26E35-60D0-72FF-B30C-EDC242333F01}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ECC26E35-60D0-72FF-B30C-EDC242333F01}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{FE87360C-869D-7B35-363D-DE203D3FFE0C} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{6E239B35-68A5-A176-E5CF-ACBF55B90BA6} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{8FDC2EAD-6F3F-781C-BF71-A09948590D8E} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{B356D0F1-35C3-EFCA-1E60-EF8AAFCDF444} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0075F111-78C4-42BC-9B7E-D6F3F4A27A10}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Users\NewFolder\**" />
+    <EmbeddedResource Remove="Users\NewFolder\**" />
+    <None Remove="Users\NewFolder\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MediatR" Version="14.1.0" />
+  </ItemGroup>
+
+ 
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\shared\EcoRuteando.Shared\EcoRuteando.Shared.csproj" />
+    <ProjectReference Include="..\EcoRuteando.Modules.Security.Domain\EcoRuteando.Modules.Security.Domain.csproj" />
+  </ItemGroup>
+
+</Project>
