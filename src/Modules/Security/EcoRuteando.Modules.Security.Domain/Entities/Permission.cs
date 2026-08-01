@@ -27,6 +27,18 @@ namespace EcoRuteando.Modules.Security.Domain.Entities
             Description = description;
             CreatedAt = DateTime.UtcNow;
         }
+        public void Update(
+            string name,
+            string? description)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                throw new DomainException("El nombre del permiso es obligatorio.");
+            }
+
+            Name = name.Trim();
+            Description = description?.Trim();
+        }
 
     }
 }

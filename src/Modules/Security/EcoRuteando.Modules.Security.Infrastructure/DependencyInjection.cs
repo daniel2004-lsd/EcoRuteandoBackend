@@ -3,6 +3,8 @@ using EcoRuteando.Modules.Security.Domain.Repositories;
 using EcoRuteando.Modules.Security.Infrastructure.Persistence;
 using EcoRuteando.Modules.Security.Infrastructure.Persistence.Repositories;
 using EcoRuteando.Modules.Security.Infrastructure.Security;
+using EcoRuteando.Shared.Abstractions;
+using EcoRuteando.Shared.Abstractions.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,6 +24,10 @@ public static class DependencyInjection
         "No se encontró la cadena de conexión 'DefaultConnection'.");
 
 
+        services.Configure<JwtOptions>(
+            configuration.GetSection("Jwt"));
+
+
         services.AddDbContext<SecurityDbContext>(options =>
         {
             options.UseNpgsql(
@@ -32,11 +38,22 @@ public static class DependencyInjection
                 });
         });
 
+        services.AddScoped<IUnitOfWork>(sp =>
+        sp.GetRequiredService<SecurityDbContext>());
+
         // Repositorios
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IRoleRepository, RoleRepository>();
+        services.AddScoped<IPermissionRepository, PermissionRepository>();
+        services.AddScoped<IUserRoleRepository, UserRoleRepository>();
+        services.AddScoped<IRolePermissionRepository, RolePermissionRepository>();
+        services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
         // Servicios
         services.AddScoped<IPasswordHasher, BCryptPasswordHasher>();
+        services.AddScoped<IJwtProvider, JwtProvider>();
+        services.AddScoped<IPermissionRepository, PermissionRepository>();
+        services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 
         return services;
     }
