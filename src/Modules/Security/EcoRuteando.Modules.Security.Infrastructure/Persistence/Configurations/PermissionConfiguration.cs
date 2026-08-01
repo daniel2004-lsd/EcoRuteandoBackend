@@ -37,7 +37,13 @@ namespace EcoRuteando.Modules.Security.Infrastructure.Persistence.Configurations
                     .HasColumnName("created_at")
                     .IsRequired()
                     .HasDefaultValueSql("now()");
-                    
+
+
+            builder.Property(p => p.UpdatedAt)
+                    .HasColumnName("updated_at")
+                    .IsRequired()
+                    .HasDefaultValueSql("now()");
+
 
 
 

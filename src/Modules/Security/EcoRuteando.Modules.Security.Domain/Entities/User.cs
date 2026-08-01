@@ -27,7 +27,12 @@ namespace EcoRuteando.Modules.Security.Domain.Entities
         public int FailedAttempts { get; private set; }
         public DateTime? LockedUntil { get; private set; }
         public int? PrimaryRoleId { get; private set; }
-        public ICollection<UserRole> UserRoles { get; private set; } = new List<UserRole>();    
+
+        public ICollection<UserRole> UserRoles { get; private set; }
+            = new List<UserRole>();
+
+        public ICollection<RefreshToken> RefreshTokens { get; private set; }
+            = new List<RefreshToken>();
 
 
         private User()
@@ -75,6 +80,34 @@ namespace EcoRuteando.Modules.Security.Domain.Entities
         {
             EmailVerified = true;
         }
+        public void AssignPrimaryRole(Role role)
+        {
+            if (role is null)
+            {
+                throw new DomainException("El rol es obligatorio.");
+            }
+
+            PrimaryRole = role;
+            PrimaryRoleId = role.Id;
+        }
+        
+        public void Update(
+         string firstName,
+        string? lastName,
+        string? phoneNumber)
+        {
+            if (string.IsNullOrWhiteSpace(firstName))
+            {
+                throw new DomainException("El nombre es obligatorio.");
+            }
+
+            FirstName = firstName.Trim();
+            LastName = lastName?.Trim();
+            PhoneNumber = phoneNumber?.Trim();
+        }
+
 
     }
+
+
 }

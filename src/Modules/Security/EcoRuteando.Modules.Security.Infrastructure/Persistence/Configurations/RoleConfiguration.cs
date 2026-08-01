@@ -28,6 +28,13 @@ namespace EcoRuteando.Modules.Security.Infrastructure.Persistence.Configurations
                 .HasMaxLength(255);
             builder.HasIndex(r => r.Name) // define un indice en la columna name de la tabla roles
                 .IsUnique(); // define un indice unico en la columna name de la tabla roles
+
+            builder.Property(r => r.CreatedAt)
+                .HasColumnName("created_at")
+                .HasDefaultValueSql("now()");
+
+            builder.Property(r => r.UpdatedAt)
+                .HasColumnName("updated_at");
         }
             
     }
