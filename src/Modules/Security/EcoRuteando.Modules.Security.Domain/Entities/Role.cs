@@ -2,7 +2,7 @@
 using EcoRuteando.Shared.BaseClasses;
 using EcoRuteando.Shared.Exceptions;
 
-public sealed class Role : Entity<int>
+public sealed class Role : Entity<Guid>
 {
     public string Name { get; private set; } = string.Empty;
 

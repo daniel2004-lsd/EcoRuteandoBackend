@@ -19,7 +19,7 @@ namespace EcoRuteando.Modules.Security.Infrastructure.Persistence.Configurations
             builder.ToTable("permissions","security");
             builder.HasKey(p => p.Id);
             builder.Property(p => p.Id)
-                    .HasColumnName("permission_id");
+                    .HasColumnName("id");
            //----------------------------------------------
             builder.Property(p => p.Name)
                     .HasColumnName("name")
@@ -41,7 +41,6 @@ namespace EcoRuteando.Modules.Security.Infrastructure.Persistence.Configurations
 
             builder.Property(p => p.UpdatedAt)
                     .HasColumnName("updated_at")
-                    .IsRequired()
                     .HasDefaultValueSql("now()");
 
 

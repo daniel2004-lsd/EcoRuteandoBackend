@@ -4,5 +4,5 @@ namespace EcoRuteando.Modules.Security.Application.UserRoles.Commands.RemoveRole
 
 public sealed record RemoveRoleFromUserCommand(
     Guid UserId,
-    int RoleId)
+    Guid RoleId)
     : IRequest;

@@ -6,7 +6,7 @@ using MediatR;
 namespace EcoRuteando.Modules.Security.Application.Permissions.Commands.CreatePermission;
 
 public sealed class CreatePermissionCommandHandler
-    : IRequestHandler<CreatePermissionCommand, int>
+    : IRequestHandler<CreatePermissionCommand, Guid>
 {
     private readonly IPermissionRepository _repository;
 
@@ -16,7 +16,7 @@ public sealed class CreatePermissionCommandHandler
         _repository = repository;
     }
 
-    public async Task<int> Handle(
+    public async Task<Guid> Handle(
         CreatePermissionCommand request,
         CancellationToken cancellationToken)
     {

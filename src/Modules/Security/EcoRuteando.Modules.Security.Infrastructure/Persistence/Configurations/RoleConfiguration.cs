@@ -16,7 +16,7 @@ namespace EcoRuteando.Modules.Security.Infrastructure.Persistence.Configurations
             builder.ToTable("roles", "security"); 
             builder.HasKey(r => r.Id); // define cual es la llave primaria de la tabla
             builder.Property(r => r.Id) // trata de decir que va a configurar la propiedad Id de la entidad Role
-                .HasColumnName("role_id"); // la propiedad id se gurda en la columna role_id de la tabla roles
+                .HasColumnName("id"); // la propiedad id se gurda en la columna role_id de la tabla roles
             builder.Property(r => r.Name)
                 .HasColumnName("name")
                 .IsRequired()

@@ -1,5 +1,7 @@
-﻿using EcoRuteando.Modules.Security.Application.Abstractions.Security;
+﻿using EcoRuteando.Modules.Security.Application.Abstractions.Email;
+using EcoRuteando.Modules.Security.Application.Abstractions.Security;
 using EcoRuteando.Modules.Security.Domain.Repositories;
+using EcoRuteando.Modules.Security.Infrastructure.Email;
 using EcoRuteando.Modules.Security.Infrastructure.Persistence;
 using EcoRuteando.Modules.Security.Infrastructure.Persistence.Repositories;
 using EcoRuteando.Modules.Security.Infrastructure.Security;
@@ -48,12 +50,18 @@ public static class DependencyInjection
         services.AddScoped<IUserRoleRepository, UserRoleRepository>();
         services.AddScoped<IRolePermissionRepository, RolePermissionRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+        services.AddScoped<IPasswordRecoveryRepository, PasswordRecoveryRepository>();
 
         // Servicios
         services.AddScoped<IPasswordHasher, BCryptPasswordHasher>();
         services.AddScoped<IJwtProvider, JwtProvider>();
         services.AddScoped<IPermissionRepository, PermissionRepository>();
         services.AddScoped<IRefreshTokenService, RefreshTokenService>();
+        services.AddScoped<ITokenProvider, TokenProvider>();
+        services.Configure<EmailSettings>(configuration.GetSection("EmailSettings"));
+        services.AddScoped<IEmailService, SmtpEmailService>();
+        services.AddScoped<IEmailTemplateService, EmailTemplateService>();
+        services.AddScoped<IOtpProvider, OtpProvider>();
 
         return services;
     }

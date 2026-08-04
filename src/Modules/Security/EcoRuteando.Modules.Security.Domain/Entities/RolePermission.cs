@@ -11,9 +11,9 @@ namespace EcoRuteando.Modules.Security.Domain.Entities
     public sealed class RolePermission
 
     {
-        public int RoleId { get; private set; } // Foreign key to Role
+        public Guid RoleId { get; private set; } // Foreign key to Role
 
-        public int PermissionId { get; private set; } // Foreign key to Permission
+        public Guid PermissionId { get; private set; } // Foreign key to Permission
 
         public Role Role { get; private set; } = null!;
 
@@ -23,7 +23,7 @@ namespace EcoRuteando.Modules.Security.Domain.Entities
         {
         }
 
-        public RolePermission(int roleId, int permissionId)
+        public RolePermission(Guid roleId, Guid permissionId)
         {
             RoleId = roleId;
             PermissionId = permissionId;

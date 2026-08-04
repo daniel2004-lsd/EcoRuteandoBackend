@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace EcoRuteando.Modules.Security.Domain.Entities
 {
-    public sealed class Permission : Entity<int>
+    public sealed class Permission : Entity<Guid>
     {
         public string Name { get; private set; } = string.Empty; // string.Empty me permite inicializar con una cadena vacia 
         public string? Description {get; private set;}

@@ -62,7 +62,7 @@ public sealed class UserRepository : IUserRepository
 
 
     public  Task DeleteAsync(
-    User user,
+    User user,  
     CancellationToken cancellationToken = default)
     {
         _dbContext.Users.Remove(user);

@@ -11,7 +11,7 @@ namespace EcoRuteando.Modules.Security.Domain.Entities
     {
         public Guid UserId { get; private set; } // Foreign key to User
 
-        public int RoleId { get; private set; } // Foreign key to Role
+        public Guid RoleId { get; private set; } // Foreign key to Role
 
 
         public User User { get; private set; } = null!;
@@ -21,7 +21,7 @@ namespace EcoRuteando.Modules.Security.Domain.Entities
 
         public UserRole() { }
 
-        public UserRole(Guid userId, int roleId)
+        public UserRole(Guid userId, Guid roleId)
         {
             UserId = userId;
             RoleId = roleId;
