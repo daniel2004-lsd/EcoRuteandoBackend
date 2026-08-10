@@ -1,0 +1,63 @@
+@host = https://localhost:7076
+
+### Login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "daniela@gmail.com",
+  "password": "stringd"
+}
+### Test privado
+GET {{host}}/api/test/private
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1MTk0ZGRlMi03Mjg0LTQwMWItYjI0Zi1lYTUyMmQ2YjJiNGEiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJkYW5pZWxhQGdtYWlsLmNvbSIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IlVzZXIiLCJleHAiOjE3ODUxMjQ0NjEsImlzcyI6IkVjb1J1dGVhbmRvIiwiYXVkIjoiRWNvUnV0ZWFuZG9Vc2VycyJ9.snuf0pqzJSbGJiZJqxdB_nlqVS-wfELEo7eUhUYThqE
+
+### Obtener usuarios
+GET https://localhost:7076/api/users
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1MTk0ZGRlMi03Mjg0LTQwMWItYjI0Zi1lYTUyMmQ2YjJiNGEiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJkYW5pZWxhQGdtYWlsLmNvbSIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IlVzZXIiLCJleHAiOjE3ODUxMjQ0NjEsImlzcyI6IkVjb1J1dGVhbmRvIiwiYXVkIjoiRWNvUnV0ZWFuZG9Vc2VycyJ9.snuf0pqzJSbGJiZJqxdB_nlqVS-wfELEo7eUhUYThqE
+
+### Obtener usuario por id
+GET https://localhost:7076/api/users/5194dde2-7284-401b-b24f-ea522d6b2b4a
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1MTk0ZGRlMi03Mjg0LTQwMWItYjI0Zi1lYTUyMmQ2YjJiNGEiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJkYW5pZWxhQGdtYWlsLmNvbSIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IlVzZXIiLCJleHAiOjE3ODUxMjQ0NjEsImlzcyI6IkVjb1J1dGVhbmRvIiwiYXVkIjoiRWNvUnV0ZWFuZG9Vc2VycyJ9.snuf0pqzJSbGJiZJqxdB_nlqVS-wfELEo7eUhUYThqE
+
+### Obtener roles
+GET {{host}}/api/roles
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1MTk0ZGRlMi03Mjg0LTQwMWItYjI0Zi1lYTUyMmQ2YjJiNGEiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJkYW5pZWxhQGdtYWlsLmNvbSIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IlVzZXIiLCJleHAiOjE3ODUxMjQ0NjEsImlzcyI6IkVjb1J1dGVhbmRvIiwiYXVkIjoiRWNvUnV0ZWFuZG9Vc2VycyJ9.snuf0pqzJSbGJiZJqxdB_nlqVS-wfELEo7eUhUYThqE
+
+### Actualizar rol
+PUT {{host}}/api/roles/2
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1MTk0ZGRlMi03Mjg0LTQwMWItYjI0Zi1lYTUyMmQ2YjJiNGEiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJkYW5pZWxhQGdtYWlsLmNvbSIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IlVzZXIiLCJleHAiOjE3ODUxMjQ0NjEsImlzcyI6IkVjb1J1dGVhbmRvIiwiYXVkIjoiRWNvUnV0ZWFuZG9Vc2VycyJ9.snuf0pqzJSbGJiZJqxdB_nlqVS-wfELEo7eUhUYThqE
+Content-Type: application/json
+
+{
+  "name": "User",
+  "description": "Usuario Estándar"
+}
+
+
+### Obtener permisos
+GET {{host}}/api/permissions
+Authorization: Bearer 
+
+
+### Asignar rol a un usuario
+POST {{host}}/api/userroles
+Authorization: Bearer TU_TOKEN
+Content-Type: application/json
+
+{
+  "userId": "5194dde2-7284-401b-b24f-ea522d6b2b4a",
+  "roleId": 1
+}
+
+###
+
+### Obtener roles de un usuario
+GET {{host}}/api/userroles/5194dde2-7284-401b-b24f-ea522d6b2b4a
+Authorization: Bearer TU_TOKEN
+
+###
+
+### Eliminar rol de un usuario
+DELETE {{host}}/api/userroles/5194dde2-7284-401b-b24f-ea522d6b2b4a/1
+Authorization: Bearer TU_TOKEN
