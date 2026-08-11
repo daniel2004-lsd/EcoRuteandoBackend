@@ -1,12 +1,14 @@
 ﻿using EcoRuteando.Modules.Security.Application.Abstractions.Email;
 using EcoRuteando.Modules.Security.Application.Abstractions.Security;
 using EcoRuteando.Modules.Security.Domain.Repositories;
+using EcoRuteando.Modules.Security.Infrastructure.Authorization;
 using EcoRuteando.Modules.Security.Infrastructure.Email;
 using EcoRuteando.Modules.Security.Infrastructure.Persistence;
 using EcoRuteando.Modules.Security.Infrastructure.Persistence.Repositories;
 using EcoRuteando.Modules.Security.Infrastructure.Security;
 using EcoRuteando.Shared.Abstractions;
 using EcoRuteando.Shared.Abstractions.Persistence;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -62,6 +64,8 @@ public static class DependencyInjection
         services.AddScoped<IEmailService, SmtpEmailService>();
         services.AddScoped<IEmailTemplateService, EmailTemplateService>();
         services.AddScoped<IOtpProvider, OtpProvider>();
+        services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
+        services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
 
         return services;
     }

@@ -134,7 +134,7 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
 
             return Ok(new
             {
-                message = "Si el correo existe, se enviará un enlace para recuperar la contraseña."
+                message = "Si el correo existe, se enviará un enlace para autentificar la contraseña."
             });
         }
 

@@ -1,6 +1,7 @@
-﻿using EcoRuteando.Modules.Security.Domain.Entities;
-using EcoRuteando.Shared.BaseClasses;
+﻿using EcoRuteando.Shared.BaseClasses;
 using EcoRuteando.Shared.Exceptions;
+
+namespace EcoRuteando.Modules.Security.Domain.Entities;
 
 public sealed class Role : Entity<Guid>
 {
@@ -22,17 +23,13 @@ public sealed class Role : Entity<Guid>
             throw new DomainException("El nombre del rol es obligatorio.");
 
         Name = name.Trim();
-        Description = description;
+        Description = description?.Trim();
     }
 
-    public void Update(
-        string name,
-        string? description)
+    public void Update(string name, string? description)
     {
         if (string.IsNullOrWhiteSpace(name))
-        {
             throw new DomainException("El nombre del rol es obligatorio.");
-        }
 
         Name = name.Trim();
         Description = description?.Trim();
