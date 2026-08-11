@@ -8,6 +8,6 @@ using System.Threading.Tasks;
 namespace EcoRuteando.Modules.Security.Application.Roles.Command.DeleteRole
 {
     public sealed record DeleteRoleCommand(
-    int RoleId
+    Guid RoleId
 ) : IRequest;
 }

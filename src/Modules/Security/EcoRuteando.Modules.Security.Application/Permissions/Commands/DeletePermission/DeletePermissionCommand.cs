@@ -8,6 +8,6 @@ using System.Threading.Tasks;
 namespace EcoRuteando.Modules.Security.Application.Permissions.Commands.DeletePermission
 {
     public sealed record DeletePermissionCommand(
-    int PermissionId)
+    Guid PermissionId)
     : IRequest;
 }

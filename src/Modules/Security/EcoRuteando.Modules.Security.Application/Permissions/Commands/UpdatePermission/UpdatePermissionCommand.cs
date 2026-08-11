@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace EcoRuteando.Modules.Security.Application.Permissions.Commands.UpdatePermission
 {
     public sealed record UpdatePermissionCommand(
-     int PermissionId,
+     Guid PermissionId,
      string Name,
      string? Description)
      : IRequest;

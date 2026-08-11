@@ -7,7 +7,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\..\shared\EcoRuteando.Shared\EcoRuteando.Shared.csproj" />
+		<ProjectReference Include="..\..\..\Shared\EcoRuteando.Shared\EcoRuteando.Shared.csproj" />
 		<ProjectReference Include="..\EcoRuteando.Modules.Security.Application\EcoRuteando.Modules.Security.Application.csproj" />
 		<ProjectReference Include="..\EcoRuteando.Modules.Security.Domain\EcoRuteando.Modules.Security.Domain.csproj" />
 	</ItemGroup>
@@ -15,6 +15,8 @@
 	<ItemGroup>
 
 		<PackageReference Include="BCrypt.Net-Next" Version="4.2.0" />
+
+		<PackageReference Include="MailKit" Version="4.17.0" />
 
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.0" />
 
@@ -37,6 +39,12 @@
 
 		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
 
+	</ItemGroup>
+
+	<ItemGroup>
+		<Content Include="Email\Templates\**\*.*">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
 	</ItemGroup>
 	
 </Project>

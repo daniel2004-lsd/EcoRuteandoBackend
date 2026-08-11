@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace EcoRuteando.Modules.Security.Application.Roles.Queries.GetRoles
 {
     public sealed record RoleResponse(
-    int Id,
+    Guid Id,
     string Name,
     string? Description);
 }

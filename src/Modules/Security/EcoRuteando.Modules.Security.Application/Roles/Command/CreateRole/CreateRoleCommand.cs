@@ -10,5 +10,5 @@ namespace EcoRuteando.Modules.Security.Application.Roles.Command.CreateRole
     public sealed record CreateRoleCommand(
     string Name,
     string? Description
-) : IRequest<int>;
+) : IRequest<Guid>;
 }

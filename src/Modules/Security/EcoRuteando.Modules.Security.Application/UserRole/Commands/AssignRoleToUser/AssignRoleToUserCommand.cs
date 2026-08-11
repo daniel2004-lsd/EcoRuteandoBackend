@@ -4,5 +4,5 @@ namespace EcoRuteando.Modules.Security.Application.UserRoles.Commands.AssignRole
 
 public sealed record AssignRoleToUserCommand(
     Guid UserId,
-    int RoleId)
+    Guid RoleId)
     : IRequest;

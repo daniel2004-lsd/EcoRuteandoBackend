@@ -32,11 +32,11 @@ public sealed class RolePermissionsController : ControllerBase
         return NoContent();
     }
 
-    [HttpDelete("{roleId:int}/{permissionId:int}")]
+    [HttpDelete("{roleId:Guid}/{permissionId:Guid}")]
     [HasPermission("rolepermissions.remove")]
     public async Task<IActionResult> RemovePermission(
-        int roleId,
-        int permissionId,
+        Guid roleId,
+        Guid permissionId,
         CancellationToken cancellationToken)
     {
         await _mediator.Send(
@@ -46,10 +46,10 @@ public sealed class RolePermissionsController : ControllerBase
         return NoContent();
     }
 
-    [HttpGet("{roleId:int}")]
+    [HttpGet("{roleId:Guid}")]
     [HasPermission("rolepermissions.read")]
     public async Task<IActionResult> GetPermissions(
-        int roleId,
+        Guid roleId,
         CancellationToken cancellationToken)
     {
         var permissions = await _mediator.Send(
