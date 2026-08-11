@@ -8,7 +8,7 @@ public interface IPermissionRepository
         CancellationToken cancellationToken = default);
 
     Task<Permission?> GetByIdAsync(
-        int id,
+        Guid id,
         CancellationToken cancellationToken = default);
 
     Task<Permission?> GetByNameAsync(

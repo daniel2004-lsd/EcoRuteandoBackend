@@ -6,7 +6,7 @@ public interface IUserRoleRepository
 {
     Task<UserRole?> GetAsync(
         Guid userId,
-        int roleId,
+        Guid roleId,
         CancellationToken cancellationToken = default);
 
     Task AddAsync(

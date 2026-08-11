@@ -35,7 +35,7 @@ public sealed class UserRolesController : ControllerBase
     [HasPermission("userroles.remove")]
     public async Task<IActionResult> RemoveRole(
         Guid userId,
-        int roleId,
+        Guid roleId,
         CancellationToken cancellationToken)
     {
         await _mediator.Send(

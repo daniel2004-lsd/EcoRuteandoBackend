@@ -22,7 +22,7 @@ public sealed class PermissionRepository : IPermissionRepository
     }
 
     public async Task<Permission?> GetByIdAsync(
-        int id,
+        Guid id,
         CancellationToken cancellationToken = default)
     {
         return await _dbContext.Permissions

@@ -8,7 +8,7 @@ using MediatR;
 namespace EcoRuteando.Modules.Security.Application.Roles.Commands.CreateRole;
 
 public sealed class CreateRoleCommandHandler
-    : IRequestHandler<CreateRoleCommand, int>
+    : IRequestHandler<CreateRoleCommand, Guid>
 {
     private readonly IRoleRepository _roleRepository;
     private readonly IUnitOfWork _unitOfWork;
@@ -21,7 +21,7 @@ public sealed class CreateRoleCommandHandler
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<int> Handle(
+    public async Task<Guid> Handle(
         CreateRoleCommand request,
         CancellationToken cancellationToken)
     {

@@ -14,7 +14,7 @@ public sealed class RefreshTokenConfiguration
         builder.HasKey(rt => rt.Id);
 
         builder.Property(rt => rt.Id)
-            .HasColumnName("refresh_token_id");
+            .HasColumnName("id");
 
         builder.Property(rt => rt.UserId)
             .HasColumnName("user_id")

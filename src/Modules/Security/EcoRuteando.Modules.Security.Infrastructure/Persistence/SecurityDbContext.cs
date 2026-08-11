@@ -18,6 +18,8 @@ namespace EcoRuteando.Modules.Security.Infrastructure.Persistence
 
         public DbSet<Role> Roles => Set<Role>();
 
+        public DbSet<PasswordRecovery> PasswordRecoveries => Set<PasswordRecovery>();
+
         public DbSet<Permission> Permissions => Set<Permission>();
 
         public DbSet<UserRole> UserRoles => Set<UserRole>();
@@ -35,6 +37,7 @@ namespace EcoRuteando.Modules.Security.Infrastructure.Persistence
             modelBuilder.ApplyConfiguration(new RolePermissionConfiguration());
             modelBuilder.ApplyConfiguration(new UserRoleConfiguration());
             modelBuilder.ApplyConfiguration(new RefreshTokenConfiguration());
+            modelBuilder.ApplyConfiguration(new PasswordRecoveryConfiguration());
         }
     }
 }

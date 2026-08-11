@@ -15,7 +15,7 @@ public sealed class UserRoleRepository : IUserRoleRepository
 
     public async Task<UserRole?> GetAsync(
         Guid userId,
-        int roleId,
+        Guid roleId,
         CancellationToken cancellationToken = default)
     {
         return await _dbContext.UserRoles

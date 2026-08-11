@@ -5,8 +5,8 @@ namespace EcoRuteando.Modules.Security.Domain.Repositories;
 public interface IRolePermissionRepository
 {
     Task<RolePermission?> GetAsync(
-        int roleId,
-        int permissionId,
+        Guid roleId,
+        Guid permissionId,
         CancellationToken cancellationToken = default);
 
     Task AddAsync(
@@ -18,6 +18,6 @@ public interface IRolePermissionRepository
         CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<RolePermission>> GetByRoleIdAsync(
-        int roleId,
+        Guid roleId,
         CancellationToken cancellationToken = default);
 }

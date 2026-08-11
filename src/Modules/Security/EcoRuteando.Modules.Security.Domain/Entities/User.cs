@@ -26,7 +26,7 @@ namespace EcoRuteando.Modules.Security.Domain.Entities
         public Role? PrimaryRole { get; private set; }
         public int FailedAttempts { get; private set; }
         public DateTime? LockedUntil { get; private set; }
-        public int? PrimaryRoleId { get; private set; }
+        public Guid? PrimaryRoleId { get; private set; }
 
         public ICollection<UserRole> UserRoles { get; private set; }
             = new List<UserRole>();
@@ -106,6 +106,19 @@ namespace EcoRuteando.Modules.Security.Domain.Entities
             PhoneNumber = phoneNumber?.Trim();
         }
 
+
+        public void ChangePassword(string passwordHash)
+        {
+            if (string.IsNullOrWhiteSpace(passwordHash))
+            {
+                throw new DomainException("La contraseña es obligatoria.");
+            }
+
+            PasswordHash = passwordHash;
+            FailedAttempts = 0;
+            LockedUntil = null;
+            UpdatedAt = DateTime.UtcNow;
+        }
 
     }
 

@@ -8,6 +8,6 @@ using System.Threading.Tasks;
 namespace EcoRuteando.Modules.Security.Application.Permissions.Queries.GetPermissionById
 {
     public sealed record GetPermissionByIdQuery(
-     int PermissionId)
+     Guid PermissionId)
      : IRequest<GetPermissionByIdResponse>;
 }
