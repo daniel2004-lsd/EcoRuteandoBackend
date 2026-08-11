@@ -7,7 +7,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\..\shared\EcoRuteando.Shared\EcoRuteando.Shared.csproj" />
+		<ProjectReference Include="..\..\..\Shared\EcoRuteando.Shared\EcoRuteando.Shared.csproj" />
 		<ProjectReference Include="..\EcoRuteando.Modules.Security.Application\EcoRuteando.Modules.Security.Application.csproj" />
 		<ProjectReference Include="..\EcoRuteando.Modules.Security.Domain\EcoRuteando.Modules.Security.Domain.csproj" />
 	</ItemGroup>

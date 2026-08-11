@@ -20,7 +20,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Modules\Security\EcoRuteando.Modules.Security.Infrastructure\EcoRuteando.Modules.Security.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Security\EcoRuteando.Modules.Security.Presentation\EcoRuteando.Modules.Security.Presentation.csproj" />
-	<ProjectReference Include="..\..\shared\EcoRuteando.Shared\EcoRuteando.Shared.csproj" />
+	<ProjectReference Include="..\..\Shared\EcoRuteando.Shared\EcoRuteando.Shared.csproj" />
   </ItemGroup>
 
 	<ItemGroup>
