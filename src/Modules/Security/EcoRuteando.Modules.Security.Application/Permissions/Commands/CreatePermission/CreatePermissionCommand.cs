@@ -10,5 +10,5 @@ namespace EcoRuteando.Modules.Security.Application.Permissions.Commands.CreatePe
     public sealed record CreatePermissionCommand(
     string Name,
     string? Description)
-    : IRequest<int>;
+    : IRequest<Guid>;
 }

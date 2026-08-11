@@ -1,18 +1,21 @@
-﻿using MediatR;
+﻿using EcoRuteando.Modules.Security.Application.Users.Commands.ForgotPassword;
+using EcoRuteando.Modules.Security.Application.Users.Commands.LoginUsers;
+using EcoRuteando.Modules.Security.Application.Users.Commands.LogoutUser;
+using EcoRuteando.Modules.Security.Application.Users.Commands.RefreshToken;
+using EcoRuteando.Modules.Security.Application.Users.Commands.RegisterUser;
+using EcoRuteando.Modules.Security.Application.Users.Commands.ResetPassword;
+using EcoRuteando.Modules.Security.Application.Users.Queries.GetCurrentUser;
+using EcoRuteando.Modules.Security.Presentation.Contracts.Auth;
+using EcoRuteando.Modules.Security.Presentation.Requests;
+using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
-using EcoRuteando.Modules.Security.Application.Users.Commands.RegisterUser;
-using EcoRuteando.Modules.Security.Application.Users.Commands.LoginUsers;
-using EcoRuteando.Modules.Security.Presentation.Contracts.Auth;
-using EcoRuteando.Modules.Security.Application.Users.Commands.RefreshToken;
-using EcoRuteando.Modules.Security.Application.Users.Commands.LogoutUser;
-using System.Security.Claims;
-using EcoRuteando.Modules.Security.Application.Users.Queries.GetCurrentUser;
-using Microsoft.AspNetCore.Authorization;
 
 namespace EcoRuteando.Modules.Security.Presentation.Controllers
 {
@@ -117,6 +120,40 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
 
             return Ok(user);
         }
-    }
 
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword(
+        ForgotPasswordRequest request,
+        CancellationToken cancellationToken)
+        {
+            await _mediator.Send(
+                new ForgotPasswordCommand(
+                    request.Email,
+                    HttpContext.Connection.RemoteIpAddress?.ToString()),
+                cancellationToken);
+
+            return Ok(new
+            {
+                message = "Si el correo existe, se enviará un enlace para autentificar la contraseña."
+            });
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword(
+        ResetPasswordRequest request,
+        CancellationToken cancellationToken)
+        {
+            await _mediator.Send(
+                new ResetPasswordCommand(
+                    request.Token,
+                    request.NewPassword,
+                    HttpContext.Connection.RemoteIpAddress?.ToString()),
+                cancellationToken);
+
+            return Ok(new
+            {
+                message = "La contraseña fue actualizada correctamente."
+            });
+        }
+    }
 }

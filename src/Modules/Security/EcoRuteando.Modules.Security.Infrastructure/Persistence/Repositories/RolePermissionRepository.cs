@@ -14,8 +14,8 @@ public sealed class RolePermissionRepository : IRolePermissionRepository
     }
 
     public async Task<RolePermission?> GetAsync(
-        int roleId,
-        int permissionId,
+        Guid roleId,
+        Guid permissionId,
         CancellationToken cancellationToken = default)
     {
         return await _dbContext.RolePermissions
@@ -44,7 +44,7 @@ public sealed class RolePermissionRepository : IRolePermissionRepository
     }
 
     public async Task<IReadOnlyList<RolePermission>> GetByRoleIdAsync(
-        int roleId,
+        Guid roleId,
         CancellationToken cancellationToken = default)
     {
         return await _dbContext.RolePermissions

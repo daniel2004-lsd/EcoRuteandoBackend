@@ -8,6 +8,6 @@ using System.Threading.Tasks;
 
 namespace EcoRuteando.Modules.Security.Application.Roles.Queries.GetRoleById
 {
-    public sealed record GetRoleByIdQuery(int RoleId)
+    public sealed record GetRoleByIdQuery(Guid RoleId)
     : IRequest<RoleResponse>;
 }

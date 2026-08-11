@@ -41,7 +41,7 @@ public sealed class RolesController : ControllerBase
     [HttpGet("{id:int}")]
     [HasPermission("roles.read")]
     public async Task<IActionResult> GetRoleById(
-        int id,
+        Guid id,
         CancellationToken cancellationToken)
     {
         var role = await _mediator.Send(
@@ -74,7 +74,7 @@ public sealed class RolesController : ControllerBase
     [HttpPut("{id:int}")]
     [HasPermission("roles.update")]
     public async Task<IActionResult> UpdateRole(
-        int id,
+        Guid id,
         UpdateRoleRequest request,
         CancellationToken cancellationToken)
     {
@@ -93,7 +93,7 @@ public sealed class RolesController : ControllerBase
     [HttpDelete("{id:int}")]
     [HasPermission("roles.delete")]
     public async Task<IActionResult> DeleteRole(
-        int id,
+        Guid id,
         CancellationToken cancellationToken)
     {
         await _mediator.Send(

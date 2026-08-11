@@ -13,7 +13,7 @@ namespace EcoRuteando.Modules.Security.Infrastructure.Persistence.Configurations
             builder.HasKey(u => u.Id);
 
             builder.Property(u => u.Id)
-                   .HasColumnName("user_id")
+                   .HasColumnName("id")
                    .HasDefaultValueSql("uuid_generate_v4()");
 
             builder.Property(u => u.FirstName)

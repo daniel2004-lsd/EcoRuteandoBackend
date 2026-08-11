@@ -3,7 +3,7 @@
 public interface IRoleRepository
 {
     Task<Role?> GetByIdAsync(
-        int id,
+        Guid id,
         CancellationToken cancellationToken = default);
 
     Task<Role?> GetByNameAsync(

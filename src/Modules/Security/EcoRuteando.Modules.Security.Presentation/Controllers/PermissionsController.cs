@@ -38,7 +38,7 @@ public sealed class PermissionsController : ControllerBase
     [HttpGet("{id:int}")]
     [HasPermission("permissions.read")]
     public async Task<IActionResult> GetPermissionById(
-        int id,
+        Guid id,
         CancellationToken cancellationToken)
     {
         var permission = await _mediator.Send(
@@ -71,7 +71,7 @@ public sealed class PermissionsController : ControllerBase
     [HttpPut("{id:int}")]
     [HasPermission("permissions.update")]
     public async Task<IActionResult> UpdatePermission(
-        int id,
+        Guid id,
         UpdatePermissionRequest request,
         CancellationToken cancellationToken)
     {
@@ -90,7 +90,7 @@ public sealed class PermissionsController : ControllerBase
     [HttpDelete("{id:int}")]
     [HasPermission("permissions.delete")]
     public async Task<IActionResult> DeletePermission(
-        int id,
+        Guid id,
         CancellationToken cancellationToken)
     {
         await _mediator.Send(
