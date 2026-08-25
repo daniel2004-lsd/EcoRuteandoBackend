@@ -13,17 +13,20 @@ public sealed class RefreshTokenCommandHandler
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IRefreshTokenService _refreshTokenService;
     private readonly IJwtProvider _jwtProvider;
+    private readonly ISessionRepository _sessionRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     public RefreshTokenCommandHandler(
         IRefreshTokenRepository refreshTokenRepository,
         IRefreshTokenService refreshTokenService,
         IJwtProvider jwtProvider,
+        ISessionRepository sessionRepository,
         IUnitOfWork unitOfWork)
     {
         _refreshTokenRepository = refreshTokenRepository;
         _refreshTokenService = refreshTokenService;
         _jwtProvider = jwtProvider;
+        _sessionRepository = sessionRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -71,12 +74,33 @@ public sealed class RefreshTokenCommandHandler
         revokedByIp: null,
         replacedByRefreshTokenHash: newRefreshTokenHash);
 
+        // Update session
+        var session = await _sessionRepository.GetByRefreshTokenHashAsync(
+            refreshTokenHash, cancellationToken);
+
+        if (session is not null)
+        {
+            session.Revoke();
+            _sessionRepository.Update(session);
+        }
+
         // Crear el nuevo refresh token
         var refreshTokenEntity = new EcoRuteando.Modules.Security.Domain.Entities.RefreshToken(
             user.Id,
             newRefreshTokenHash,
             DateTime.UtcNow.AddDays(7),
             null);
+
+        // Create new session
+        var newSession = new EcoRuteando.Modules.Security.Domain.Entities.Session(
+            user.Id,
+            newRefreshTokenHash,
+            session?.SourceIp,
+            session?.UserAgent,
+            session?.Device,
+            DateTime.UtcNow.AddDays(7));
+
+        await _sessionRepository.AddAsync(newSession, cancellationToken);
 
         // Guardarlo
         await _refreshTokenRepository.AddAsync(
