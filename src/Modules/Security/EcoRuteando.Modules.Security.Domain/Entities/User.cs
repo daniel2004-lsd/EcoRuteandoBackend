@@ -23,9 +23,12 @@ namespace EcoRuteando.Modules.Security.Domain.Entities
         public bool IsGuest { get; private set; }
         public string PreferredLanguage { get; private set; } = "es";
         public string UiTheme { get; private set; } = "light";
+        public string? PrimaryColor { get; private set; }
         public Role? PrimaryRole { get; private set; }
         public int FailedAttempts { get; private set; }
         public DateTime? LockedUntil { get; private set; }
+        public DateTime? LastLogin { get; private set; }
+        public DateTime? DeletionRequestedAt { get; private set; }
         public Guid? PrimaryRoleId { get; private set; }
 
         public ICollection<UserRole> UserRoles { get; private set; }
@@ -64,8 +67,11 @@ namespace EcoRuteando.Modules.Security.Domain.Entities
             IsGuest = false;
             PreferredLanguage = "es";
             UiTheme = "light";
+            PrimaryColor = null;
             FailedAttempts = 0;
             LockedUntil = null;
+            LastLogin = null;
+            DeletionRequestedAt = null;
             PrimaryRoleId = null;
 
 
@@ -94,18 +100,66 @@ namespace EcoRuteando.Modules.Security.Domain.Entities
         public void Update(
          string firstName,
         string? lastName,
-        string? phoneNumber)
+        string? phoneNumber,
+        string? primaryColor = null)
         {
             if (string.IsNullOrWhiteSpace(firstName))
             {
                 throw new DomainException("El nombre es obligatorio.");
             }
 
+            if (primaryColor is not null
+                && !System.Text.RegularExpressions.Regex.IsMatch(
+                    primaryColor, "^#[0-9A-Fa-f]{6}$"))
+            {
+                throw new DomainException(
+                    "El color primario debe ser un hexadecimal válido (ej. #1ABC9C).");
+            }
+
             FirstName = firstName.Trim();
             LastName = lastName?.Trim();
             PhoneNumber = phoneNumber?.Trim();
+            PrimaryColor = primaryColor;
         }
 
+        public void RecordLogin()
+        {
+            LastLogin = DateTime.UtcNow;
+        }
+
+        public void RequestDeletion()
+        {
+            DeletionRequestedAt = DateTime.UtcNow;
+            Status = "deleted";
+        }
+
+
+        public bool IsLocked =>
+            LockedUntil.HasValue && LockedUntil.Value > DateTime.UtcNow;
+
+        public void IncrementFailedAttempts(int maxAttempts, int lockoutMinutes)
+        {
+            FailedAttempts++;
+            UpdatedAt = DateTime.UtcNow;
+
+            if (FailedAttempts >= maxAttempts)
+            {
+                Lock(lockoutMinutes);
+            }
+        }
+
+        public void Lock(int lockoutMinutes)
+        {
+            LockedUntil = DateTime.UtcNow.AddMinutes(lockoutMinutes);
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void ResetFailedAttempts()
+        {
+            FailedAttempts = 0;
+            LockedUntil = null;
+            UpdatedAt = DateTime.UtcNow;
+        }
 
         public void ChangePassword(string passwordHash)
         {

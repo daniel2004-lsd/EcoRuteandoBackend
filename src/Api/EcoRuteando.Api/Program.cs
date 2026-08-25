@@ -1,8 +1,11 @@
+using System.Threading.RateLimiting;
 using EcoRuteando.Api.Middlewares;
 using EcoRuteando.Modules.Security.Application;
 using EcoRuteando.Modules.Security.Infrastructure;
 using EcoRuteando.Modules.Security.Infrastructure.Authorization;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.OpenApi.Models;
 
 namespace EcoRuteando.Api
@@ -24,14 +27,53 @@ namespace EcoRuteando.Api
 
             // Controllers + Swagger
             builder.Services.AddControllers();
+
+            // Rate Limiting
+            builder.Services.AddRateLimiter(options =>
+            {
+                options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+                // Política para endpoints de auth: 5 requests por 15 min por IP
+                options.AddFixedWindowLimiter("auth", opt =>
+                {
+                    opt.PermitLimit = 5;
+                    opt.Window = TimeSpan.FromMinutes(15);
+                    opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+                    opt.QueueLimit = 0;
+                });
+
+                // Política para forgot-password / send-verification: 3 por hora
+                options.AddFixedWindowLimiter("sensitive", opt =>
+                {
+                    opt.PermitLimit = 3;
+                    opt.Window = TimeSpan.FromHours(1);
+                    opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+                    opt.QueueLimit = 0;
+                });
+
+                // Política general API: 100 por minuto
+                options.AddFixedWindowLimiter("api", opt =>
+                {
+                    opt.PermitLimit = 100;
+                    opt.Window = TimeSpan.FromMinutes(1);
+                    opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+                    opt.QueueLimit = 0;
+                });
+            });
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("ReactPolicy", policy =>
                 {
                     policy
-                        .WithOrigins("http://localhost:3000")
+                        .WithOrigins(
+                        "http://localhost:3000",
+                        "http://localhost:3001",
+                        "http://localhost:3007",
+                        "http://localhost:3002",
+                        "http://10.3.235.158:3007")
                         .AllowAnyHeader()
-                        .AllowAnyMethod();
+                        .AllowAnyMethod()
+                        .AllowCredentials();
                 });
             });
             builder.Services.AddEndpointsApiExplorer();
@@ -77,6 +119,19 @@ namespace EcoRuteando.Api
 
             var app = builder.Build();
 
+            // Detrás del proxy inverso (nginx): reconstruye la IP real del cliente
+            // a partir de X-Forwarded-For para que el rate limiting sea por usuario
+            // y no por la IP compartida del contenedor nginx.
+            var forwardedHeaders = new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+            };
+            // Dentro de la red Docker el único proxy es nginx:
+            // se limpia la lista de proxies confiables (por defecto solo loopback).
+            forwardedHeaders.KnownNetworks.Clear();
+            forwardedHeaders.KnownProxies.Clear();
+            app.UseForwardedHeaders(forwardedHeaders);
+
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -91,6 +146,8 @@ namespace EcoRuteando.Api
             app.UseAuthentication();
 
             app.UseAuthorization();
+
+            app.UseRateLimiter();
 
             app.MapControllers();
 

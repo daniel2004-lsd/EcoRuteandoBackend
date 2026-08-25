@@ -2,4 +2,6 @@
 
 public sealed record LoginResponse(
     string AccessToken,
-    string RefreshToken);
+    string RefreshToken,
+    bool RequiresTwoFactor = false,
+    string? TwoFactorToken = null);

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EcoRuteando.Modules.Security.Application.Roles.Command.CreateRole
+namespace EcoRuteando.Modules.Security.Application.Roles.Commands.CreateRole
 {
     public sealed class CreateRoleCommandValidator
     : AbstractValidator<CreateRoleCommand>
