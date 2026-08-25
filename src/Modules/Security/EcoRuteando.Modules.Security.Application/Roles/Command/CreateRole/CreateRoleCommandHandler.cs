@@ -1,4 +1,4 @@
-﻿using EcoRuteando.Modules.Security.Application.Roles.Command.CreateRole;
+﻿using EcoRuteando.Modules.Security.Application.Roles.Commands.CreateRole;
 using EcoRuteando.Modules.Security.Domain.Entities;
 using EcoRuteando.Modules.Security.Domain.Repositories;
 using EcoRuteando.Shared.Abstractions.Persistence;

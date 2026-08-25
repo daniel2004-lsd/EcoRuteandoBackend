@@ -37,7 +37,8 @@ public sealed class UpdateUserCommandHandler
         user.Update(
             request.FirstName,
             request.LastName,
-            request.PhoneNumber);
+            request.PhoneNumber,
+            request.PrimaryColor);
 
         await _userRepository.UpdateAsync(
             user,

@@ -1,4 +1,4 @@
-﻿using EcoRuteando.Modules.Security.Application.Roles.Command.DeleteRole;
+﻿using EcoRuteando.Modules.Security.Application.Roles.Commands.DeleteRole;
 using EcoRuteando.Modules.Security.Domain.Repositories;
 using EcoRuteando.Shared.Abstractions.Persistence;
 using EcoRuteando.Shared.Exceptions;

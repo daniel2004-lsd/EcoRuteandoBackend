@@ -76,6 +76,16 @@ namespace EcoRuteando.Modules.Security.Infrastructure.Persistence.Configurations
                        .HasMaxLength(20)
                        .IsRequired();
 
+            builder.Property(u => u.PrimaryColor)
+                   .HasColumnName("primary_color")
+                   .HasMaxLength(7);
+
+            builder.Property(u => u.LastLogin)
+                   .HasColumnName("last_login");
+
+            builder.Property(u => u.DeletionRequestedAt)
+                   .HasColumnName("deletion_requested_at");
+
             builder.Property(u => u.PrimaryRoleId)
                    .HasColumnName("primary_role_id");
 
@@ -101,8 +111,24 @@ namespace EcoRuteando.Modules.Security.Infrastructure.Persistence.Configurations
             builder.ToTable(t =>
             {
                 t.HasCheckConstraint(
-                    "CK_users_phone_number",
+                    "users_phone_number_check",
                     "phone_number ~ '^\\+?[0-9 ()-]{6,30}$'");
+
+                t.HasCheckConstraint(
+                    "users_primary_color_check",
+                    "primary_color ~ '^#[0-9A-Fa-f]{6}$'");
+
+                t.HasCheckConstraint(
+                    "chk_users_status",
+                    "status IN ('active', 'inactive', 'blocked', 'deleted')");
+
+                t.HasCheckConstraint(
+                    "chk_users_preferred_language",
+                    "preferred_language IN ('es', 'en', 'pt', 'fr')");
+
+                t.HasCheckConstraint(
+                    "chk_users_ui_theme",
+                    "ui_theme IN ('light', 'dark', 'system')");
             });
         }
     }
