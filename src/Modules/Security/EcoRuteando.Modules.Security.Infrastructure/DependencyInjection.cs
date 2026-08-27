@@ -49,7 +49,7 @@ public static class DependencyInjection
                 });
         });
 
-        services.AddScoped<IUnitOfWork>(sp =>
+        services.AddScoped<ISecurityUnitOfWork>(sp =>
         sp.GetRequiredService<SecurityDbContext>());
 
         // Repositorios

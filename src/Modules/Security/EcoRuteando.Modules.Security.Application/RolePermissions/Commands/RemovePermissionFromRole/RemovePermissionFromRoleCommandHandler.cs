@@ -10,12 +10,12 @@ public sealed class RemovePermissionFromRoleCommandHandler
     : IRequestHandler<RemovePermissionFromRoleCommand>
 {
     private readonly IRolePermissionRepository _rolePermissionRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ISecurityUnitOfWork _unitOfWork;
     private readonly IAuditLogService _auditLogService;
 
     public RemovePermissionFromRoleCommandHandler(
         IRolePermissionRepository rolePermissionRepository,
-        IUnitOfWork unitOfWork,
+        ISecurityUnitOfWork unitOfWork,
         IAuditLogService auditLogService)
     {
         _rolePermissionRepository = rolePermissionRepository;

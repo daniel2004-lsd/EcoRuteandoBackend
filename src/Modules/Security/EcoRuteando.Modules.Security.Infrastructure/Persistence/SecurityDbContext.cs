@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EcoRuteando.Modules.Security.Infrastructure.Persistence
 {
-    public class SecurityDbContext : DbContext, IUnitOfWork
+    public class SecurityDbContext : DbContext, ISecurityUnitOfWork
     {
         public SecurityDbContext(DbContextOptions<SecurityDbContext> options)
             : base(options)

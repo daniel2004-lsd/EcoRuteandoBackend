@@ -12,7 +12,7 @@ services:
       - "5124:5124"
 
     environment:
-      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_ENVIRONMENT: Development
 
       ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=ecoRuteando_db;Username=postgres;Password=postgres"
 

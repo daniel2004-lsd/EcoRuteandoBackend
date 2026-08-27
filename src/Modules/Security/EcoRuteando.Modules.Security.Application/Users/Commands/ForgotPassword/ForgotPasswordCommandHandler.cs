@@ -19,7 +19,7 @@ public sealed class ForgotPasswordCommandHandler
     private readonly IUserRepository _userRepository;
     private readonly IPasswordRecoveryRepository _passwordRecoveryRepository;
     private readonly IOtpProvider _otpProvider;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ISecurityUnitOfWork _unitOfWork;
     private readonly IEmailService _emailService;
     private readonly IEmailTemplateService _templateService;
     private readonly IAuditLogService _auditLogService;
@@ -27,7 +27,7 @@ public sealed class ForgotPasswordCommandHandler
     public ForgotPasswordCommandHandler(
     IUserRepository userRepository,
     IPasswordRecoveryRepository passwordRecoveryRepository,
-    IUnitOfWork unitOfWork,
+    ISecurityUnitOfWork unitOfWork,
     IOtpProvider otpProvider,
     IEmailService emailService,
     IEmailTemplateService templateService,

@@ -13,12 +13,12 @@ public sealed class VerifyTwoFactorAuthCommandHandler
 {
     private readonly ITotpService _totpService;
     private readonly ITwoFactorAuthRepository _twoFactorAuthRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ISecurityUnitOfWork _unitOfWork;
 
     public VerifyTwoFactorAuthCommandHandler(
         ITotpService totpService,
         ITwoFactorAuthRepository twoFactorAuthRepository,
-        IUnitOfWork unitOfWork)
+        ISecurityUnitOfWork unitOfWork)
     {
         _totpService = totpService;
         _twoFactorAuthRepository = twoFactorAuthRepository;

@@ -14,14 +14,14 @@ public sealed class RefreshTokenCommandHandler
     private readonly IRefreshTokenService _refreshTokenService;
     private readonly IJwtProvider _jwtProvider;
     private readonly ISessionRepository _sessionRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ISecurityUnitOfWork _unitOfWork;
 
     public RefreshTokenCommandHandler(
         IRefreshTokenRepository refreshTokenRepository,
         IRefreshTokenService refreshTokenService,
         IJwtProvider jwtProvider,
         ISessionRepository sessionRepository,
-        IUnitOfWork unitOfWork)
+        ISecurityUnitOfWork unitOfWork)
     {
         _refreshTokenRepository = refreshTokenRepository;
         _refreshTokenService = refreshTokenService;

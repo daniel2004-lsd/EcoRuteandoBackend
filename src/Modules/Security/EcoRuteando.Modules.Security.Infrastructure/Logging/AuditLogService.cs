@@ -9,11 +9,11 @@ namespace EcoRuteando.Modules.Security.Infrastructure.Logging;
 public sealed class AuditLogService : IAuditLogService
 {
     private readonly IAuditLogRepository _auditLogRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ISecurityUnitOfWork _unitOfWork;
 
     public AuditLogService(
         IAuditLogRepository auditLogRepository,
-        IUnitOfWork unitOfWork)
+        ISecurityUnitOfWork unitOfWork)
     {
         _auditLogRepository = auditLogRepository;
         _unitOfWork = unitOfWork;

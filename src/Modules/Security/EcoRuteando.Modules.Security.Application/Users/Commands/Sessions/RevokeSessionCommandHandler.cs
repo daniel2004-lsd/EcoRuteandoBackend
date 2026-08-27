@@ -9,11 +9,11 @@ public sealed class RevokeSessionCommandHandler
     : IRequestHandler<RevokeSessionCommand, Unit>
 {
     private readonly ISessionRepository _sessionRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ISecurityUnitOfWork _unitOfWork;
 
     public RevokeSessionCommandHandler(
         ISessionRepository sessionRepository,
-        IUnitOfWork unitOfWork)
+        ISecurityUnitOfWork unitOfWork)
     {
         _sessionRepository = sessionRepository;
         _unitOfWork = unitOfWork;

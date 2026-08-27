@@ -1,5 +1,7 @@
 using System.Threading.RateLimiting;
 using EcoRuteando.Api.Middlewares;
+using EcoRuteando.Modules.Mobility.Application;
+using EcoRuteando.Modules.Mobility.Infrastructure;
 using EcoRuteando.Modules.Security.Application;
 using EcoRuteando.Modules.Security.Infrastructure;
 using EcoRuteando.Modules.Security.Infrastructure.Authorization;
@@ -18,26 +20,42 @@ namespace EcoRuteando.Api
 
             // Registrar Application
             builder.Services.AddSecurityApplication();
+            builder.Services.AddMobilityApplication();
 
             // Registrar Infrastructure
             builder.Services.AddSecurityInfrastructure(builder.Configuration);
+            builder.Services.AddMobilityInfrastructure(builder.Configuration);
             builder.Services.AddAuthorization();
             builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
             builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
 
             // Controllers + Swagger
-            builder.Services.AddControllers();
+            builder.Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.PropertyNamingPolicy =
+                        System.Text.Json.JsonNamingPolicy.CamelCase;
+                    options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+                });
 
             // Rate Limiting
             builder.Services.AddRateLimiter(options =>
             {
                 options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
-                // Política para endpoints de auth: 5 requests por 15 min por IP
+                options.OnRejected = async (context, cancellationToken) =>
+                {
+                    if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+                    {
+                        context.HttpContext.Response.Headers.RetryAfter = ((int)retryAfter.TotalSeconds).ToString();
+                    }
+                };
+
+                // Política para endpoints de auth: 5 requests por 5 min por IP
                 options.AddFixedWindowLimiter("auth", opt =>
                 {
                     opt.PermitLimit = 5;
-                    opt.Window = TimeSpan.FromMinutes(15);
+                    opt.Window = TimeSpan.FromMinutes(5);
                     opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
                     opt.QueueLimit = 0;
                 });

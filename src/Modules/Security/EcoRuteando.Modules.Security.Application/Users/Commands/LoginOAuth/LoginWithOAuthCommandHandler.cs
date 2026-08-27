@@ -20,7 +20,7 @@ public sealed class LoginWithOAuthCommandHandler
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly ISessionRepository _sessionRepository;
     private readonly ISecurityPolicyRepository _securityPolicyRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ISecurityUnitOfWork _unitOfWork;
     private readonly IAuditLogService _auditLogService;
 
     public LoginWithOAuthCommandHandler(
@@ -33,7 +33,7 @@ public sealed class LoginWithOAuthCommandHandler
         IRefreshTokenRepository refreshTokenRepository,
         ISessionRepository sessionRepository,
         ISecurityPolicyRepository securityPolicyRepository,
-        IUnitOfWork unitOfWork,
+        ISecurityUnitOfWork unitOfWork,
         IAuditLogService auditLogService)
     {
         _oauthProviders = oauthProviders;

@@ -17,14 +17,14 @@ public sealed class SendVerificationEmailCommandHandler
     private readonly IEmailVerificationRepository _emailVerificationRepository;
     private readonly IEmailService _emailService;
     private readonly IEmailTemplateService _templateService;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ISecurityUnitOfWork _unitOfWork;
 
     public SendVerificationEmailCommandHandler(
         IUserRepository userRepository,
         IEmailVerificationRepository emailVerificationRepository,
         IEmailService emailService,
         IEmailTemplateService templateService,
-        IUnitOfWork unitOfWork)
+        ISecurityUnitOfWork unitOfWork)
     {
         _userRepository = userRepository;
         _emailVerificationRepository = emailVerificationRepository;
