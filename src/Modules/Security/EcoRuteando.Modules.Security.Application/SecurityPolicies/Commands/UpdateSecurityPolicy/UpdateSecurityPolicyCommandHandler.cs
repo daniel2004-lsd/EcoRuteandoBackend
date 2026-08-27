@@ -10,12 +10,12 @@ public sealed class UpdateSecurityPolicyCommandHandler
     : IRequestHandler<UpdateSecurityPolicyCommand, SecurityPolicyResponse>
 {
     private readonly ISecurityPolicyRepository _securityPolicyRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ISecurityUnitOfWork _unitOfWork;
     private readonly IAuditLogService _auditLogService;
 
     public UpdateSecurityPolicyCommandHandler(
         ISecurityPolicyRepository securityPolicyRepository,
-        IUnitOfWork unitOfWork,
+        ISecurityUnitOfWork unitOfWork,
         IAuditLogService auditLogService)
     {
         _securityPolicyRepository = securityPolicyRepository;

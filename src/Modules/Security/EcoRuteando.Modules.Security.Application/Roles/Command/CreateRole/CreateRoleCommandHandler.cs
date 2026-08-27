@@ -11,11 +11,11 @@ public sealed class CreateRoleCommandHandler
     : IRequestHandler<CreateRoleCommand, Guid>
 {
     private readonly IRoleRepository _roleRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ISecurityUnitOfWork _unitOfWork;
 
     public CreateRoleCommandHandler(
         IRoleRepository roleRepository,
-        IUnitOfWork unitOfWork)
+        ISecurityUnitOfWork unitOfWork)
     {
         _roleRepository = roleRepository;
         _unitOfWork = unitOfWork;

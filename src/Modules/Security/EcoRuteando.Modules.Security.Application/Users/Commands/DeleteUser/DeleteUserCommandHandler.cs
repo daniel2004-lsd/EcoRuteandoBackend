@@ -10,12 +10,12 @@ namespace EcoRuteando.Modules.Security.Application.Users.Commands.DeleteUser
      : IRequestHandler<DeleteUserCommand>
     {
         private readonly IUserRepository _repository;
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly ISecurityUnitOfWork _unitOfWork;
         private readonly IAuditLogService _auditLogService;
 
         public DeleteUserCommandHandler(
             IUserRepository repository,
-            IUnitOfWork unitOfWork,
+            ISecurityUnitOfWork unitOfWork,
             IAuditLogService auditLogService)
         {
             _repository = repository;

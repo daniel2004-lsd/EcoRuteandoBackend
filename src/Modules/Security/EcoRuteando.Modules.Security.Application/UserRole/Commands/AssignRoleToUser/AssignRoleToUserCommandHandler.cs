@@ -13,14 +13,14 @@ public sealed class AssignRoleToUserCommandHandler
     private readonly IUserRepository _userRepository;
     private readonly IRoleRepository _roleRepository;
     private readonly IUserRoleRepository _userRoleRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ISecurityUnitOfWork _unitOfWork;
     private readonly IAuditLogService _auditLogService;
 
     public AssignRoleToUserCommandHandler(
         IUserRepository userRepository,
         IRoleRepository roleRepository,
         IUserRoleRepository userRoleRepository,
-        IUnitOfWork unitOfWork,
+        ISecurityUnitOfWork unitOfWork,
         IAuditLogService auditLogService)
     {
         _userRepository = userRepository;

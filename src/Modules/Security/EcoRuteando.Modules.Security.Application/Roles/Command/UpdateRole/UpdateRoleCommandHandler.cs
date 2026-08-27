@@ -10,11 +10,11 @@ public sealed class UpdateRoleCommandHandler
     : IRequestHandler<UpdateRoleCommand>
 {
     private readonly IRoleRepository _roleRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ISecurityUnitOfWork _unitOfWork;
 
     public UpdateRoleCommandHandler(
         IRoleRepository roleRepository,
-        IUnitOfWork unitOfWork)
+        ISecurityUnitOfWork unitOfWork)
     {
         _roleRepository = roleRepository;
         _unitOfWork = unitOfWork;
