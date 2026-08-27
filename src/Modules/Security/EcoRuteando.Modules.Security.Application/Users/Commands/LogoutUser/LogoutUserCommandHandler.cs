@@ -13,14 +13,14 @@ public sealed class LogoutUserCommandHandler
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IRefreshTokenService _refreshTokenService;
     private readonly ISessionRepository _sessionRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ISecurityUnitOfWork _unitOfWork;
     private readonly IAuditLogService _auditLogService;
 
     public LogoutUserCommandHandler(
         IRefreshTokenRepository refreshTokenRepository,
         IRefreshTokenService refreshTokenService,
         ISessionRepository sessionRepository,
-        IUnitOfWork unitOfWork,
+        ISecurityUnitOfWork unitOfWork,
         IAuditLogService auditLogService)
     {
         _refreshTokenRepository = refreshTokenRepository;

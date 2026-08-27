@@ -12,12 +12,12 @@ public sealed class VerifyEmailCommandHandler
 {
     private readonly IEmailVerificationRepository _emailVerificationRepository;
     private readonly IUserRepository _userRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ISecurityUnitOfWork _unitOfWork;
 
     public VerifyEmailCommandHandler(
         IEmailVerificationRepository emailVerificationRepository,
         IUserRepository userRepository,
-        IUnitOfWork unitOfWork)
+        ISecurityUnitOfWork unitOfWork)
     {
         _emailVerificationRepository = emailVerificationRepository;
         _userRepository = userRepository;

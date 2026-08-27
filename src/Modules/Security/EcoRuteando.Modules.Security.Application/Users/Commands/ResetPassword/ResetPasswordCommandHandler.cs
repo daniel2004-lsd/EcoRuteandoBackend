@@ -16,14 +16,14 @@ public sealed class ResetPasswordCommandHandler
     private readonly IPasswordRecoveryRepository _passwordRecoveryRepository;
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHasher _passwordHasher;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ISecurityUnitOfWork _unitOfWork;
     private readonly IAuditLogService _auditLogService;
 
     public ResetPasswordCommandHandler(
         IPasswordRecoveryRepository passwordRecoveryRepository,
         IUserRepository userRepository,
         IPasswordHasher passwordHasher,
-        IUnitOfWork unitOfWork,
+        ISecurityUnitOfWork unitOfWork,
         IAuditLogService auditLogService)
     {
         _passwordRecoveryRepository = passwordRecoveryRepository;

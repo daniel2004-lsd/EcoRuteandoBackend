@@ -8,11 +8,11 @@ namespace EcoRuteando.Modules.Security.Infrastructure.Logging;
 public sealed class ErrorLogService : IErrorLogService
 {
     private readonly IErrorLogRepository _errorLogRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ISecurityUnitOfWork _unitOfWork;
 
     public ErrorLogService(
         IErrorLogRepository errorLogRepository,
-        IUnitOfWork unitOfWork)
+        ISecurityUnitOfWork unitOfWork)
     {
         _errorLogRepository = errorLogRepository;
         _unitOfWork = unitOfWork;

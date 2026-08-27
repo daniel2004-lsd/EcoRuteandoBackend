@@ -4,4 +4,5 @@ public sealed record LoginResponse(
     string AccessToken,
     string RefreshToken,
     bool RequiresTwoFactor = false,
-    string? TwoFactorToken = null);
+    string? TwoFactorToken = null,
+    bool RequiresEmailVerification = false);

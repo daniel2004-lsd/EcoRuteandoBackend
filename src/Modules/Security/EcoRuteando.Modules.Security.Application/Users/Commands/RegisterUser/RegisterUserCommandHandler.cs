@@ -15,7 +15,7 @@ public sealed class RegisterUserCommandHandler
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IRoleRepository _roleRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ISecurityUnitOfWork _unitOfWork;
     private readonly ISender _sender;
     private readonly IAuditLogService _auditLogService;
 
@@ -23,7 +23,7 @@ public sealed class RegisterUserCommandHandler
         IUserRepository userRepository,
         IPasswordHasher passwordHasher,
         IRoleRepository roleRepository,
-        IUnitOfWork unitOfWork,
+        ISecurityUnitOfWork unitOfWork,
         ISender sender,
         IAuditLogService auditLogService)
     {

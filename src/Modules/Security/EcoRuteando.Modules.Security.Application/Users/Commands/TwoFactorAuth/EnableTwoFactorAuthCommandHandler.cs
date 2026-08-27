@@ -14,14 +14,14 @@ public sealed class EnableTwoFactorAuthCommandHandler
     private readonly ITotpService _totpService;
     private readonly ITwoFactorAuthRepository _twoFactorAuthRepository;
     private readonly IUserRepository _userRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ISecurityUnitOfWork _unitOfWork;
     private readonly IAuditLogService _auditLogService;
 
     public EnableTwoFactorAuthCommandHandler(
         ITotpService totpService,
         ITwoFactorAuthRepository twoFactorAuthRepository,
         IUserRepository userRepository,
-        IUnitOfWork unitOfWork,
+        ISecurityUnitOfWork unitOfWork,
         IAuditLogService auditLogService)
     {
         _totpService = totpService;

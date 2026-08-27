@@ -14,13 +14,16 @@ public sealed class ExceptionMiddleware
 
     private readonly RequestDelegate _next;
     private readonly IBackgroundTaskQueue _backgroundTaskQueue;
+    private readonly ILogger<ExceptionMiddleware> _logger;
 
     public ExceptionMiddleware(
         RequestDelegate next,
-        IBackgroundTaskQueue backgroundTaskQueue)
+        IBackgroundTaskQueue backgroundTaskQueue,
+        ILogger<ExceptionMiddleware> logger)
     {
         _next = next;
         _backgroundTaskQueue = backgroundTaskQueue;
+        _logger = logger;
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -73,8 +76,23 @@ public sealed class ExceptionMiddleware
                 "Forbidden",
                 exception.Message);
         }
+        catch (DomainException exception)
+        {
+            await WriteProblemDetails(
+                context,
+                StatusCodes.Status400BadRequest,
+                "Domain Error",
+                exception.Message);
+        }
         catch (Exception exception)
         {
+            try
+            {
+                var errorFile = Path.Combine("/tmp", "last_error.txt");
+                File.WriteAllText(errorFile, $"[{DateTime.UtcNow:O}] {exception.GetType().FullName}: {exception.Message}\n{exception.StackTrace}\n---INNER---\n{exception.InnerException?.Message}\n{exception.InnerException?.StackTrace}");
+            }
+            catch { }
+
             await LogErrorInBackgroundAsync(exception);
 
             await WriteProblemDetails(

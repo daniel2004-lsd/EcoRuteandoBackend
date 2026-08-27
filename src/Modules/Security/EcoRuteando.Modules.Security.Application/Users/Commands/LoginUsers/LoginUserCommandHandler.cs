@@ -21,7 +21,7 @@ public sealed class LoginUserCommandHandler
     private readonly ISessionRepository _sessionRepository;
     private readonly ITwoFactorAuthRepository _twoFactorAuthRepository;
     private readonly ITotpService _totpService;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ISecurityUnitOfWork _unitOfWork;
     private readonly IAuditLogService _auditLogService;
 
     public LoginUserCommandHandler(
@@ -34,7 +34,7 @@ public sealed class LoginUserCommandHandler
         ISessionRepository sessionRepository,
         ITwoFactorAuthRepository twoFactorAuthRepository,
         ITotpService totpService,
-        IUnitOfWork unitOfWork,
+        ISecurityUnitOfWork unitOfWork,
         IAuditLogService auditLogService)
     {
         _userRepository = userRepository;
@@ -73,7 +73,7 @@ public sealed class LoginUserCommandHandler
 
         var isPasswordValid = _passwordHasher.Verify(
             request.Password,
-            user.PasswordHash);
+            user.PasswordHash!);
 
         if (!isPasswordValid)
         {
@@ -97,8 +97,10 @@ public sealed class LoginUserCommandHandler
 
         if (!user.EmailVerified)
         {
-            throw new ForbiddenException(
-                "Debes verificar tu correo electrónico antes de iniciar sesión. Revisa tu bandeja de entrada.");
+            return new LoginResponse(
+                AccessToken: string.Empty,
+                RefreshToken: string.Empty,
+                RequiresEmailVerification: true);
         }
 
         if (user.PrimaryRole is null)

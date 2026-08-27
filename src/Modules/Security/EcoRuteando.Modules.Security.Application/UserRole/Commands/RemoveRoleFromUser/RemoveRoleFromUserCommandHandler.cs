@@ -10,12 +10,12 @@ public sealed class RemoveRoleFromUserCommandHandler
     : IRequestHandler<RemoveRoleFromUserCommand>
 {
     private readonly IUserRoleRepository _userRoleRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ISecurityUnitOfWork _unitOfWork;
     private readonly IAuditLogService _auditLogService;
 
     public RemoveRoleFromUserCommandHandler(
         IUserRoleRepository userRoleRepository,
-        IUnitOfWork unitOfWork,
+        ISecurityUnitOfWork unitOfWork,
         IAuditLogService auditLogService)
     {
         _userRoleRepository = userRoleRepository;
