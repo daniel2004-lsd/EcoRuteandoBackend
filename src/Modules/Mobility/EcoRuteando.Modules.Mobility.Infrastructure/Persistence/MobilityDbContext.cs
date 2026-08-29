@@ -18,6 +18,8 @@ public class MobilityDbContext : DbContext, IMobilityUnitOfWork
 
     public DbSet<RoutePoi> RoutePois => Set<RoutePoi>();
 
+    public DbSet<RouteUsage> RouteUsages => Set<RouteUsage>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -32,8 +34,14 @@ public class MobilityDbContext : DbContext, IMobilityUnitOfWork
             "route_status",
             new[] { "active", "inactive", "under_review", "archived" });
 
+        modelBuilder.HasPostgresEnum(
+            "mobility",
+            "usage_source",
+            new[] { "web", "mobile", "pwa" });
+
         modelBuilder.ApplyConfiguration(new RouteConfiguration());
         modelBuilder.ApplyConfiguration(new PointOfInterestConfiguration());
         modelBuilder.ApplyConfiguration(new RoutePoiConfiguration());
+        modelBuilder.ApplyConfiguration(new RouteUsageConfiguration());
     }
 }

@@ -31,6 +31,7 @@ public static class DependencyInjection
                     o.MigrationsAssembly("EcoRuteando.Modules.Mobility.Infrastructure");
                     o.MapEnum<TransportType>("transport_type", "mobility");
                     o.MapEnum<RouteStatus>("route_status", "mobility");
+                    o.MapEnum<UsageSource>("usage_source", "mobility");
                     o.UseNetTopologySuite();
                 });
         });
@@ -41,6 +42,7 @@ public static class DependencyInjection
         // Repositorios
         services.AddScoped<IRouteRepository, RouteRepository>();
         services.AddScoped<IPointOfInterestRepository, PointOfInterestRepository>();
+        services.AddScoped<IRouteUsageRepository, RouteUsageRepository>();
 
         // Google Maps
         services.Configure<GoogleMapsOptions>(
