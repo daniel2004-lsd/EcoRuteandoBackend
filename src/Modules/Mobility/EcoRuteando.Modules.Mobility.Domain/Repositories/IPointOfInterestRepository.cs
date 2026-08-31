@@ -12,5 +12,12 @@ public interface IPointOfInterestRepository
     /// Lista los puntos de interés activos (para mostrarlos en el mapa).
     /// </summary>
     Task<IReadOnlyList<PointOfInterest>> GetActiveAsync(
+        string? poiType = null,
         CancellationToken cancellationToken = default);
+
+    Task AddAsync(
+        PointOfInterest pointOfInterest,
+        CancellationToken cancellationToken = default);
+
+    void Update(PointOfInterest pointOfInterest);
 }
