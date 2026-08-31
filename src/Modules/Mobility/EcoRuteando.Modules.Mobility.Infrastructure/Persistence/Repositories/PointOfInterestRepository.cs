@@ -25,11 +25,32 @@ public sealed class PointOfInterestRepository : IPointOfInterestRepository
     }
 
     public async Task<IReadOnlyList<PointOfInterest>> GetActiveAsync(
+        string? poiType = null,
         CancellationToken cancellationToken = default)
     {
-        return await _dbContext.PointsOfInterest
+        var query = _dbContext.PointsOfInterest
             .AsNoTracking()
-            .Where(p => p.IsActive)
-            .ToListAsync(cancellationToken);
+            .Where(p => p.IsActive);
+
+        if (!string.IsNullOrWhiteSpace(poiType))
+        {
+            query = query.Where(p => p.PoiType == poiType.Trim());
+        }
+
+        return await query.ToListAsync(cancellationToken);
+    }
+
+    public async Task AddAsync(
+        PointOfInterest pointOfInterest,
+        CancellationToken cancellationToken = default)
+    {
+        await _dbContext.PointsOfInterest.AddAsync(
+            pointOfInterest,
+            cancellationToken);
+    }
+
+    public void Update(PointOfInterest pointOfInterest)
+    {
+        _dbContext.PointsOfInterest.Update(pointOfInterest);
     }
 }
