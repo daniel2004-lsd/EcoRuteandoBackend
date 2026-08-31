@@ -75,6 +75,8 @@ public sealed class RegisterUserCommandHandler
             user,
             cancellationToken);
 
+        user.UserRoles.Add(new UserRole(user.Id, role.Id));
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         await _auditLogService.LogAsync(

@@ -1,3 +1,5 @@
+using EcoRuteando.Modules.Mobility.Application.RoutePois.Commands.AddPoiToRoute;
+using EcoRuteando.Modules.Mobility.Application.RoutePois.Commands.RemovePoiFromRoute;
 using EcoRuteando.Modules.Mobility.Application.Routes.Commands.CreateRoute;
 using EcoRuteando.Modules.Mobility.Application.Routes.Commands.DeleteRoute;
 using EcoRuteando.Modules.Mobility.Application.Routes.Commands.UpdateRoute;
@@ -106,6 +108,41 @@ public sealed class RoutesController : ControllerBase
     {
         await _mediator.Send(
             new DeleteRouteCommand(id),
+            cancellationToken);
+
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Asocia un punto de interés a la ruta con su orden de visita.
+    /// </summary>
+    [HttpPost("{id:guid}/pois/{poiId:guid}")]
+    [HasPermission("routes.write")]
+    public async Task<IActionResult> AddPoiToRoute(
+        Guid id,
+        Guid poiId,
+        [FromQuery] short? sortOrder,
+        CancellationToken cancellationToken)
+    {
+        await _mediator.Send(
+            new AddPoiToRouteCommand(id, poiId, sortOrder),
+            cancellationToken);
+
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Desasocia un punto de interés de la ruta.
+    /// </summary>
+    [HttpDelete("{id:guid}/pois/{poiId:guid}")]
+    [HasPermission("routes.write")]
+    public async Task<IActionResult> RemovePoiFromRoute(
+        Guid id,
+        Guid poiId,
+        CancellationToken cancellationToken)
+    {
+        await _mediator.Send(
+            new RemovePoiFromRouteCommand(id, poiId),
             cancellationToken);
 
         return NoContent();

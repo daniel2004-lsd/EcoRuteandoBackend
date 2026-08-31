@@ -74,6 +74,38 @@ public sealed class PointOfInterest : Entity<Guid>
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void Update(
+        string name,
+        string poiType,
+        string? description = null,
+        string? address = null,
+        string? iconUrl = null,
+        Point? location = null)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new DomainException("El nombre del punto de interés es obligatorio.");
+
+        if (name.Trim().Length > 150)
+            throw new DomainException("El nombre no puede superar 150 caracteres.");
+
+        if (string.IsNullOrWhiteSpace(poiType))
+            throw new DomainException("El tipo de punto de interés es obligatorio.");
+
+        if (poiType.Trim().Length > 80)
+            throw new DomainException("El tipo no puede superar 80 caracteres.");
+
+        if (location is null)
+            throw new DomainException("La ubicación del punto de interés es obligatoria.");
+
+        Name = name.Trim();
+        PoiType = poiType.Trim();
+        Description = description?.Trim();
+        Address = address?.Trim();
+        IconUrl = iconUrl?.Trim();
+        Location = location;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void Deactivate()
     {
         IsActive = false;

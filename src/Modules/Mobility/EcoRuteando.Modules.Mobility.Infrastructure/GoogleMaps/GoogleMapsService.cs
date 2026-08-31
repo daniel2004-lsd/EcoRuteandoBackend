@@ -62,6 +62,12 @@ public sealed class GoogleMapsService : IGoogleMapsService
                 _logger.LogWarning(
                     "Google Directions API returned status {Status}",
                     status);
+
+                if (status == "ZERO_RESULTS")
+                {
+                    return new DirectionsResponse { Status = status };
+                }
+
                 return null;
             }
 
