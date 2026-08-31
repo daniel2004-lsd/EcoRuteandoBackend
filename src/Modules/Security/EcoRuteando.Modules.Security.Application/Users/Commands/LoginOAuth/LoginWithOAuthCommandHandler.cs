@@ -154,6 +154,8 @@ public sealed class LoginWithOAuthCommandHandler
 
         await _userRepository.AddAsync(user, cancellationToken);
 
+        user.UserRoles.Add(new UserRole(user.Id, role.Id));
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return user;
