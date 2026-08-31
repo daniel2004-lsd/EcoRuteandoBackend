@@ -20,6 +20,8 @@ public class MobilityDbContext : DbContext, IMobilityUnitOfWork
 
     public DbSet<RouteUsage> RouteUsages => Set<RouteUsage>();
 
+    public DbSet<TransportFactor> TransportFactors => Set<TransportFactor>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -27,7 +29,7 @@ public class MobilityDbContext : DbContext, IMobilityUnitOfWork
         modelBuilder.HasPostgresEnum(
             "mobility",
             "transport_type",
-            new[] { "bike", "public_transport", "mixed", "walking" });
+            new[] { "bike", "public_transport", "mixed", "walking", "car" });
 
         modelBuilder.HasPostgresEnum(
             "mobility",
@@ -43,5 +45,6 @@ public class MobilityDbContext : DbContext, IMobilityUnitOfWork
         modelBuilder.ApplyConfiguration(new PointOfInterestConfiguration());
         modelBuilder.ApplyConfiguration(new RoutePoiConfiguration());
         modelBuilder.ApplyConfiguration(new RouteUsageConfiguration());
+        modelBuilder.ApplyConfiguration(new TransportFactorConfiguration());
     }
 }
