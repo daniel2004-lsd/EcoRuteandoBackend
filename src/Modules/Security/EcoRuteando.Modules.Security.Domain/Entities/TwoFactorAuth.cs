@@ -1,11 +1,17 @@
 using EcoRuteando.Shared.BaseClasses;
+using NpgsqlTypes;
 
 namespace EcoRuteando.Modules.Security.Domain.Entities;
 
 public enum TwoFactorMethod
 {
+    [PgName("totp")]
     TOTP = 0,
+
+    [PgName("sms")]
     SMS = 1,
+
+    [PgName("email")]
     Email = 2
 }
 

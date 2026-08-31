@@ -1,12 +1,20 @@
 using EcoRuteando.Shared.BaseClasses;
+using NpgsqlTypes;
 
 namespace EcoRuteando.Modules.Security.Domain.Entities;
 
 public enum OAuthProvider
 {
+    [PgName("google")]
     Google = 0,
+
+    [PgName("facebook")]
     Facebook = 1,
+
+    [PgName("github")]
     Github = 2,
+
+    [PgName("apple")]
     Apple = 3
 }
 
