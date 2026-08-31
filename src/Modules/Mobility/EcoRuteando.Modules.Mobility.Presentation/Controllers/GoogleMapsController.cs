@@ -60,6 +60,23 @@ public sealed class GoogleMapsController : ControllerBase
             });
         }
 
+        if (result.Status == "ZERO_RESULTS")
+        {
+            var friendlyMode = travelMode switch
+            {
+                "walking" => "a pie",
+                "bicycling" => "en bicicleta",
+                "transit" => "en transporte público",
+                "driving" => "en automóvil",
+                _ => $"en modo {travelMode}"
+            };
+
+            return NotFound(new
+            {
+                message = $"No existe una ruta {friendlyMode} entre el origen y el destino. Prueba con otro modo de transporte."
+            });
+        }
+
         return Ok(result);
     }
 
