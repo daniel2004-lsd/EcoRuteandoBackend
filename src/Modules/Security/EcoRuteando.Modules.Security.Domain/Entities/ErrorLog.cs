@@ -1,12 +1,20 @@
 using EcoRuteando.Shared.BaseClasses;
+using NpgsqlTypes;
 
 namespace EcoRuteando.Modules.Security.Domain.Entities;
 
 public enum ErrorLevel
 {
+    [PgName("INFO")]
     Info = 0,
+
+    [PgName("WARNING")]
     Warning = 1,
+
+    [PgName("ERROR")]
     Error = 2,
+
+    [PgName("CRITICAL")]
     Critical = 3
 }
 
