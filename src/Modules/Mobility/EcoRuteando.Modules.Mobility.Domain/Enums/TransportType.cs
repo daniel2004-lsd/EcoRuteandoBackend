@@ -17,5 +17,8 @@ public enum TransportType
     Mixed = 2,
 
     [PgName("walking")]
-    Walking = 3
+    Walking = 3,
+
+    [PgName("car")]
+    Car = 4
 }
