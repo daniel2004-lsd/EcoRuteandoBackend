@@ -1,4 +1,3 @@
-using System.Text;
 using EcoRuteando.Modules.Security.Application.Abstractions.Logging;
 using EcoRuteando.Modules.Security.Application.Abstractions.Security;
 using EcoRuteando.Modules.Security.Domain.Entities;
@@ -13,17 +12,20 @@ public sealed class DisableTwoFactorAuthCommandHandler
     : IRequestHandler<DisableTwoFactorAuthCommand, bool>
 {
     private readonly ITotpService _totpService;
+    private readonly IEncryptionService _encryptionService;
     private readonly ITwoFactorAuthRepository _twoFactorAuthRepository;
     private readonly ISecurityUnitOfWork _unitOfWork;
     private readonly IAuditLogService _auditLogService;
 
     public DisableTwoFactorAuthCommandHandler(
         ITotpService totpService,
+        IEncryptionService encryptionService,
         ITwoFactorAuthRepository twoFactorAuthRepository,
         ISecurityUnitOfWork unitOfWork,
         IAuditLogService auditLogService)
     {
         _totpService = totpService;
+        _encryptionService = encryptionService;
         _twoFactorAuthRepository = twoFactorAuthRepository;
         _unitOfWork = unitOfWork;
         _auditLogService = auditLogService;
@@ -43,7 +45,8 @@ public sealed class DisableTwoFactorAuthCommandHandler
 
         if (twoFactorAuth.EncryptedSecret is not null)
         {
-            var secret = Encoding.UTF8.GetString(twoFactorAuth.EncryptedSecret);
+            var secret = System.Text.Encoding.UTF8.GetString(
+                _encryptionService.Decrypt(twoFactorAuth.EncryptedSecret));
 
             if (!_totpService.ValidateCode(secret, request.Code))
             {

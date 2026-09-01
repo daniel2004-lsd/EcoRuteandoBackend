@@ -53,8 +53,6 @@ public sealed class SmtpEmailService : IEmailService
 
         using var client = new SmtpClient();
 
-        client.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
-
         await client.ConnectAsync(
             _settings.Host,
             _settings.Port,
