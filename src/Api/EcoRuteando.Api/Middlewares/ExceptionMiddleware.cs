@@ -86,20 +86,13 @@ public sealed class ExceptionMiddleware
         }
         catch (Exception exception)
         {
-            try
-            {
-                var errorFile = Path.Combine("/tmp", "last_error.txt");
-                File.WriteAllText(errorFile, $"[{DateTime.UtcNow:O}] {exception.GetType().FullName}: {exception.Message}\n{exception.StackTrace}\n---INNER---\n{exception.InnerException?.Message}\n{exception.InnerException?.StackTrace}");
-            }
-            catch { }
-
             await LogErrorInBackgroundAsync(exception);
 
             await WriteProblemDetails(
                 context,
                 StatusCodes.Status500InternalServerError,
                 "Internal Server Error",
-                exception.Message);
+                "Ocurrió un error interno. Intente de nuevo más tarde.");
         }
     }
 

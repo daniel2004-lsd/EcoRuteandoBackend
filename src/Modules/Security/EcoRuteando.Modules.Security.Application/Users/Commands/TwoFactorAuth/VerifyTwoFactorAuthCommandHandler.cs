@@ -1,4 +1,3 @@
-using System.Text;
 using EcoRuteando.Modules.Security.Application.Abstractions.Security;
 using EcoRuteando.Modules.Security.Domain.Entities;
 using EcoRuteando.Modules.Security.Domain.Repositories;
@@ -12,15 +11,18 @@ public sealed class VerifyTwoFactorAuthCommandHandler
     : IRequestHandler<VerifyTwoFactorAuthCommand, bool>
 {
     private readonly ITotpService _totpService;
+    private readonly IEncryptionService _encryptionService;
     private readonly ITwoFactorAuthRepository _twoFactorAuthRepository;
     private readonly ISecurityUnitOfWork _unitOfWork;
 
     public VerifyTwoFactorAuthCommandHandler(
         ITotpService totpService,
+        IEncryptionService encryptionService,
         ITwoFactorAuthRepository twoFactorAuthRepository,
         ISecurityUnitOfWork unitOfWork)
     {
         _totpService = totpService;
+        _encryptionService = encryptionService;
         _twoFactorAuthRepository = twoFactorAuthRepository;
         _unitOfWork = unitOfWork;
     }
@@ -37,7 +39,8 @@ public sealed class VerifyTwoFactorAuthCommandHandler
             throw new NotFoundException("2FA no está configurado.");
         }
 
-        var secret = Encoding.UTF8.GetString(twoFactorAuth.EncryptedSecret);
+        var secret = System.Text.Encoding.UTF8.GetString(
+            _encryptionService.Decrypt(twoFactorAuth.EncryptedSecret));
 
         var isValid = _totpService.ValidateCode(secret, request.Code);
 

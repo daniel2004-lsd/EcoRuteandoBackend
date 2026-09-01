@@ -101,6 +101,13 @@ public sealed class LoginWithOAuthCommandHandler
             if (existingUser is not null)
             {
                 user = existingUser;
+
+                if (!user.EmailVerified
+                    && !string.IsNullOrWhiteSpace(oauthUserInfo.Email)
+                    && oauthUserInfo.Email.Equals(user.Email, StringComparison.OrdinalIgnoreCase))
+                {
+                    user.VerifyEmail();
+                }
             }
             else
             {

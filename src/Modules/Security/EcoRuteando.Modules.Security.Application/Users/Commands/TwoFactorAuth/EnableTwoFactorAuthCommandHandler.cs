@@ -12,6 +12,7 @@ public sealed class EnableTwoFactorAuthCommandHandler
     : IRequestHandler<EnableTwoFactorAuthCommand, TwoFactorSetupResponse>
 {
     private readonly ITotpService _totpService;
+    private readonly IEncryptionService _encryptionService;
     private readonly ITwoFactorAuthRepository _twoFactorAuthRepository;
     private readonly IUserRepository _userRepository;
     private readonly ISecurityUnitOfWork _unitOfWork;
@@ -19,12 +20,14 @@ public sealed class EnableTwoFactorAuthCommandHandler
 
     public EnableTwoFactorAuthCommandHandler(
         ITotpService totpService,
+        IEncryptionService encryptionService,
         ITwoFactorAuthRepository twoFactorAuthRepository,
         IUserRepository userRepository,
         ISecurityUnitOfWork unitOfWork,
         IAuditLogService auditLogService)
     {
         _totpService = totpService;
+        _encryptionService = encryptionService;
         _twoFactorAuthRepository = twoFactorAuthRepository;
         _userRepository = userRepository;
         _unitOfWork = unitOfWork;
@@ -56,7 +59,7 @@ public sealed class EnableTwoFactorAuthCommandHandler
             secret, user.Email, "EcoRuteando");
         var recoveryCodes = _totpService.GenerateRecoveryCodes();
 
-        var secretBytes = System.Text.Encoding.UTF8.GetBytes(secret);
+        var secretBytes = _encryptionService.Encrypt(System.Text.Encoding.UTF8.GetBytes(secret));
 
         if (existing is not null)
         {

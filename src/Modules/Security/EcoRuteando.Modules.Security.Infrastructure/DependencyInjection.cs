@@ -81,6 +81,7 @@ public static class DependencyInjection
         services.AddScoped<IEmailTemplateService, EmailTemplateService>();
         services.AddScoped<IOtpProvider, OtpProvider>();
         services.AddScoped<ITotpService, TotpService>();
+        services.AddScoped<IEncryptionService, AesEncryptionService>();
         services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
         services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
 
