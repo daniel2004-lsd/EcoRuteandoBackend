@@ -67,8 +67,7 @@ public sealed class LoginUserCommandHandler
 
         if (user.IsLocked)
         {
-            throw new UnauthorizedException(
-                "La cuenta está bloqueada temporalmente. Intente de nuevo más tarde.");
+            throw new UnauthorizedException("Correo o contraseña incorrectos.");
         }
 
         var isPasswordValid = _passwordHasher.Verify(
