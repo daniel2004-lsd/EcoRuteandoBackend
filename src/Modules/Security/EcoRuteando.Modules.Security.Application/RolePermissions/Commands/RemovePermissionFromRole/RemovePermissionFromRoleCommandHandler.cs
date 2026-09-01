@@ -1,4 +1,5 @@
-﻿using EcoRuteando.Modules.Security.Domain.Repositories;
+﻿using EcoRuteando.Modules.Security.Application.Abstractions.Logging;
+using EcoRuteando.Modules.Security.Domain.Repositories;
 using EcoRuteando.Shared.Abstractions.Persistence;
 using EcoRuteando.Shared.Exceptions;
 using MediatR;
@@ -9,14 +10,17 @@ public sealed class RemovePermissionFromRoleCommandHandler
     : IRequestHandler<RemovePermissionFromRoleCommand>
 {
     private readonly IRolePermissionRepository _rolePermissionRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ISecurityUnitOfWork _unitOfWork;
+    private readonly IAuditLogService _auditLogService;
 
     public RemovePermissionFromRoleCommandHandler(
         IRolePermissionRepository rolePermissionRepository,
-        IUnitOfWork unitOfWork)
+        ISecurityUnitOfWork unitOfWork,
+        IAuditLogService auditLogService)
     {
         _rolePermissionRepository = rolePermissionRepository;
         _unitOfWork = unitOfWork;
+        _auditLogService = auditLogService;
     }
 
     public async Task Handle(
@@ -40,5 +44,12 @@ public sealed class RemovePermissionFromRoleCommandHandler
 
         await _unitOfWork.SaveChangesAsync(
             cancellationToken);
+
+        await _auditLogService.LogAsync(
+            null,
+            "permission.revoked",
+            entityName: "role_permissions",
+            entityId: $"{request.RoleId}/{request.PermissionId}",
+            cancellationToken: cancellationToken);
     }
 }

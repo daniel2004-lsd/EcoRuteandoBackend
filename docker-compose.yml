@@ -1,0 +1,39 @@
+name: ecoruteando_backend
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: dockerfile
+
+    container_name: ecoruteando-backend
+
+    ports:
+      - "5124:5124"
+
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=ecoRuteando_db;Username=postgres;Password=postgres"
+
+      Jwt__SecretKey: "${Jwt__SecretKey}"
+
+      Google__ClientId: "${Google__ClientId}"
+      Google__ClientSecret: "${Google__ClientSecret}"
+
+      Facebook__AppId: "${Facebook__AppId}"
+      Facebook__AppSecret: "${Facebook__AppSecret}"
+
+      EmailSettings__Username: "${EmailSettings__Username}"
+      EmailSettings__Password: "${EmailSettings__Password}"
+      EmailSettings__FromEmail: "${EmailSettings__FromEmail}"
+
+    networks:
+      - ecoruteando_db_default
+      - ecoruteando_default
+
+networks:
+  ecoruteando_db_default:
+    external: true
+  ecoruteando_default:
+    external: true

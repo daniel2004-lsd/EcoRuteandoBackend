@@ -1,4 +1,5 @@
-﻿using EcoRuteando.Modules.Security.Application.Abstractions.Security;
+﻿using EcoRuteando.Modules.Security.Application.Abstractions.Logging;
+using EcoRuteando.Modules.Security.Application.Abstractions.Security;
 using EcoRuteando.Modules.Security.Domain.Repositories;
 using EcoRuteando.Shared.Abstractions.Persistence;
 using EcoRuteando.Shared.Exceptions;
@@ -11,16 +12,22 @@ public sealed class LogoutUserCommandHandler
 {
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IRefreshTokenService _refreshTokenService;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ISessionRepository _sessionRepository;
+    private readonly ISecurityUnitOfWork _unitOfWork;
+    private readonly IAuditLogService _auditLogService;
 
     public LogoutUserCommandHandler(
         IRefreshTokenRepository refreshTokenRepository,
         IRefreshTokenService refreshTokenService,
-        IUnitOfWork unitOfWork)
+        ISessionRepository sessionRepository,
+        ISecurityUnitOfWork unitOfWork,
+        IAuditLogService auditLogService)
     {
         _refreshTokenRepository = refreshTokenRepository;
         _refreshTokenService = refreshTokenService;
+        _sessionRepository = sessionRepository;
         _unitOfWork = unitOfWork;
+        _auditLogService = auditLogService;
     }
 
     public async Task Handle(
@@ -48,10 +55,27 @@ public sealed class LogoutUserCommandHandler
             revokedByIp: null,
             replacedByRefreshTokenHash: null);
 
+        // Revoke session
+        var session = await _sessionRepository.GetByRefreshTokenHashAsync(
+            refreshTokenHash, cancellationToken);
+
+        if (session is not null)
+        {
+            session.Revoke();
+            _sessionRepository.Update(session);
+        }
+
         await _refreshTokenRepository.UpdateAsync(
             refreshToken,
             cancellationToken);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await _auditLogService.LogAsync(
+            refreshToken.UserId,
+            "user.logout",
+            entityName: "users",
+            entityId: refreshToken.UserId.ToString(),
+            cancellationToken: cancellationToken);
     }
 }

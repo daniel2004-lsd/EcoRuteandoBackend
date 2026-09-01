@@ -1,4 +1,5 @@
-﻿using EcoRuteando.Modules.Security.Domain.Entities;
+﻿using EcoRuteando.Modules.Security.Application.Abstractions.Logging;
+using EcoRuteando.Modules.Security.Domain.Entities;
 using EcoRuteando.Modules.Security.Domain.Repositories;
 using EcoRuteando.Shared.Abstractions.Persistence;
 using EcoRuteando.Shared.Exceptions;
@@ -12,18 +13,21 @@ public sealed class AssignPermissionToRoleCommandHandler
     private readonly IRoleRepository _roleRepository;
     private readonly IPermissionRepository _permissionRepository;
     private readonly IRolePermissionRepository _rolePermissionRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ISecurityUnitOfWork _unitOfWork;
+    private readonly IAuditLogService _auditLogService;
 
     public AssignPermissionToRoleCommandHandler(
         IRoleRepository roleRepository,
         IPermissionRepository permissionRepository,
         IRolePermissionRepository rolePermissionRepository,
-        IUnitOfWork unitOfWork)
+        ISecurityUnitOfWork unitOfWork,
+        IAuditLogService auditLogService)
     {
         _roleRepository = roleRepository;
         _permissionRepository = permissionRepository;
         _rolePermissionRepository = rolePermissionRepository;
         _unitOfWork = unitOfWork;
+        _auditLogService = auditLogService;
     }
 
     public async Task Handle(
@@ -69,5 +73,13 @@ public sealed class AssignPermissionToRoleCommandHandler
 
         await _unitOfWork.SaveChangesAsync(
             cancellationToken);
+
+        await _auditLogService.LogAsync(
+            null,
+            "permission.granted",
+            entityName: "role_permissions",
+            entityId: $"{request.RoleId}/{request.PermissionId}",
+            afterData: $"{{\"role\":\"{role.Name}\",\"permission\":\"{permission.Name}\"}}",
+            cancellationToken: cancellationToken);
     }
 }

@@ -1,5 +1,7 @@
 ﻿
 using EcoRuteando.Shared.Exceptions;
+using EcoRuteando.Modules.Security.Application.Abstractions.BackgroundJobs;
+using EcoRuteando.Modules.Security.Application.Abstractions.Logging;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
@@ -8,11 +10,20 @@ namespace EcoRuteando.Api.Middlewares;
 
 public sealed class ExceptionMiddleware
 {
-    private readonly RequestDelegate _next;
+    private const string Source = "EcoRuteando.Api.Middlewares.ExceptionMiddleware";
 
-    public ExceptionMiddleware(RequestDelegate next)
+    private readonly RequestDelegate _next;
+    private readonly IBackgroundTaskQueue _backgroundTaskQueue;
+    private readonly ILogger<ExceptionMiddleware> _logger;
+
+    public ExceptionMiddleware(
+        RequestDelegate next,
+        IBackgroundTaskQueue backgroundTaskQueue,
+        ILogger<ExceptionMiddleware> logger)
     {
         _next = next;
+        _backgroundTaskQueue = backgroundTaskQueue;
+        _logger = logger;
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -65,13 +76,38 @@ public sealed class ExceptionMiddleware
                 "Forbidden",
                 exception.Message);
         }
+        catch (DomainException exception)
+        {
+            await WriteProblemDetails(
+                context,
+                StatusCodes.Status400BadRequest,
+                "Domain Error",
+                exception.Message);
+        }
         catch (Exception exception)
         {
+            await LogErrorInBackgroundAsync(exception);
+
             await WriteProblemDetails(
                 context,
                 StatusCodes.Status500InternalServerError,
                 "Internal Server Error",
-                exception.Message);
+                "Ocurrió un error interno. Intente de nuevo más tarde.");
+        }
+    }
+
+    private async Task LogErrorInBackgroundAsync(Exception exception)
+    {
+        try
+        {
+            await _backgroundTaskQueue.EnqueueAsync<IErrorLogService>(logService =>
+                logService.LogErrorAsync(
+                    exception.Message,
+                    exception,
+                    source: Source));
+        }
+        catch
+        {
         }
     }
 

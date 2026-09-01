@@ -23,7 +23,7 @@ public sealed class UsersController : ControllerBase
     }
 
     [HttpGet]
-    [HasPermission("permissions.read")]
+    [HasPermission("users.read")]
     public async Task<IActionResult> GetUsers(
         CancellationToken cancellationToken)
     {
@@ -36,7 +36,7 @@ public sealed class UsersController : ControllerBase
 
     
     [HttpGet("{id:guid}")]
-    [HasPermission("permissions.read")]
+    [HasPermission("users.read")]
     public async Task<IActionResult> GetUserById(
         Guid id,
         CancellationToken cancellationToken)
@@ -53,7 +53,7 @@ public sealed class UsersController : ControllerBase
 
 
     [HttpPut("{id:guid}")]
-    [HasPermission("permissions.update ")]
+    [HasPermission("users.update")]
     public async Task<IActionResult> UpdateUser(
      Guid id,
     UpdateUserRequest request,
@@ -64,7 +64,8 @@ public sealed class UsersController : ControllerBase
                 id,
                 request.FirstName,
                 request.LastName,
-                request.PhoneNumber
+                request.PhoneNumber,
+                request.PrimaryColor
 
 
             );
@@ -75,7 +76,7 @@ public sealed class UsersController : ControllerBase
 }
 
     [HttpDelete("{id:guid}")]
-    [HasPermission("permissions.delete")]
+    [HasPermission("users.delete")]
     public async Task<IActionResult> DeleteUser(
     Guid id,
     CancellationToken cancellationToken)

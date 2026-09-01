@@ -4,7 +4,9 @@ using EcoRuteando.Modules.Security.Application.Abstractions.Security;
 using EcoRuteando.Modules.Security.Domain.Entities;
 using EcoRuteando.Modules.Security.Domain.Repositories;
 using EcoRuteando.Modules.Security.Application.Abstractions.Email;
+using EcoRuteando.Modules.Security.Application.Abstractions.Logging;
 using EcoRuteando.Shared.Abstractions.Persistence;
+using EcoRuteando.Shared.Exceptions;
 using System.Net;
 
 using MediatR;
@@ -17,17 +19,19 @@ public sealed class ForgotPasswordCommandHandler
     private readonly IUserRepository _userRepository;
     private readonly IPasswordRecoveryRepository _passwordRecoveryRepository;
     private readonly IOtpProvider _otpProvider;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ISecurityUnitOfWork _unitOfWork;
     private readonly IEmailService _emailService;
     private readonly IEmailTemplateService _templateService;
+    private readonly IAuditLogService _auditLogService;
 
     public ForgotPasswordCommandHandler(
     IUserRepository userRepository,
     IPasswordRecoveryRepository passwordRecoveryRepository,
-    IUnitOfWork unitOfWork,
+    ISecurityUnitOfWork unitOfWork,
     IOtpProvider otpProvider,
     IEmailService emailService,
-    IEmailTemplateService templateService)
+    IEmailTemplateService templateService,
+    IAuditLogService auditLogService)
     {
         _userRepository = userRepository;
         _passwordRecoveryRepository = passwordRecoveryRepository;
@@ -35,6 +39,7 @@ public sealed class ForgotPasswordCommandHandler
         _unitOfWork = unitOfWork;
         _emailService = emailService;
         _templateService = templateService;
+        _auditLogService = auditLogService;
     }
 
     public async Task Handle(
@@ -70,13 +75,21 @@ public sealed class ForgotPasswordCommandHandler
 
         var body = _templateService.LoadTemplate("ForgotPassword.html");
 
-        body = body.Replace("{{UserName}}", user.FirstName);
+        body = body.Replace("{{UserName}}", UserNameFormatter.Format(user.FirstName));
         body = body.Replace("{{Code}}", code);
 
         await _emailService.SendAsync(
             user.Email,
             "Recuperación de contraseña - EcoRuteando",
             body);
+
+        await _auditLogService.LogAsync(
+            user.Id,
+            "user.password_recovery_requested",
+            entityName: "users",
+            entityId: user.Id.ToString(),
+            sourceIp: request.RequestIp,
+            cancellationToken: cancellationToken);
     }
 
     private static string ComputeSha256(string value)

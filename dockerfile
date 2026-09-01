@@ -15,6 +15,10 @@ COPY src/Modules/Security/EcoRuteando.Modules.Security.Application/EcoRuteando.M
 COPY src/Modules/Security/EcoRuteando.Modules.Security.Infrastructure/EcoRuteando.Modules.Security.Infrastructure.csproj src/Modules/Security/EcoRuteando.Modules.Security.Infrastructure/
 COPY src/Modules/Security/EcoRuteando.Modules.Security.Presentation/EcoRuteando.Modules.Security.Presentation.csproj src/Modules/Security/EcoRuteando.Modules.Security.Presentation/
 COPY src/Modules/Security/EcoRuteando.Modules.Security/EcoRuteando.Modules.Security.csproj src/Modules/Security/EcoRuteando.Modules.Security/
+COPY src/Modules/Mobility/EcoRuteando.Modules.Mobility.Domain/EcoRuteando.Modules.Mobility.Domain.csproj src/Modules/Mobility/EcoRuteando.Modules.Mobility.Domain/
+COPY src/Modules/Mobility/EcoRuteando.Modules.Mobility.Application/EcoRuteando.Modules.Mobility.Application.csproj src/Modules/Mobility/EcoRuteando.Modules.Mobility.Application/
+COPY src/Modules/Mobility/EcoRuteando.Modules.Mobility.Infrastructure/EcoRuteando.Modules.Mobility.Infrastructure.csproj src/Modules/Mobility/EcoRuteando.Modules.Mobility.Infrastructure/
+COPY src/Modules/Mobility/EcoRuteando.Modules.Mobility.Presentation/EcoRuteando.Modules.Mobility.Presentation.csproj src/Modules/Mobility/EcoRuteando.Modules.Mobility.Presentation/
 COPY src/Api/EcoRuteando.Api/EcoRuteando.Api.csproj src/Api/EcoRuteando.Api/
 
 # Restaurar dependencias

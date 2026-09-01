@@ -1,21 +1,22 @@
 ﻿using EcoRuteando.Modules.Security.Application.Users.Commands.ForgotPassword;
+using EcoRuteando.Modules.Security.Application.Users.Commands.LoginOAuth;
 using EcoRuteando.Modules.Security.Application.Users.Commands.LoginUsers;
 using EcoRuteando.Modules.Security.Application.Users.Commands.LogoutUser;
 using EcoRuteando.Modules.Security.Application.Users.Commands.RefreshToken;
 using EcoRuteando.Modules.Security.Application.Users.Commands.RegisterUser;
 using EcoRuteando.Modules.Security.Application.Users.Commands.ResetPassword;
+using EcoRuteando.Modules.Security.Application.Users.Commands.SendVerificationEmail;
+using EcoRuteando.Modules.Security.Application.Users.Commands.Sessions;
+using EcoRuteando.Modules.Security.Application.Users.Commands.TwoFactorAuth;
+using EcoRuteando.Modules.Security.Application.Users.Commands.VerifyEmail;
 using EcoRuteando.Modules.Security.Application.Users.Queries.GetCurrentUser;
 using EcoRuteando.Modules.Security.Presentation.Contracts.Auth;
 using EcoRuteando.Modules.Security.Presentation.Requests;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EcoRuteando.Modules.Security.Presentation.Controllers
 {
@@ -30,6 +31,7 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
             _mediator = mediator;
         }
 
+        [EnableRateLimiting("auth")]
         [HttpPost("register")]
         public async Task<IActionResult> Register(
             RegisterRequest request,
@@ -51,6 +53,7 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
 
 
 
+        [EnableRateLimiting("auth")]
         [HttpPost("login")]
         public async Task<IActionResult> Login(
             LoginRequest request,
@@ -64,10 +67,7 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
                 command,
                 cancellationToken);
 
-            return Ok(new
-            {
-                Token = token
-            });
+            return Ok(token);
 
         }
 
@@ -121,6 +121,7 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
             return Ok(user);
         }
 
+        [EnableRateLimiting("sensitive")]
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword(
         ForgotPasswordRequest request,
@@ -154,6 +155,170 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
             {
                 message = "La contraseña fue actualizada correctamente."
             });
+        }
+
+        [AllowAnonymous]
+        [EnableRateLimiting("sensitive")]
+        [HttpPost("send-verification")]
+        public async Task<IActionResult> SendVerification(
+            ResendVerificationRequest? request,
+            CancellationToken cancellationToken)
+        {
+            Guid? userId = null;
+
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+
+            if (userIdClaim is not null
+                && Guid.TryParse(userIdClaim.Value, out var parsed))
+            {
+                userId = parsed;
+            }
+
+            await _mediator.Send(
+                new SendVerificationEmailCommand(
+                    userId,
+                    request?.Email,
+                    HttpContext.Connection.RemoteIpAddress?.ToString()),
+                cancellationToken);
+
+            return Ok(new
+            {
+                message = "Si el correo no fue verificado, se envió un código de verificación."
+            });
+        }
+
+        [EnableRateLimiting("sensitive")]
+        [HttpPost("verify-email")]
+        public async Task<IActionResult> VerifyEmail(
+            VerifyEmailRequest request,
+            CancellationToken cancellationToken)
+        {
+            await _mediator.Send(
+                new VerifyEmailCommand(request.Code),
+                cancellationToken);
+
+            return Ok(new
+            {
+                message = "Correo electrónico verificado correctamente."
+            });
+        }
+
+        [EnableRateLimiting("auth")]
+        [HttpPost("oauth/login")]
+        public async Task<IActionResult> OAuthLogin(
+            OAuthLoginRequest request,
+            CancellationToken cancellationToken)
+        {
+            var command = new LoginWithOAuthCommand(
+                request.Provider,
+                request.AccessToken);
+
+            var tokens = await _mediator.Send(
+                command,
+                cancellationToken);
+
+            return Ok(new
+            {
+                tokens.AccessToken,
+                tokens.RefreshToken
+            });
+        }
+
+        // ── Sessions ──────────────────────────────────────────────
+
+        [Authorize]
+        [HttpGet("sessions")]
+        public async Task<IActionResult> GetSessions(
+            CancellationToken cancellationToken)
+        {
+            var userId = Guid.Parse(
+                User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var sessions = await _mediator.Send(
+                new GetActiveSessionsQuery(userId),
+                cancellationToken);
+
+            return Ok(sessions);
+        }
+
+        [Authorize]
+        [HttpDelete("sessions/{sessionId:guid}")]
+        public async Task<IActionResult> RevokeSession(
+            Guid sessionId,
+            CancellationToken cancellationToken)
+        {
+            var userId = Guid.Parse(
+                User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            await _mediator.Send(
+                new RevokeSessionCommand(userId, sessionId),
+                cancellationToken);
+
+            return NoContent();
+        }
+
+        [Authorize]
+        [HttpDelete("sessions")]
+        public async Task<IActionResult> RevokeAllSessions(
+            CancellationToken cancellationToken)
+        {
+            var userId = Guid.Parse(
+                User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var count = await _mediator.Send(
+                new RevokeAllSessionsCommand(userId),
+                cancellationToken);
+
+            return Ok(new { revoked = count });
+        }
+
+        // ── Two-Factor Authentication ─────────────────────────────
+
+        [Authorize]
+        [HttpPost("2fa/enable")]
+        public async Task<IActionResult> EnableTwoFactorAuth(
+            CancellationToken cancellationToken)
+        {
+            var userId = Guid.Parse(
+                User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var result = await _mediator.Send(
+                new EnableTwoFactorAuthCommand(userId),
+                cancellationToken);
+
+            return Ok(result);
+        }
+
+        [Authorize]
+        [HttpPost("2fa/verify")]
+        public async Task<IActionResult> VerifyTwoFactorAuth(
+            VerifyTwoFactorAuthRequest request,
+            CancellationToken cancellationToken)
+        {
+            var userId = Guid.Parse(
+                User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            await _mediator.Send(
+                new VerifyTwoFactorAuthCommand(userId, request.Code),
+                cancellationToken);
+
+            return Ok(new { message = "2FA activado correctamente." });
+        }
+
+        [Authorize]
+        [HttpPost("2fa/disable")]
+        public async Task<IActionResult> DisableTwoFactorAuth(
+            DisableTwoFactorAuthRequest request,
+            CancellationToken cancellationToken)
+        {
+            var userId = Guid.Parse(
+                User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            await _mediator.Send(
+                new DisableTwoFactorAuthCommand(userId, request.Code),
+                cancellationToken);
+
+            return Ok(new { message = "2FA desactivado correctamente." });
         }
     }
 }
