@@ -1,4 +1,5 @@
-﻿using EcoRuteando.Modules.Security.Domain.Repositories;
+﻿using EcoRuteando.Modules.Security.Application.Abstractions.Logging;
+using EcoRuteando.Modules.Security.Domain.Repositories;
 using EcoRuteando.Shared.Abstractions.Persistence;
 using EcoRuteando.Shared.Exceptions;
 using MediatR;
@@ -9,14 +10,17 @@ public sealed class RemoveRoleFromUserCommandHandler
     : IRequestHandler<RemoveRoleFromUserCommand>
 {
     private readonly IUserRoleRepository _userRoleRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ISecurityUnitOfWork _unitOfWork;
+    private readonly IAuditLogService _auditLogService;
 
     public RemoveRoleFromUserCommandHandler(
         IUserRoleRepository userRoleRepository,
-        IUnitOfWork unitOfWork)
+        ISecurityUnitOfWork unitOfWork,
+        IAuditLogService auditLogService)
     {
         _userRoleRepository = userRoleRepository;
         _unitOfWork = unitOfWork;
+        _auditLogService = auditLogService;
     }
 
     public async Task Handle(
@@ -40,5 +44,12 @@ public sealed class RemoveRoleFromUserCommandHandler
 
         await _unitOfWork.SaveChangesAsync(
             cancellationToken);
+
+        await _auditLogService.LogAsync(
+            request.UserId,
+            "role.removed",
+            entityName: "user_roles",
+            entityId: $"{request.UserId}/{request.RoleId}",
+            cancellationToken: cancellationToken);
     }
 }
