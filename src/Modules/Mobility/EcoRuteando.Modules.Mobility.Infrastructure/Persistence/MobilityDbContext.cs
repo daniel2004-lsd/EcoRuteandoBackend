@@ -22,6 +22,8 @@ public class MobilityDbContext : DbContext, IMobilityUnitOfWork
 
     public DbSet<TransportFactor> TransportFactors => Set<TransportFactor>();
 
+    public DbSet<FavoriteRoute> FavoriteRoutes => Set<FavoriteRoute>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -46,5 +48,6 @@ public class MobilityDbContext : DbContext, IMobilityUnitOfWork
         modelBuilder.ApplyConfiguration(new RoutePoiConfiguration());
         modelBuilder.ApplyConfiguration(new RouteUsageConfiguration());
         modelBuilder.ApplyConfiguration(new TransportFactorConfiguration());
+        modelBuilder.ApplyConfiguration(new FavoriteRouteConfiguration());
     }
 }

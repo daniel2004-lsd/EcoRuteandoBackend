@@ -44,6 +44,7 @@ public static class DependencyInjection
         services.AddScoped<IPointOfInterestRepository, PointOfInterestRepository>();
         services.AddScoped<IRouteUsageRepository, RouteUsageRepository>();
         services.AddScoped<ITransportFactorRepository, TransportFactorRepository>();
+        services.AddScoped<IFavoriteRouteRepository, FavoriteRouteRepository>();
 
         // Google Maps
         services.Configure<GoogleMapsOptions>(
