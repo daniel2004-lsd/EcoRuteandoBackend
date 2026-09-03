@@ -20,3 +20,7 @@ obj/
 .env
 .env.*
 !.env.example
+
+# OpenCode (herramienta del agente, no del proyecto)
+opencode.json
+.opencode/
