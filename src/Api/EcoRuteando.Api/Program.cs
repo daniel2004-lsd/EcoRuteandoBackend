@@ -51,10 +51,13 @@ namespace EcoRuteando.Api
                     }
                 };
 
-                // Política para endpoints de auth: 5 requests por 5 min por IP
+                // Política para endpoints de auth: 20 requests por 5 min por IP.
+                // El control de reintentos por cuenta (escalonado) vive en la lógica de
+                // LoginUserCommandHandler; este límite por IP es solo una salvaguarda
+                // anti-fuerza-bruta global y no debe "tapar" ese escalonado.
                 options.AddFixedWindowLimiter("auth", opt =>
                 {
-                    opt.PermitLimit = 5;
+                    opt.PermitLimit = 20;
                     opt.Window = TimeSpan.FromMinutes(5);
                     opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
                     opt.QueueLimit = 0;

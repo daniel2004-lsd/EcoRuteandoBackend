@@ -65,21 +65,26 @@ public sealed class LoginUserCommandHandler
 
         var policy = await _securityPolicyRepository.GetAsync(cancellationToken);
 
+        var maxAttempts = policy?.MaxFailedAttempts ?? 5;
+
         if (user.IsLocked)
         {
-            throw new UnauthorizedException("Correo o contraseña incorrectos.");
+            throw new UnauthorizedException(
+                "Demasiados intentos fallidos. Cuenta temporalmente bloqueada.",
+                attemptsRemaining: 0,
+                retryAfterSeconds: user.GetLockedSecondsRemaining());
         }
 
-        var isPasswordValid = _passwordHasher.Verify(
-            request.Password,
-            user.PasswordHash!);
+        var isPasswordValid = user.PasswordHash is not null
+            && _passwordHasher.Verify(
+                request.Password,
+                user.PasswordHash);
 
         if (!isPasswordValid)
         {
-            var maxAttempts = policy?.MaxFailedAttempts ?? 5;
-            var lockoutMinutes = policy?.LockoutTimeMinutes ?? 30;
-
-            user.IncrementFailedAttempts(maxAttempts, lockoutMinutes);
+            user.IncrementFailedAttempts(
+                maxAttempts,
+                policy?.LockoutTimeMinutes ?? 30);
 
             await _userRepository.UpdateAsync(user, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -91,7 +96,18 @@ public sealed class LoginUserCommandHandler
                 entityId: user.Id.ToString(),
                 cancellationToken: cancellationToken);
 
-            throw new UnauthorizedException("Correo o contraseña incorrectos.");
+            if (user.IsLocked)
+            {
+                throw new UnauthorizedException(
+                    "Demasiados intentos fallidos. Cuenta temporalmente bloqueada.",
+                    attemptsRemaining: 0,
+                    retryAfterSeconds: user.GetLockedSecondsRemaining());
+            }
+
+            throw new UnauthorizedException(
+                $"Correo o contraseña incorrectos. Te quedan {user.GetAttemptsRemaining(maxAttempts)} intentos.",
+                attemptsRemaining: user.GetAttemptsRemaining(maxAttempts),
+                retryAfterSeconds: 0);
         }
 
         if (!user.EmailVerified)
