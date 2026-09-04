@@ -91,8 +91,8 @@ namespace EcoRuteando.Api
                         "http://localhost:3001",
                         "http://localhost:3007",
                         "http://localhost:3002")
-                        .AllowAnyHeader()
-                        .AllowAnyMethod()
+                        .WithHeaders("Authorization", "Content-Type")
+                        .WithMethods("GET", "POST", "PUT", "DELETE")
                         .AllowCredentials();
                 });
             });
