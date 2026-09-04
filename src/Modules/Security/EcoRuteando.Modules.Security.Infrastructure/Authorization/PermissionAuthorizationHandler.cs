@@ -21,6 +21,13 @@ public sealed class PermissionAuthorizationHandler
         AuthorizationHandlerContext context,
         PermissionRequirement requirement)
     {
+        // Reject tokens with two_factor_pending role — user must complete 2FA first
+        var roleClaim = context.User.FindFirst(ClaimTypes.Role);
+        if (roleClaim?.Value == "two_factor_pending")
+        {
+            return;
+        }
+
         var userIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier);
 
         if (userIdClaim is null)

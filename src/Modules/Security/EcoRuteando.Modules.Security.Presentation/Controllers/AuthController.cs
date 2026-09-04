@@ -72,6 +72,7 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
         }
 
 
+        [EnableRateLimiting("auth")]
         [HttpPost("refresh")]
         public async Task<IActionResult> Refresh(
         RefreshTokenRequest request,
@@ -139,6 +140,7 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
             });
         }
 
+        [EnableRateLimiting("sensitive")]
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword(
         ResetPasswordRequest request,
