@@ -22,6 +22,15 @@ public interface IRouteUsageRepository
         Guid routeId,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Agrega los trayectos completados en un rango de fechas (opcional)
+    /// para el portal de estadísticas (HU-13 / CU08).
+    /// </summary>
+    Task<RouteUsageAnalytics> GetAnalyticsAsync(
+        DateTime? from = null,
+        DateTime? to = null,
+        CancellationToken cancellationToken = default);
+
     Task AddAsync(
         RouteUsage routeUsage,
         CancellationToken cancellationToken = default);
