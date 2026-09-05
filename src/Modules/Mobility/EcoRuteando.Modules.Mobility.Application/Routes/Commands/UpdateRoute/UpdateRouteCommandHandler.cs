@@ -34,10 +34,31 @@ public sealed class UpdateRouteCommandHandler
             throw new NotFoundException("La ruta no existe.");
         }
 
+        // Regla de negocio CU03: un usuario solo puede modificar rutas que él creó.
+        // El administrador puede modificar cualquier ruta.
+        if (!request.IsAdmin
+            && (route.CreatedBy is null
+                || route.CreatedBy != request.RequestedByUserId))
+        {
+            throw new ForbiddenException(
+                "Solo puedes modificar las rutas que tú mismo creaste.");
+        }
+
         if (!PgEnumExtensions.TryFromPgName(request.TransportType, out TransportType transportType))
         {
             throw new DomainException(
                 $"El tipo de transporte '{request.TransportType}' no es válido.");
+        }
+
+        // Regla de negocio CU03: no permitir rutas duplicadas por nombre
+        // (se excluye la propia ruta al actualizarla).
+        if (await _routeRepository.ExistsByNameAsync(
+                request.Name,
+                excludeId: request.Id,
+                cancellationToken: cancellationToken))
+        {
+            throw new DomainException(
+                $"Ya existe una ruta con el nombre '{request.Name}'.");
         }
 
         Point? startLocation = null;

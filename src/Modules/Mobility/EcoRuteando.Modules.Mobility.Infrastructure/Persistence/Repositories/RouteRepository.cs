@@ -44,6 +44,28 @@ public sealed class RouteRepository : IRouteRepository
         return await query.ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Route>> GetAllAsync(
+        CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Routes
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<bool> ExistsByNameAsync(
+        string name,
+        Guid? excludeId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var normalized = name.Trim().ToLowerInvariant();
+
+        return await _dbContext.Routes
+            .AnyAsync(
+                r => r.Name.Trim().ToLower() == normalized
+                     && (!excludeId.HasValue || r.Id != excludeId.Value),
+                cancellationToken);
+    }
+
     public async Task AddAsync(
         Route route,
         CancellationToken cancellationToken = default)
