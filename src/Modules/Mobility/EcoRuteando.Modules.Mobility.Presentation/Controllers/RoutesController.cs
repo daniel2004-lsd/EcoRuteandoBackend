@@ -30,6 +30,7 @@ public sealed class RoutesController : ControllerBase
     [HasPermission("routes.read")]
     public async Task<IActionResult> GetRoutes(
         [FromQuery] string? transportType,
+        [FromQuery] bool? includeInactive,
         CancellationToken cancellationToken)
     {
         TransportType? type = null;
@@ -41,7 +42,7 @@ public sealed class RoutesController : ControllerBase
         }
 
         var routes = await _mediator.Send(
-            new GetRoutesQuery(type),
+            new GetRoutesQuery(type, includeInactive ?? false),
             cancellationToken);
 
         return Ok(routes);
@@ -95,7 +96,13 @@ public sealed class RoutesController : ControllerBase
             });
         }
 
-        await _mediator.Send(command, cancellationToken);
+        await _mediator.Send(
+            command with
+            {
+                RequestedByUserId = GetUserId(),
+                IsAdmin = User.IsInRole("Admin")
+            },
+            cancellationToken);
 
         return NoContent();
     }
@@ -107,7 +114,10 @@ public sealed class RoutesController : ControllerBase
         CancellationToken cancellationToken)
     {
         await _mediator.Send(
-            new DeleteRouteCommand(id),
+            new DeleteRouteCommand(
+                id,
+                RequestedByUserId: GetUserId(),
+                IsAdmin: User.IsInRole("Admin")),
             cancellationToken);
 
         return NoContent();
