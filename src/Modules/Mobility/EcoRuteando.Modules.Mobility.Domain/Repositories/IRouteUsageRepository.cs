@@ -13,6 +13,15 @@ public interface IRouteUsageRepository
         Guid userId,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Indica si el usuario ha completado al menos un trayecto de la ruta
+    /// (precondición de la HU-11 "Calificar rutas").
+    /// </summary>
+    Task<bool> HasCompletedUsageAsync(
+        Guid userId,
+        Guid routeId,
+        CancellationToken cancellationToken = default);
+
     Task AddAsync(
         RouteUsage routeUsage,
         CancellationToken cancellationToken = default);

@@ -45,6 +45,20 @@ public sealed class RouteUsageRepository : IRouteUsageRepository
         await _dbContext.RouteUsages.AddAsync(routeUsage, cancellationToken);
     }
 
+    public async Task<bool> HasCompletedUsageAsync(
+        Guid userId,
+        Guid routeId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.RouteUsages
+            .AsNoTracking()
+            .AnyAsync(
+                ru => ru.UserId == userId
+                    && ru.RouteId == routeId
+                    && ru.Completed,
+                cancellationToken);
+    }
+
     public void Update(RouteUsage routeUsage)
     {
         _dbContext.RouteUsages.Update(routeUsage);
