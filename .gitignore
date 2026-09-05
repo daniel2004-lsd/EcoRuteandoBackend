@@ -24,3 +24,6 @@ obj/
 # OpenCode (herramienta del agente, no del proyecto)
 opencode.json
 .opencode/
+
+# Memoria del agente (no del proyecto)
+.project-memory/
