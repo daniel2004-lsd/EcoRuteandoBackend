@@ -28,8 +28,6 @@ public sealed class SharedRoute : Entity<Guid>
 
     public bool Confirmed { get; private set; }
 
-    public RouteUsage? Usage { get; private set; }
-
     private SharedRoute()
     {
     }

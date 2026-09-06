@@ -20,7 +20,6 @@ public sealed class SharedRouteRepository : ISharedRouteRepository
     {
         return await _dbContext.SharedRoutes
             .AsNoTracking()
-            .Include(sr => sr.Usage)
             .FirstOrDefaultAsync(
                 sr => sr.Id == id && sr.UserId == userId,
                 cancellationToken);
@@ -32,7 +31,6 @@ public sealed class SharedRouteRepository : ISharedRouteRepository
     {
         return await _dbContext.SharedRoutes
             .AsNoTracking()
-            .Include(sr => sr.Usage)
             .Where(sr => sr.UserId == userId)
             .OrderByDescending(sr => sr.CreatedAt)
             .ToListAsync(cancellationToken);

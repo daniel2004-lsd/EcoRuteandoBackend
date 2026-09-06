@@ -39,9 +39,5 @@ public sealed class SharedRouteConfiguration
         builder.Property(sr => sr.CreatedAt)
             .HasColumnName("created_at")
             .HasDefaultValueSql("now()");
-
-        builder.HasOne(sr => sr.Usage)
-            .WithMany()
-            .HasForeignKey(sr => sr.UsageId);
     }
 }
