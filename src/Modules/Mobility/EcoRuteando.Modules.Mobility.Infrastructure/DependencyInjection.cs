@@ -1,8 +1,10 @@
 using EcoRuteando.Modules.Mobility.Application.Abstractions.GoogleMaps;
+using EcoRuteando.Modules.Mobility.Application.Abstractions.Weather;
 using EcoRuteando.Modules.Mobility.Domain.Enums;
 using EcoRuteando.Modules.Mobility.Domain.Repositories;
 using EcoRuteando.Modules.Mobility.Infrastructure.GoogleMaps;
 using EcoRuteando.Modules.Mobility.Infrastructure.Persistence;
+using EcoRuteando.Modules.Mobility.Infrastructure.Weather;
 using EcoRuteando.Modules.Mobility.Infrastructure.Persistence.Repositories;
 using EcoRuteando.Shared.Abstractions.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -53,6 +55,17 @@ public static class DependencyInjection
             configuration.GetSection("GoogleMaps"));
 
         services.AddHttpClient<IGoogleMapsService, GoogleMapsService>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(30);
+        });
+
+        // Google Weather API
+        services.Configure<GoogleWeatherOptions>(options =>
+        {
+            options.ApiKey = configuration["GoogleMaps:ApiKey"] ?? string.Empty;
+        });
+
+        services.AddHttpClient<IWeatherService, WeatherService>(client =>
         {
             client.Timeout = TimeSpan.FromSeconds(30);
         });
