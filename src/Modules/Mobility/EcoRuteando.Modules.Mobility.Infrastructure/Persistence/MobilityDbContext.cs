@@ -24,6 +24,8 @@ public class MobilityDbContext : DbContext, IMobilityUnitOfWork
 
     public DbSet<FavoriteRoute> FavoriteRoutes => Set<FavoriteRoute>();
 
+    public DbSet<SharedRoute> SharedRoutes => Set<SharedRoute>();
+
     public DbSet<Rating> Ratings => Set<Rating>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -51,6 +53,7 @@ public class MobilityDbContext : DbContext, IMobilityUnitOfWork
         modelBuilder.ApplyConfiguration(new RouteUsageConfiguration());
         modelBuilder.ApplyConfiguration(new TransportFactorConfiguration());
         modelBuilder.ApplyConfiguration(new FavoriteRouteConfiguration());
+        modelBuilder.ApplyConfiguration(new SharedRouteConfiguration());
         modelBuilder.ApplyConfiguration(new RatingConfiguration());
     }
 }
