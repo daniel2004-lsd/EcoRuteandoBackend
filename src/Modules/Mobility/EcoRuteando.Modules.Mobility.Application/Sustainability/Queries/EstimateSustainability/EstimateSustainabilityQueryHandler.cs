@@ -104,6 +104,7 @@ public sealed class EstimateSustainabilityQueryHandler
         {
             TransportType.Bike => "bicycling",
             TransportType.Walking => "walking",
+            TransportType.Car => "driving",
             _ => "transit"
         };
     }

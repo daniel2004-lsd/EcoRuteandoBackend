@@ -32,6 +32,8 @@ public sealed class GetTripByIdQueryHandler
             usage.Id,
             usage.RouteId,
             usage.Route?.Name ?? "Ruta eliminada",
+            usage.Route?.StartName ?? "Origen",
+            usage.Route?.DestinationName ?? "Destino",
             usage.TransportMode?.ToPgName(),
             usage.Source.ToPgName(),
             usage.StartedAt,
