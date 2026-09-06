@@ -107,6 +107,50 @@ public sealed class WeatherService : IWeatherService
         }
     }
 
+    public async Task<List<WeatherForecastDayResponse>?> GetDailyForecastAsync(
+        double lat,
+        double lng,
+        int days,
+        string? languageCode = null,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var lang = string.IsNullOrWhiteSpace(languageCode) ? "es" : languageCode;
+            var url = BuildUrl(
+                "forecast/days:lookup",
+                $"location.latitude={Invariant(lat)}&location.longitude={Invariant(lng)}&days={Math.Clamp(days, 1, 10)}&languageCode={lang}");
+
+            if (await GetJsonAsync(url, cancellationToken) is not { } json ||
+                !json.TryGetProperty("forecastDays", out var forecastDays))
+            {
+                return null;
+            }
+
+            var result = new List<WeatherForecastDayResponse>();
+            foreach (var day in forecastDays.EnumerateArray())
+            {
+                result.Add(new WeatherForecastDayResponse
+                {
+                    Date = ParseDate(day.GetProperty("displayDate")),
+                    MaxTemperatureC = GetDouble(day, "maxTemperature", "degrees"),
+                    MinTemperatureC = GetDouble(day, "minTemperature", "degrees"),
+                    Condition = GetString(day, "daytimeForecast", "weatherCondition", "type") ?? string.Empty,
+                    IconBaseUri = GetString(day, "daytimeForecast", "weatherCondition", "iconBaseUri") ?? string.Empty,
+                    Sunrise = GetString(day, "sunEvents", "sunriseTime"),
+                    Sunset = GetString(day, "sunEvents", "sunsetTime")
+                });
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error calling Google Weather API (forecast/days)");
+            return null;
+        }
+    }
+
     private async Task<JsonElement?> GetJsonAsync(string url, CancellationToken ct)
     {
         var response = await _httpClient.GetAsync(url, ct);
@@ -179,4 +223,15 @@ public sealed class WeatherService : IWeatherService
 
     private static string Invariant(double value)
         => value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+    private static DateOnly ParseDate(JsonElement displayDate)
+    {
+        var year = GetInt(displayDate, "year");
+        var month = GetInt(displayDate, "month");
+        var day = GetInt(displayDate, "day");
+
+        return year > 0 && month is >= 1 and <= 12 && day is >= 1 and <= 31
+            ? new DateOnly(year, month, day)
+            : DateOnly.FromDateTime(DateTime.UtcNow);
+    }
 }

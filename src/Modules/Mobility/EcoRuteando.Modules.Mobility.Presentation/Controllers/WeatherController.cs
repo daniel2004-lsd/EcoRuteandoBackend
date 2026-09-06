@@ -1,4 +1,5 @@
 using EcoRuteando.Modules.Mobility.Application.Weather.Queries.GetWeather;
+using EcoRuteando.Modules.Mobility.Application.Weather.Queries.GetWeatherCurrent;
 using EcoRuteando.Shared.Authorization;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -33,6 +34,23 @@ public sealed class WeatherController : ControllerBase
     {
         var result = await _mediator.Send(
             new GetWeatherQuery(originLat, originLng, destinationLat, destinationLng),
+            cancellationToken);
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Condiciones climáticas actuales de un punto específico (ej. Neiva) con sus alertas.
+    /// </summary>
+    [HttpGet("current")]
+    [HasPermission("routes.read")]
+    public async Task<IActionResult> GetCurrent(
+        [FromQuery] double lat,
+        [FromQuery] double lng,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new GetWeatherCurrentQuery(lat, lng),
             cancellationToken);
 
         return Ok(result);

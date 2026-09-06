@@ -12,6 +12,13 @@ public interface IWeatherService
         double lng,
         string? languageCode = null,
         CancellationToken cancellationToken = default);
+
+    Task<List<WeatherForecastDayResponse>?> GetDailyForecastAsync(
+        double lat,
+        double lng,
+        int days,
+        string? languageCode = null,
+        CancellationToken cancellationToken = default);
 }
 
 public sealed class WeatherConditionsResponse
@@ -43,4 +50,15 @@ public sealed class WeatherAlertResponse
     public DateTimeOffset? StartTime { get; init; }
     public DateTimeOffset? ExpirationTime { get; init; }
     public string? DataSource { get; init; }
+}
+
+public sealed class WeatherForecastDayResponse
+{
+    public DateOnly Date { get; init; }
+    public double MaxTemperatureC { get; init; }
+    public double MinTemperatureC { get; init; }
+    public string Condition { get; init; } = string.Empty;
+    public string IconBaseUri { get; init; } = string.Empty;
+    public string? Sunrise { get; init; }
+    public string? Sunset { get; init; }
 }
