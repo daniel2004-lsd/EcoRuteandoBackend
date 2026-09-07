@@ -5,16 +5,18 @@ using EcoRuteando.Modules.Mobility.Infrastructure;
 using EcoRuteando.Modules.Security.Application;
 using EcoRuteando.Modules.Security.Infrastructure;
 using EcoRuteando.Modules.Security.Infrastructure.Authorization;
+using EcoRuteando.Modules.Security.Infrastructure.Bootstrap;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 
 namespace EcoRuteando.Api
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -138,6 +140,16 @@ namespace EcoRuteando.Api
 
 
             var app = builder.Build();
+
+            // Bootstrap del administrador inicial (Admin__*): crea el usuario,
+            // le asigna 'Admin' como rol principal y verifica su correo.
+            using (var scope = app.Services.CreateScope())
+            {
+                var adminBootstrap = scope.ServiceProvider
+                    .GetRequiredService<IAdminBootstrapService>();
+
+                await adminBootstrap.EnsureAdminAsync();
+            }
 
             // Detrás del proxy inverso (nginx): reconstruye la IP real del cliente
             // a partir de X-Forwarded-For para que el rate limiting sea por usuario
