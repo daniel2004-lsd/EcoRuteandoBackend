@@ -24,11 +24,14 @@ public sealed class ExportsController : ControllerBase
     /// <summary>
     /// Exporta el historial de trayectos del usuario autenticado (CU19).
     /// Formatos admitidos: csv, json, xlsx.
+    /// Opcional: from/to filtran por fecha de inicio del trayecto (RF29.2).
     /// </summary>
     [HttpGet("trips")]
     [HasPermission("routes.read")]
     public async Task<IActionResult> ExportTrips(
         [FromQuery] string format,
+        [FromQuery] DateTime? from,
+        [FromQuery] DateTime? to,
         CancellationToken cancellationToken)
     {
         if (!TryParseFormat(format, out var exportFormat))
@@ -39,7 +42,7 @@ public sealed class ExportsController : ControllerBase
         var userId = GetRequiredUserId();
 
         var file = await _mediator.Send(
-            new GetTripsExportQuery(userId, exportFormat),
+            new GetTripsExportQuery(userId, exportFormat, from, to),
             cancellationToken);
 
         return File(file.Content, file.ContentType, file.FileName);

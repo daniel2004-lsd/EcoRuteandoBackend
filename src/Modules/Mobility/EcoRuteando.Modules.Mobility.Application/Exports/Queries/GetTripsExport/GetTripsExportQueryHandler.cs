@@ -26,9 +26,28 @@ public sealed class GetTripsExportQueryHandler
         GetTripsExportQuery request,
         CancellationToken cancellationToken)
     {
-        var usages = await _routeUsageRepository.GetByUserAsync(
-            request.UserId,
-            cancellationToken);
+        // Filtro de período (RF29.2): From inclusive y To inclusive,
+        // el día final se interpreta hasta las 23:59:59.999.
+        bool IsInPeriod(RouteUsage usage)
+        {
+            if (request.From.HasValue && usage.StartedAt < request.From.Value.Date)
+            {
+                return false;
+            }
+
+            if (request.To.HasValue && usage.StartedAt >= request.To.Value.Date.AddDays(1))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        var usages = (await _routeUsageRepository.GetByUserAsync(
+                request.UserId,
+                cancellationToken))
+            .Where(IsInPeriod)
+            .ToList();
 
         var headers = new[]
         {
