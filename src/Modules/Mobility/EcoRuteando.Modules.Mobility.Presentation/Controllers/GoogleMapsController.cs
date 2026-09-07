@@ -62,18 +62,17 @@ public sealed class GoogleMapsController : ControllerBase
 
         if (result.Status == "ZERO_RESULTS")
         {
-            var friendlyMode = travelMode switch
+            var (friendlyMode, suggestion) = travelMode switch
             {
-                "walking" => "a pie",
-                "bicycling" => "en bicicleta",
-                "transit" => "en transporte público",
-                "driving" => "en automóvil",
-                _ => $"en modo {travelMode}"
+                "bicycling" => ("en bicicleta", "Intenta a pie o en automóvil."),
+                "transit" => ("en transporte público", "En Neiva puede que no haya rutas de bus disponibles para este trayecto. Intenta a pie o en automóvil."),
+                "driving" => ("en automóvil", "Intenta caminando."),
+                _ => ("a pie", "Intenta en automóvil.")
             };
 
             return NotFound(new
             {
-                message = $"No existe una ruta {friendlyMode} entre el origen y el destino. Prueba con otro modo de transporte."
+                message = $"No existe una ruta {friendlyMode} entre el origen y el destino. {suggestion}"
             });
         }
 

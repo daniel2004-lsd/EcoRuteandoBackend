@@ -19,6 +19,8 @@ public sealed record GetTripByIdResponse(
     Guid UsageId,
     Guid RouteId,
     string RouteName,
+    string StartName,
+    string DestinationName,
     string? TransportMode,
     string Source,
     DateTime StartedAt,
