@@ -34,6 +34,7 @@ public static class DependencyInjection
                     o.MapEnum<TransportType>("transport_type", "mobility");
                     o.MapEnum<RouteStatus>("route_status", "mobility");
                     o.MapEnum<UsageSource>("usage_source", "mobility");
+                    o.MapEnum<ReportStatus>("report_status", "community");
                     o.UseNetTopologySuite();
                 });
         });
@@ -49,6 +50,7 @@ public static class DependencyInjection
         services.AddScoped<IFavoriteRouteRepository, FavoriteRouteRepository>();
         services.AddScoped<ISharedRouteRepository, SharedRouteRepository>();
         services.AddScoped<IRatingRepository, RatingRepository>();
+        services.AddScoped<IObstacleReportRepository, ObstacleReportRepository>();
 
         // Google Maps
         services.Configure<GoogleMapsOptions>(

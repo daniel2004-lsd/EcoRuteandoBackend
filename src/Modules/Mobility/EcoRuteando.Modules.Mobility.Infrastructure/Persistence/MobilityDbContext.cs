@@ -28,6 +28,8 @@ public class MobilityDbContext : DbContext, IMobilityUnitOfWork
 
     public DbSet<Rating> Ratings => Set<Rating>();
 
+    public DbSet<ObstacleReport> ObstacleReports => Set<ObstacleReport>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -47,6 +49,11 @@ public class MobilityDbContext : DbContext, IMobilityUnitOfWork
             "usage_source",
             new[] { "web", "mobile", "pwa" });
 
+        modelBuilder.HasPostgresEnum(
+            "community",
+            "report_status",
+            new[] { "pending", "under_review", "validated", "rejected" });
+
         modelBuilder.ApplyConfiguration(new RouteConfiguration());
         modelBuilder.ApplyConfiguration(new PointOfInterestConfiguration());
         modelBuilder.ApplyConfiguration(new RoutePoiConfiguration());
@@ -55,5 +62,6 @@ public class MobilityDbContext : DbContext, IMobilityUnitOfWork
         modelBuilder.ApplyConfiguration(new FavoriteRouteConfiguration());
         modelBuilder.ApplyConfiguration(new SharedRouteConfiguration());
         modelBuilder.ApplyConfiguration(new RatingConfiguration());
+        modelBuilder.ApplyConfiguration(new ObstacleReportConfiguration());
     }
 }
