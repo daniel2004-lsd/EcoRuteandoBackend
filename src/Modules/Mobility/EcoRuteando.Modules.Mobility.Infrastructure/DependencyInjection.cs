@@ -1,7 +1,9 @@
+using EcoRuteando.Modules.Mobility.Application.Abstractions.Export;
 using EcoRuteando.Modules.Mobility.Application.Abstractions.GoogleMaps;
 using EcoRuteando.Modules.Mobility.Application.Abstractions.Weather;
 using EcoRuteando.Modules.Mobility.Domain.Enums;
 using EcoRuteando.Modules.Mobility.Domain.Repositories;
+using EcoRuteando.Modules.Mobility.Infrastructure.Export;
 using EcoRuteando.Modules.Mobility.Infrastructure.GoogleMaps;
 using EcoRuteando.Modules.Mobility.Infrastructure.Persistence;
 using EcoRuteando.Modules.Mobility.Infrastructure.Weather;
@@ -51,6 +53,9 @@ public static class DependencyInjection
         services.AddScoped<ISharedRouteRepository, SharedRouteRepository>();
         services.AddScoped<IRatingRepository, RatingRepository>();
         services.AddScoped<IObstacleReportRepository, ObstacleReportRepository>();
+
+        // Exportación de archivos (CU19): CSV, JSON y XLSX
+        services.AddScoped<IExportFileService, ExportFileService>();
 
         // Google Maps
         services.Configure<GoogleMapsOptions>(
