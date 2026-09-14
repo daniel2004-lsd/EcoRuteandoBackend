@@ -122,6 +122,34 @@ namespace EcoRuteando.Modules.Security.Domain.Entities
             PrimaryColor = primaryColor;
         }
 
+        /// <summary>
+        /// Actualiza los datos personales del propio usuario (CU12/RF5).
+        /// Requiere que la identidad ya haya sido confirmada con la
+        /// contraseña actual a nivel de aplicación.
+        /// </summary>
+        public void UpdateProfile(
+            string firstName,
+            string? lastName,
+            string email,
+            string? phoneNumber)
+        {
+            if (string.IsNullOrWhiteSpace(firstName))
+            {
+                throw new DomainException("El nombre es obligatorio.");
+            }
+
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                throw new DomainException("El correo electrónico es obligatorio.");
+            }
+
+            FirstName = firstName.Trim();
+            LastName = lastName?.Trim();
+            Email = email.Trim().ToLowerInvariant();
+            PhoneNumber = phoneNumber?.Trim();
+            UpdatedAt = DateTime.UtcNow;
+        }
+
         public void RecordLogin()
         {
             LastLogin = DateTime.UtcNow;

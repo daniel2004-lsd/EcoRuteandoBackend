@@ -38,6 +38,7 @@ public sealed class GetCurrentUserQueryHandler
             user.FirstName,
             user.LastName,
             user.Email,
+            user.PhoneNumber,
             user.PrimaryRole.Name);
     }
 }
