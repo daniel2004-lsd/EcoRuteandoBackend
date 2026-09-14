@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net.Http.Json;
 using System.Text.Json;
 using EcoRuteando.Modules.Mobility.Application.Abstractions.GoogleMaps;
@@ -22,6 +23,9 @@ public sealed class GoogleMapsService : IGoogleMapsService
         _logger = logger;
     }
 
+    private static string Fmt(double value) =>
+        value.ToString(CultureInfo.InvariantCulture);
+
     public async Task<DirectionsResponse?> GetDirectionsAsync(
         double originLat,
         double originLng,
@@ -32,8 +36,8 @@ public sealed class GoogleMapsService : IGoogleMapsService
     {
         try
         {
-            var origin = $"{originLat},{originLng}";
-            var destination = $"{destinationLat},{destinationLng}";
+            var origin = $"{Fmt(originLat)},{Fmt(originLng)}";
+            var destination = $"{Fmt(destinationLat)},{Fmt(destinationLng)}";
 
             var url = $"{_options.DirectionsBaseUrl}" +
                       $"?origin={origin}" +
@@ -195,7 +199,7 @@ public sealed class GoogleMapsService : IGoogleMapsService
         try
         {
             var url = $"{_options.GeocodeBaseUrl}" +
-                      $"?latlng={lat},{lng}" +
+                      $"?latlng={Fmt(lat)},{Fmt(lng)}" +
                       $"&key={_options.ApiKey}";
 
             var response = await _httpClient.GetAsync(url, cancellationToken);
@@ -320,5 +324,57 @@ public sealed class GoogleMapsService : IGoogleMapsService
         }
 
         return list;
+    }
+    public async Task<PlacesNearbyResponse?> GetPlacesNearbyAsync(
+        double lat,
+        double lng,
+        string type,
+        double radius,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var location = $"{Fmt(lat)},{Fmt(lng)}";
+            var url = _options.PlacesBaseUrl +
+                      $"?location={location}" +
+                      $"&radius={radius.ToString("F0", CultureInfo.InvariantCulture)}" +
+                      $"&type={type}" +
+                      $"&key={_options.ApiKey}";
+
+            var response = await _httpClient.GetAsync(url, cancellationToken);
+            if (!response.IsSuccessStatusCode) return null;
+
+            var json = await response.Content.ReadAsStringAsync(cancellationToken);
+            var document = JsonDocument.Parse(json);
+            var root = document.RootElement;
+            var status = root.GetProperty("status").GetString() ?? "UNKNOWN";
+
+            if (status != "OK") return new PlacesNearbyResponse { Status = status };
+
+            var results = root.GetProperty("results");
+            var placeList = new List<PlaceResult>();
+
+            foreach (var result in results.EnumerateArray())
+            {
+                placeList.Add(new PlaceResult
+                {
+                    Name = result.TryGetProperty("name", out var n) ? n.GetString() ?? "" : "",
+                    Vicinity = result.TryGetProperty("vicinity", out var v) ? v.GetString() ?? "" : "",
+                    Lat = result.TryGetProperty("geometry", out var geo1) && geo1.TryGetProperty("location", out var loc1) ? loc1.GetProperty("lat").GetDouble() : 0,
+                    Lng = result.TryGetProperty("geometry", out var geo2) && geo2.TryGetProperty("location", out var loc2) ? loc2.GetProperty("lng").GetDouble() : 0,
+                    PlaceId = result.TryGetProperty("place_id", out var p) ? p.GetString() : null,
+                    Icon = result.TryGetProperty("icon", out var i) ? i.GetString() : null,
+                    Rating = result.TryGetProperty("rating", out var r) ? r.TryGetDouble(out var rv) ? rv : null : null,
+                    Types = result.TryGetProperty("types", out var t) ? string.Join(", ", t.EnumerateArray().Select(x => x.GetString() ?? "")) : ""
+                });
+            }
+
+            return new PlacesNearbyResponse { Status = status, Results = placeList };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error calling Google Places Nearby API");
+            return null;
+        }
     }
 }
