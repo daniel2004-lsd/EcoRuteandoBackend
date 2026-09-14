@@ -13,7 +13,6 @@ namespace EcoRuteando.Modules.Mobility.Presentation.Controllers;
 
 [ApiController]
 [Route("api/pois")]
-[Authorize]
 public sealed class PoisController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -27,7 +26,6 @@ public sealed class PoisController : ControllerBase
     /// Lista los puntos de interés activos, opcionalmente filtrados por tipo.
     /// </summary>
     [HttpGet]
-    [HasPermission("routes.read")]
     public async Task<IActionResult> GetPois(
         [FromQuery] string? poiType,
         CancellationToken cancellationToken)
@@ -40,7 +38,6 @@ public sealed class PoisController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
-    [HasPermission("routes.read")]
     public async Task<IActionResult> GetPoiById(
         Guid id,
         CancellationToken cancellationToken)
