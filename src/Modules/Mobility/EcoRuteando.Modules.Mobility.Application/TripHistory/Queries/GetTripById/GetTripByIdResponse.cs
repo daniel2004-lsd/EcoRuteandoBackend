@@ -26,6 +26,7 @@ public sealed record GetTripByIdResponse(
     DateTime StartedAt,
     DateTime? EndedAt,
     bool Completed,
+    bool Interrupted,
     decimal? ActualDistanceKm,
     int? ActualDurationMin,
     decimal? ActualCo2Kg,

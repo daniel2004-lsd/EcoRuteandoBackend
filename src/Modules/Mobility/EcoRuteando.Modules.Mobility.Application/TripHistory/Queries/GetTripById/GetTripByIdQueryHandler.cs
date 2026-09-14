@@ -39,6 +39,7 @@ public sealed class GetTripByIdQueryHandler
             usage.StartedAt,
             usage.EndedAt,
             usage.Completed,
+            usage.Interrupted,
             usage.ActualDistanceKm,
             usage.ActualDurationMin,
             usage.ActualCo2Kg,
