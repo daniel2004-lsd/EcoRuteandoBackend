@@ -7,6 +7,7 @@ public sealed record UpdateUserCommand(
     Guid UserId,
     string FirstName,
     string? LastName,
-    string? PhoneNumber
+    string? PhoneNumber,
+    string? PrimaryColor = null
 ) : IRequest;
 

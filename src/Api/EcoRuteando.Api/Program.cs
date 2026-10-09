@@ -1,37 +1,101 @@
+using System.Threading.RateLimiting;
 using EcoRuteando.Api.Middlewares;
+using EcoRuteando.Modules.Mobility.Application;
+using EcoRuteando.Modules.Mobility.Infrastructure;
 using EcoRuteando.Modules.Security.Application;
 using EcoRuteando.Modules.Security.Infrastructure;
 using EcoRuteando.Modules.Security.Infrastructure.Authorization;
+using EcoRuteando.Modules.Security.Infrastructure.Bootstrap;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 
 namespace EcoRuteando.Api
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
             // Registrar Application
             builder.Services.AddSecurityApplication();
+            builder.Services.AddMobilityApplication();
 
             // Registrar Infrastructure
             builder.Services.AddSecurityInfrastructure(builder.Configuration);
+            builder.Services.AddMobilityInfrastructure(builder.Configuration);
             builder.Services.AddAuthorization();
             builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
             builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
 
             // Controllers + Swagger
-            builder.Services.AddControllers();
+            builder.Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.PropertyNamingPolicy =
+                        System.Text.Json.JsonNamingPolicy.CamelCase;
+                    options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+                });
+
+            // Rate Limiting
+            builder.Services.AddRateLimiter(options =>
+            {
+                options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+                options.OnRejected = async (context, cancellationToken) =>
+                {
+                    if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+                    {
+                        context.HttpContext.Response.Headers.RetryAfter = ((int)retryAfter.TotalSeconds).ToString();
+                    }
+                };
+
+                // Política para endpoints de auth: 20 requests por 5 min por IP.
+                // El control de reintentos por cuenta (escalonado) vive en la lógica de
+                // LoginUserCommandHandler; este límite por IP es solo una salvaguarda
+                // anti-fuerza-bruta global y no debe "tapar" ese escalonado.
+                options.AddFixedWindowLimiter("auth", opt =>
+                {
+                    opt.PermitLimit = 20;
+                    opt.Window = TimeSpan.FromMinutes(5);
+                    opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+                    opt.QueueLimit = 0;
+                });
+
+                // Política para forgot-password / send-verification: 3 por hora
+                options.AddFixedWindowLimiter("sensitive", opt =>
+                {
+                    opt.PermitLimit = 3;
+                    opt.Window = TimeSpan.FromHours(1);
+                    opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+                    opt.QueueLimit = 0;
+                });
+
+                // Política general API: 100 por minuto
+                options.AddFixedWindowLimiter("api", opt =>
+                {
+                    opt.PermitLimit = 100;
+                    opt.Window = TimeSpan.FromMinutes(1);
+                    opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+                    opt.QueueLimit = 0;
+                });
+            });
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("ReactPolicy", policy =>
                 {
                     policy
-                        .WithOrigins("http://localhost:3000")
-                        .AllowAnyHeader()
-                        .AllowAnyMethod();
+                        .WithOrigins(
+                        "http://localhost:3000",
+                        "http://localhost:3001",
+                        "http://localhost:3007",
+                        "http://localhost:3002")
+                        .WithHeaders("Authorization", "Content-Type")
+                        .WithMethods("GET", "POST", "PUT", "DELETE")
+                        .AllowCredentials();
                 });
             });
             builder.Services.AddEndpointsApiExplorer();
@@ -77,6 +141,29 @@ namespace EcoRuteando.Api
 
             var app = builder.Build();
 
+            // Bootstrap del administrador inicial (Admin__*): crea el usuario,
+            // le asigna 'Admin' como rol principal y verifica su correo.
+            using (var scope = app.Services.CreateScope())
+            {
+                var adminBootstrap = scope.ServiceProvider
+                    .GetRequiredService<IAdminBootstrapService>();
+
+                await adminBootstrap.EnsureAdminAsync();
+            }
+
+            // Detrás del proxy inverso (nginx): reconstruye la IP real del cliente
+            // a partir de X-Forwarded-For para que el rate limiting sea por usuario
+            // y no por la IP compartida del contenedor nginx.
+            var forwardedHeaders = new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+            };
+            // Dentro de la red Docker el único proxy es nginx:
+            // se limpia la lista de proxies confiables (por defecto solo loopback).
+            forwardedHeaders.KnownNetworks.Clear();
+            forwardedHeaders.KnownProxies.Clear();
+            app.UseForwardedHeaders(forwardedHeaders);
+
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -91,6 +178,8 @@ namespace EcoRuteando.Api
             app.UseAuthentication();
 
             app.UseAuthorization();
+
+            app.UseRateLimiter();
 
             app.MapControllers();
 

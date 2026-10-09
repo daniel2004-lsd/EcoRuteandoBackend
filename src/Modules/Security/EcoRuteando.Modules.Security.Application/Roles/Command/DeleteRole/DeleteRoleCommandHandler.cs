@@ -1,4 +1,4 @@
-﻿using EcoRuteando.Modules.Security.Application.Roles.Command.DeleteRole;
+﻿using EcoRuteando.Modules.Security.Application.Roles.Commands.DeleteRole;
 using EcoRuteando.Modules.Security.Domain.Repositories;
 using EcoRuteando.Shared.Abstractions.Persistence;
 using EcoRuteando.Shared.Exceptions;
@@ -10,11 +10,11 @@ public sealed class DeleteRoleCommandHandler
     : IRequestHandler<DeleteRoleCommand>
 {
     private readonly IRoleRepository _roleRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ISecurityUnitOfWork _unitOfWork;
 
     public DeleteRoleCommandHandler(
         IRoleRepository roleRepository,
-        IUnitOfWork unitOfWork)
+        ISecurityUnitOfWork unitOfWork)
     {
         _roleRepository = roleRepository;
         _unitOfWork = unitOfWork;

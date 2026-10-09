@@ -18,6 +18,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Modules\Mobility\EcoRuteando.Modules.Mobility.Infrastructure\EcoRuteando.Modules.Mobility.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Mobility\EcoRuteando.Modules.Mobility.Presentation\EcoRuteando.Modules.Mobility.Presentation.csproj" />
     <ProjectReference Include="..\..\Modules\Security\EcoRuteando.Modules.Security.Infrastructure\EcoRuteando.Modules.Security.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Security\EcoRuteando.Modules.Security.Presentation\EcoRuteando.Modules.Security.Presentation.csproj" />
 	<ProjectReference Include="..\..\Shared\EcoRuteando.Shared\EcoRuteando.Shared.csproj" />

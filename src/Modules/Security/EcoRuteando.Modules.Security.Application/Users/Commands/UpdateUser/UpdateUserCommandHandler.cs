@@ -11,11 +11,11 @@ public sealed class UpdateUserCommandHandler
     : IRequestHandler<UpdateUserCommand>
 {
     private readonly IUserRepository _userRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ISecurityUnitOfWork _unitOfWork;
 
     public UpdateUserCommandHandler(
      IUserRepository userRepository,
-     IUnitOfWork unitOfWork)
+     ISecurityUnitOfWork unitOfWork)
     {
         _userRepository = userRepository;
         _unitOfWork = unitOfWork;
@@ -37,7 +37,8 @@ public sealed class UpdateUserCommandHandler
         user.Update(
             request.FirstName,
             request.LastName,
-            request.PhoneNumber);
+            request.PhoneNumber,
+            request.PrimaryColor);
 
         await _userRepository.UpdateAsync(
             user,
