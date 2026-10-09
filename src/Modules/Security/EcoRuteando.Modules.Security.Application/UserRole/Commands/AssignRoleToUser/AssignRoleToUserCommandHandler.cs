@@ -1,4 +1,5 @@
-﻿using EcoRuteando.Modules.Security.Domain.Entities;
+﻿using EcoRuteando.Modules.Security.Application.Abstractions.Logging;
+using EcoRuteando.Modules.Security.Domain.Entities;
 using EcoRuteando.Modules.Security.Domain.Repositories;
 using EcoRuteando.Shared.Abstractions.Persistence;
 using EcoRuteando.Shared.Exceptions;
@@ -12,18 +13,21 @@ public sealed class AssignRoleToUserCommandHandler
     private readonly IUserRepository _userRepository;
     private readonly IRoleRepository _roleRepository;
     private readonly IUserRoleRepository _userRoleRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ISecurityUnitOfWork _unitOfWork;
+    private readonly IAuditLogService _auditLogService;
 
     public AssignRoleToUserCommandHandler(
         IUserRepository userRepository,
         IRoleRepository roleRepository,
         IUserRoleRepository userRoleRepository,
-        IUnitOfWork unitOfWork)
+        ISecurityUnitOfWork unitOfWork,
+        IAuditLogService auditLogService)
     {
         _userRepository = userRepository;
         _roleRepository = roleRepository;
         _userRoleRepository = userRoleRepository;
         _unitOfWork = unitOfWork;
+        _auditLogService = auditLogService;
     }
 
     public async Task Handle(
@@ -67,5 +71,13 @@ public sealed class AssignRoleToUserCommandHandler
             cancellationToken);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await _auditLogService.LogAsync(
+            request.UserId,
+            "role.assigned",
+            entityName: "user_roles",
+            entityId: $"{request.UserId}/{request.RoleId}",
+            afterData: $"{{\"role\":\"{role.Name}\"}}",
+            cancellationToken: cancellationToken);
     }
 }

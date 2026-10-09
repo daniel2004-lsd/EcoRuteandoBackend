@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EcoRuteando.Modules.Security.Application.Roles.Command.UpdateRole
+namespace EcoRuteando.Modules.Security.Application.Roles.Commands.UpdateRole
 {
     public sealed record UpdateRoleCommand(
     Guid RoleId,

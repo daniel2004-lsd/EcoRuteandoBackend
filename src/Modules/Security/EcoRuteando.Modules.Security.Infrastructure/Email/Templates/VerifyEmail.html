@@ -1,12 +1,114 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
 
-namespace EcoRuteando.Modules.Security.Infrastructure.Templates
-{
-    class VerifyEmail
-    {
-    }
-}
+    <style>
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: #f5f7fb;
+            font-family: Arial,Helvetica,sans-serif;
+        }
+
+        .container {
+            width: 650px;
+            margin: auto;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #E5E7EB;
+        }
+
+        .header {
+            background: #1565C0;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .token {
+            margin: 30px 0;
+            background: #F3F8FF;
+            border: 2px dashed #1565C0;
+            text-align: center;
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 28px;
+            letter-spacing: 4px;
+            font-weight: bold;
+            color: #1565C0;
+        }
+
+        .footer {
+            font-size: 12px;
+            color: #777;
+            margin-top: 40px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="header">
+
+            <h1>EcoRuteando</h1>
+
+            <p>Verificación de correo electrónico</p>
+
+        </div>
+
+        <div class="content">
+
+            <p>Hola <b>{{UserName}}</b>,</p>
+
+            <p>
+
+                Gracias por registrarte en EcoRuteando.
+
+            </p>
+
+            <p>
+
+                Utiliza el siguiente código para verificar tu correo electrónico:
+
+            </p>
+
+            <div class="token">
+
+                {{Code}}
+
+            </div>
+
+            <p>
+
+                Este código expirará en <b>24 horas.</b>
+
+            </p>
+
+            <p>
+
+                Si no creaste esta cuenta simplemente ignora este correo.
+
+            </p>
+
+            <div class="footer">
+
+                Este mensaje fue generado automáticamente por EcoRuteando.
+
+            </div>
+
+        </div>
+
+    </div>
+
+</body>
+</html>

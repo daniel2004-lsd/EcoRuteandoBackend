@@ -1,5 +1,7 @@
-﻿namespace EcoRuteando.Modules.Security.Presentation.Requests;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace EcoRuteando.Modules.Security.Presentation.Requests;
 
 public sealed record ForgotPasswordRequest(
-    string Email
+    [EmailAddress] string Email
 );

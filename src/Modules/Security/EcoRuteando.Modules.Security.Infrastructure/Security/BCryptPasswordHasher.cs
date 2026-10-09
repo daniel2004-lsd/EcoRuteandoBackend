@@ -13,7 +13,7 @@ namespace EcoRuteando.Modules.Security.Infrastructure.Security
     {
         public string Hash(string password)
         {
-            return BCrypt.Net.BCrypt.HashPassword(password);
+            return BCrypt.Net.BCrypt.HashPassword(password, workFactor: 12);
         }
 
         public bool Verify(string password, string passwordHash)
