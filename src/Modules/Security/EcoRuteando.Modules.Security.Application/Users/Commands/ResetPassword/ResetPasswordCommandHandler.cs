@@ -1,6 +1,8 @@
-﻿using EcoRuteando.Modules.Security.Application.Abstractions.Security;
+﻿using EcoRuteando.Modules.Security.Application.Abstractions.Logging;
+using EcoRuteando.Modules.Security.Application.Abstractions.Security;
 using EcoRuteando.Modules.Security.Domain.Repositories;
 using EcoRuteando.Shared.Abstractions.Persistence;
+using EcoRuteando.Shared.Exceptions;
 using MediatR;
 using System.Net;
 using System.Security.Cryptography;
@@ -14,18 +16,21 @@ public sealed class ResetPasswordCommandHandler
     private readonly IPasswordRecoveryRepository _passwordRecoveryRepository;
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHasher _passwordHasher;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ISecurityUnitOfWork _unitOfWork;
+    private readonly IAuditLogService _auditLogService;
 
     public ResetPasswordCommandHandler(
         IPasswordRecoveryRepository passwordRecoveryRepository,
         IUserRepository userRepository,
         IPasswordHasher passwordHasher,
-        IUnitOfWork unitOfWork)
+        ISecurityUnitOfWork unitOfWork,
+        IAuditLogService auditLogService)
     {
         _passwordRecoveryRepository = passwordRecoveryRepository;
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
         _unitOfWork = unitOfWork;
+        _auditLogService = auditLogService;
     }
 
     public async Task Handle(
@@ -34,25 +39,28 @@ public sealed class ResetPasswordCommandHandler
     {
         var tokenHash = ComputeSha256(request.Token);
         var recovery = await _passwordRecoveryRepository.GetByTokenHashAsync(tokenHash);
+
         if (recovery is null)
         {
-            throw new Exception("Invalid token.");
+            throw new UnauthorizedException("Token inválido.");
         }
 
         if (recovery.IsUsed)
         {
-            throw new Exception("Token has already been used.");
+            throw new UnauthorizedException("El token ya fue utilizado.");
         }
 
         if (recovery.ExpiresAt < DateTime.UtcNow)
         {
-            throw new Exception("Token has expired.");
+            throw new UnauthorizedException("El token ha expirado.");
         }
 
         var user = recovery.User;
 
         if (user is null)
-            throw new Exception("Usuario no encontrado.");
+        {
+            throw new NotFoundException("Usuario no encontrado.");
+        }
 
         IPAddress? usageIp = null;
 
@@ -72,6 +80,14 @@ public sealed class ResetPasswordCommandHandler
         await _userRepository.UpdateAsync(user, cancellationToken);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await _auditLogService.LogAsync(
+            user.Id,
+            "user.password_reset",
+            entityName: "users",
+            entityId: user.Id.ToString(),
+            sourceIp: request.UsageIp,
+            cancellationToken: cancellationToken);
     }
 
     private static string ComputeSha256(string value)
