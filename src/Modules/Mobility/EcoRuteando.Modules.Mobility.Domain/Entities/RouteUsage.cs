@@ -25,6 +25,8 @@ public sealed class RouteUsage : Entity<Guid>
 
     public bool Completed { get; private set; }
 
+    public bool Interrupted { get; private set; }
+
     public decimal? ActualDistanceKm { get; private set; }
 
     public int? ActualDurationMin { get; private set; }
@@ -108,6 +110,49 @@ public sealed class RouteUsage : Entity<Guid>
             GpsData = gpsData;
 
         Completed = true;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Marca el trayecto como interrumpido (el usuario no llegó al destino
+    /// pero se registran las métricas parciales reales).
+    /// </summary>
+    public void Interrupt(
+        decimal? actualDistanceKm,
+        int? actualDurationMin,
+        decimal? actualCo2Kg,
+        DateTime? endedAt,
+        LineString? actualRoute = null,
+        JsonDocument? gpsData = null)
+    {
+        if (EndedAt is not null)
+            throw new DomainException("El trayecto ya fue finalizado.");
+
+        if (actualDistanceKm < 0)
+            throw new DomainException("La distancia real no puede ser negativa.");
+
+        if (actualDurationMin < 0)
+            throw new DomainException("La duración real no puede ser negativa.");
+
+        if (actualCo2Kg < 0)
+            throw new DomainException("El CO₂ ahorrado no puede ser negativo.");
+
+        ActualDistanceKm = actualDistanceKm;
+        ActualDurationMin = actualDurationMin;
+        ActualCo2Kg = actualCo2Kg;
+        EndedAt = endedAt ?? DateTime.UtcNow;
+
+        if (EndedAt < StartedAt)
+            throw new DomainException("La fecha de fin no puede ser anterior al inicio.");
+
+        if (actualRoute is not null)
+            ActualRoute = actualRoute;
+
+        if (gpsData is not null)
+            GpsData = gpsData;
+
+        Interrupted = true;
+        Completed = true; // Se marca como completado para que cuente en estadísticas
         UpdatedAt = DateTime.UtcNow;
     }
 }

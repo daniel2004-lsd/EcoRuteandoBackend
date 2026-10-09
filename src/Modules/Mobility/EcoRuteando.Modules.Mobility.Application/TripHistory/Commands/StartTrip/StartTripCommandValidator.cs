@@ -7,7 +7,7 @@ public sealed class StartTripCommandValidator
     : AbstractValidator<StartTripCommand>
 {
     private static readonly string[] ValidTransportTypes =
-        ["bike", "public_transport", "mixed", "walking"];
+        ["bike", "car", "public_transport", "mixed", "walking"];
 
     private static readonly string[] ValidSources =
         ["web", "mobile", "pwa"];

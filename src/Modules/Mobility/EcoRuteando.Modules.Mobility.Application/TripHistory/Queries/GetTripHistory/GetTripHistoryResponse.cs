@@ -12,6 +12,7 @@ public sealed record GetTripHistoryResponse(
     DateTime StartedAt,
     DateTime? EndedAt,
     bool Completed,
+    bool Interrupted,
     decimal? ActualDistanceKm,
     int? ActualDurationMin,
     decimal? ActualCo2Kg,

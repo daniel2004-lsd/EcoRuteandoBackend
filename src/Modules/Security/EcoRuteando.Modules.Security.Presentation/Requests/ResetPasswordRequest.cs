@@ -1,4 +1,6 @@
-﻿public sealed record ResetPasswordRequest(
+﻿using System.ComponentModel.DataAnnotations;
+
+public sealed record ResetPasswordRequest(
     string Token,
-    string NewPassword
+    [MinLength(8)] [MaxLength(128)] string NewPassword
 );

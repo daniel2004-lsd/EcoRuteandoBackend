@@ -5,6 +5,7 @@ using EcoRuteando.Modules.Security.Application.Abstractions.Security;
 using EcoRuteando.Modules.Security.Domain.Entities;
 using EcoRuteando.Modules.Security.Domain.Repositories;
 using EcoRuteando.Modules.Security.Infrastructure.Authorization;
+using EcoRuteando.Modules.Security.Infrastructure.Bootstrap;
 using EcoRuteando.Modules.Security.Infrastructure.Email;
 using EcoRuteando.Modules.Security.Infrastructure.Logging;
 using EcoRuteando.Modules.Security.Infrastructure.Persistence;
@@ -34,6 +35,9 @@ public static class DependencyInjection
 
         services.Configure<JwtOptions>(
             configuration.GetSection("Jwt"));
+
+        services.Configure<AdminBootstrapOptions>(
+            configuration.GetSection(AdminBootstrapOptions.SectionName));
 
 
         services.AddDbContext<SecurityDbContext>(options =>
@@ -88,6 +92,9 @@ public static class DependencyInjection
         // Logging
         services.AddScoped<IAuditLogService, AuditLogService>();
         services.AddScoped<IErrorLogService, ErrorLogService>();
+
+        // Bootstrap del administrador inicial
+        services.AddScoped<IAdminBootstrapService, AdminBootstrapService>();
 
         // Background jobs
         services.Configure<Jobs.ExpiredTokensCleanupOptions>(

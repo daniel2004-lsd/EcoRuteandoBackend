@@ -7,7 +7,7 @@ public sealed class EstimateSustainabilityQueryValidator
     : AbstractValidator<EstimateSustainabilityQuery>
 {
     private static readonly string[] ValidTransportTypes =
-        ["bike", "public_transport", "mixed", "walking"];
+        ["bike", "car", "public_transport", "mixed", "walking"];
 
     public EstimateSustainabilityQueryValidator()
     {

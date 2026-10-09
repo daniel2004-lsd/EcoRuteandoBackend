@@ -1,4 +1,5 @@
 using EcoRuteando.Modules.Mobility.Application.TripHistory.Commands.CompleteTrip;
+using EcoRuteando.Modules.Mobility.Application.TripHistory.Commands.InterruptTrip;
 using EcoRuteando.Modules.Mobility.Application.TripHistory.Commands.StartTrip;
 using EcoRuteando.Modules.Mobility.Application.TripHistory.Queries.GetTripById;
 using EcoRuteando.Modules.Mobility.Application.TripHistory.Queries.GetTripHistory;
@@ -76,6 +77,34 @@ public sealed class TripHistoryController : ControllerBase
     public async Task<IActionResult> CompleteTrip(
         Guid id,
         CompleteTripCommand command,
+        CancellationToken cancellationToken)
+    {
+        if (id != command.UsageId)
+        {
+            return BadRequest(new
+            {
+                message = "El ID de la URL no coincide con el del cuerpo."
+            });
+        }
+
+        var userId = GetRequiredUserId();
+
+        var commandWithUser = command with { UserId = userId };
+
+        await _mediator.Send(commandWithUser, cancellationToken);
+
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Registra la interrupción de un trayecto con las métricas parciales reales.
+    /// El usuario no llegó al destino, pero se cuenta el CO₂ ahorrado hasta donde viajó.
+    /// </summary>
+    [HttpPost("{id:guid}/interrupt")]
+    [HasPermission("routes.write")]
+    public async Task<IActionResult> InterruptTrip(
+        Guid id,
+        InterruptTripCommand command,
         CancellationToken cancellationToken)
     {
         if (id != command.UsageId)

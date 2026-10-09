@@ -33,6 +33,7 @@ public sealed class GetTripHistoryQueryHandler
                 u.StartedAt,
                 u.EndedAt,
                 u.Completed,
+                u.Interrupted,
                 u.ActualDistanceKm,
                 u.ActualDurationMin,
                 u.ActualCo2Kg,

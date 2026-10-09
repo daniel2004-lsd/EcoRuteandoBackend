@@ -41,6 +41,10 @@ public sealed class RouteUsageConfiguration
             .HasColumnName("completed")
             .HasDefaultValue(false);
 
+        builder.Property(ru => ru.Interrupted)
+            .HasColumnName("interrupted")
+            .HasDefaultValue(false);
+
         builder.Property(ru => ru.ActualDistanceKm)
             .HasColumnName("actual_distance_km")
             .HasColumnType("numeric(10,2)");

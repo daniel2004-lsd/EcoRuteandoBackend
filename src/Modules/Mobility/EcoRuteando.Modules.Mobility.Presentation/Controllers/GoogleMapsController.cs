@@ -1,6 +1,4 @@
 using EcoRuteando.Modules.Mobility.Application.Abstractions.GoogleMaps;
-using EcoRuteando.Shared.Authorization;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EcoRuteando.Modules.Mobility.Presentation.Controllers;
@@ -10,9 +8,16 @@ namespace EcoRuteando.Modules.Mobility.Presentation.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/maps")]
-[Authorize]
 public sealed class GoogleMapsController : ControllerBase
 {
+    private static readonly HashSet<string> AllowedPlaceTypes =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            "restaurant", "hotel", "church", "park", "cafe", "bar", "museum"
+        };
+
+    private const double MaxPlacesRadius = 50_000;
+
     private readonly IGoogleMapsService _googleMapsService;
 
     public GoogleMapsController(IGoogleMapsService googleMapsService)
@@ -25,7 +30,6 @@ public sealed class GoogleMapsController : ControllerBase
     /// Modos de transporte: driving, walking, bicycling, transit.
     /// </summary>
     [HttpGet("directions")]
-    [HasPermission("routes.read")]
     public async Task<IActionResult> GetDirections(
         [FromQuery] double originLat,
         [FromQuery] double originLng,
@@ -62,18 +66,17 @@ public sealed class GoogleMapsController : ControllerBase
 
         if (result.Status == "ZERO_RESULTS")
         {
-            var friendlyMode = travelMode switch
+            var (friendlyMode, suggestion) = travelMode switch
             {
-                "walking" => "a pie",
-                "bicycling" => "en bicicleta",
-                "transit" => "en transporte público",
-                "driving" => "en automóvil",
-                _ => $"en modo {travelMode}"
+                "bicycling" => ("en bicicleta", "Intenta a pie o en automóvil."),
+                "transit" => ("en transporte público", "En Neiva puede que no haya rutas de bus disponibles para este trayecto. Intenta a pie o en automóvil."),
+                "driving" => ("en automóvil", "Intenta caminando."),
+                _ => ("a pie", "Intenta en automóvil.")
             };
 
             return NotFound(new
             {
-                message = $"No existe una ruta {friendlyMode} entre el origen y el destino. Prueba con otro modo de transporte."
+                message = $"No existe una ruta {friendlyMode} entre el origen y el destino. {suggestion}"
             });
         }
 
@@ -85,7 +88,6 @@ public sealed class GoogleMapsController : ControllerBase
     /// Ejemplo: "Neiva, Huila, Colombia"
     /// </summary>
     [HttpGet("geocode")]
-    [HasPermission("routes.read")]
     public async Task<IActionResult> Geocode(
         [FromQuery] string address,
         CancellationToken cancellationToken)
@@ -117,7 +119,6 @@ public sealed class GoogleMapsController : ControllerBase
     /// Convierte coordenadas a dirección usando Google Reverse Geocoding API.
     /// </summary>
     [HttpGet("reverse-geocode")]
-    [HasPermission("routes.read")]
     public async Task<IActionResult> ReverseGeocode(
         [FromQuery] double lat,
         [FromQuery] double lng,
@@ -136,6 +137,39 @@ public sealed class GoogleMapsController : ControllerBase
             });
         }
 
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Busca lugares cercanos de un tipo permitido (accesible a invitados, ver CU17).
+    /// </summary>
+    [HttpGet("places")]
+    public async Task<IActionResult> GetPlacesNearby(
+        [FromQuery] double lat,
+        [FromQuery] double lng,
+        [FromQuery] string type,
+        [FromQuery] double radius = 1500,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(type))
+            return BadRequest(new { message = "El tipo de lugar es obligatorio (ej: restaurant, hotel, church)." });
+
+        var normalizedType = type.Trim().ToLowerInvariant();
+        if (!AllowedPlaceTypes.Contains(normalizedType))
+            return BadRequest(new
+            {
+                message = $"El tipo '{type}' no está permitido.",
+                allowedTypes = AllowedPlaceTypes
+            });
+
+        if (lat is < -90 or > 90 || lng is < -180 or > 180)
+            return BadRequest(new { message = "Las coordenadas están fuera del rango válido." });
+
+        if (radius is <= 0 or > MaxPlacesRadius)
+            return BadRequest(new { message = $"El radio debe estar entre 1 y {MaxPlacesRadius} metros." });
+
+        var result = await _googleMapsService.GetPlacesNearbyAsync(lat, lng, normalizedType, radius, cancellationToken);
+        if (result is null) return StatusCode(502, new { message = "No se pudieron obtener los lugares." });
         return Ok(result);
     }
 }

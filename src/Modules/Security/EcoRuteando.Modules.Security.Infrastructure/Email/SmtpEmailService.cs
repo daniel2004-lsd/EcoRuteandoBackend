@@ -30,8 +30,8 @@ public sealed class SmtpEmailService : IEmailService
         if (string.IsNullOrWhiteSpace(_settings.Username))
         {
             _logger.LogWarning(
-                "SMTP no configurado. Email NO enviado → Para: {To} | Asunto: {Subject} | Cuerpo: {Body}",
-                to, subject, htmlBody);
+                "SMTP no configurado. Email NO enviado → Para: {To} | Asunto: {Subject}",
+                to, subject);
             return;
         }
 

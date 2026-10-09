@@ -31,6 +31,15 @@ public sealed class CreateRouteCommandHandler
                 $"El tipo de transporte '{request.TransportType}' no es válido.");
         }
 
+        // Regla de negocio CU03: no permitir rutas duplicadas por nombre.
+        if (await _routeRepository.ExistsByNameAsync(
+                request.Name,
+                cancellationToken: cancellationToken))
+        {
+            throw new Shared.Exceptions.DomainException(
+                $"Ya existe una ruta con el nombre '{request.Name}'.");
+        }
+
         Point? startLocation = null;
         if (request.StartLat.HasValue && request.StartLng.HasValue)
         {

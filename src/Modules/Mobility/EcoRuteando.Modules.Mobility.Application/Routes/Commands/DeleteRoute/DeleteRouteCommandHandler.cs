@@ -32,6 +32,16 @@ public sealed class DeleteRouteCommandHandler
             throw new NotFoundException("La ruta no existe.");
         }
 
+        // Regla de negocio CU03: un usuario solo puede eliminar rutas que él creó.
+        // El administrador puede eliminar cualquier ruta.
+        if (!request.IsAdmin
+            && (route.CreatedBy is null
+                || route.CreatedBy != request.RequestedByUserId))
+        {
+            throw new ForbiddenException(
+                "Solo puedes eliminar las rutas que tú mismo creaste.");
+        }
+
         _routeRepository.Delete(route);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);

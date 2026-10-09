@@ -22,4 +22,6 @@ public sealed record UpdateRouteCommand(
     short? DifficultyLevel,
     JsonDocument? MapData,
     string? PhotoUrl,
-    DateOnly? AvailableDate) : IRequest;
+    DateOnly? AvailableDate,
+    Guid? RequestedByUserId = null,
+    bool IsAdmin = false) : IRequest;

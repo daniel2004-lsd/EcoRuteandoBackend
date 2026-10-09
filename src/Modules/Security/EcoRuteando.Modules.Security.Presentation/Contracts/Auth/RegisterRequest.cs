@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace EcoRuteando.Modules.Security.Presentation.Contracts.Auth
 {
     public sealed record RegisterRequest(
-    string FirstName,
-    string? LastName,
-    string Email,
-    string Password);
+    [MaxLength(50)] string FirstName,
+    [MaxLength(50)] string? LastName,
+    [EmailAddress] string Email,
+    [MinLength(8)] [MaxLength(128)] string Password);
 }

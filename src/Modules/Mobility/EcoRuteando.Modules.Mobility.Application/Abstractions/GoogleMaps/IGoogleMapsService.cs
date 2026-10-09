@@ -18,6 +18,31 @@ public interface IGoogleMapsService
         double lat,
         double lng,
         CancellationToken cancellationToken = default);
+
+    Task<PlacesNearbyResponse?> GetPlacesNearbyAsync(
+        double lat,
+        double lng,
+        string type,
+        double radius,
+        CancellationToken cancellationToken = default);
+}
+
+public sealed class PlacesNearbyResponse
+{
+    public string Status { get; init; } = string.Empty;
+    public List<PlaceResult>? Results { get; init; }
+}
+
+public sealed class PlaceResult
+{
+    public string Name { get; init; } = string.Empty;
+    public string Vicinity { get; init; } = string.Empty;
+    public double Lat { get; init; }
+    public double Lng { get; init; }
+    public string? PlaceId { get; init; }
+    public string? Icon { get; init; }
+    public double? Rating { get; init; }
+    public string Types { get; init; } = string.Empty;
 }
 
 public sealed class DirectionsResponse

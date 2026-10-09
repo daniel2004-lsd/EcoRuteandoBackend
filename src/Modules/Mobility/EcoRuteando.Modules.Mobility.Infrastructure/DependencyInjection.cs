@@ -1,8 +1,12 @@
+using EcoRuteando.Modules.Mobility.Application.Abstractions.Export;
 using EcoRuteando.Modules.Mobility.Application.Abstractions.GoogleMaps;
+using EcoRuteando.Modules.Mobility.Application.Abstractions.Weather;
 using EcoRuteando.Modules.Mobility.Domain.Enums;
 using EcoRuteando.Modules.Mobility.Domain.Repositories;
+using EcoRuteando.Modules.Mobility.Infrastructure.Export;
 using EcoRuteando.Modules.Mobility.Infrastructure.GoogleMaps;
 using EcoRuteando.Modules.Mobility.Infrastructure.Persistence;
+using EcoRuteando.Modules.Mobility.Infrastructure.Weather;
 using EcoRuteando.Modules.Mobility.Infrastructure.Persistence.Repositories;
 using EcoRuteando.Shared.Abstractions.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -32,6 +36,7 @@ public static class DependencyInjection
                     o.MapEnum<TransportType>("transport_type", "mobility");
                     o.MapEnum<RouteStatus>("route_status", "mobility");
                     o.MapEnum<UsageSource>("usage_source", "mobility");
+                    o.MapEnum<ReportStatus>("report_status", "community");
                     o.UseNetTopologySuite();
                 });
         });
@@ -44,12 +49,30 @@ public static class DependencyInjection
         services.AddScoped<IPointOfInterestRepository, PointOfInterestRepository>();
         services.AddScoped<IRouteUsageRepository, RouteUsageRepository>();
         services.AddScoped<ITransportFactorRepository, TransportFactorRepository>();
+        services.AddScoped<IFavoriteRouteRepository, FavoriteRouteRepository>();
+        services.AddScoped<ISharedRouteRepository, SharedRouteRepository>();
+        services.AddScoped<IRatingRepository, RatingRepository>();
+        services.AddScoped<IObstacleReportRepository, ObstacleReportRepository>();
+
+        // Exportación de archivos (CU19): CSV, JSON y XLSX
+        services.AddScoped<IExportFileService, ExportFileService>();
 
         // Google Maps
         services.Configure<GoogleMapsOptions>(
             configuration.GetSection("GoogleMaps"));
 
         services.AddHttpClient<IGoogleMapsService, GoogleMapsService>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(30);
+        });
+
+        // Google Weather API
+        services.Configure<GoogleWeatherOptions>(options =>
+        {
+            options.ApiKey = configuration["GoogleMaps:ApiKey"] ?? string.Empty;
+        });
+
+        services.AddHttpClient<IWeatherService, WeatherService>(client =>
         {
             client.Timeout = TimeSpan.FromSeconds(30);
         });

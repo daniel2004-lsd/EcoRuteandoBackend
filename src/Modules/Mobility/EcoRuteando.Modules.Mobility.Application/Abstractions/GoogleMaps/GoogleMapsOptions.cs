@@ -7,4 +7,5 @@ public sealed class GoogleMapsOptions
     public string DirectionsBaseUrl { get; set; } = "https://maps.googleapis.com/maps/api/directions/json";
 
     public string GeocodeBaseUrl { get; set; } = "https://maps.googleapis.com/maps/api/geocode/json";
+    public string PlacesBaseUrl { get; set; } = "https://maps.googleapis.com/maps/api/place/nearbysearch/json";
 }

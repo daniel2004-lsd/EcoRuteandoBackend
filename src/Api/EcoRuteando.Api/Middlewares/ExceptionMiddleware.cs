@@ -62,11 +62,24 @@ public sealed class ExceptionMiddleware
         }
         catch (UnauthorizedException exception)
         {
+            object detail = exception.Message;
+
+            if (exception.AttemptsRemaining.HasValue
+                || exception.RetryAfterSeconds.HasValue)
+            {
+                detail = new Dictionary<string, object?>
+                {
+                    ["message"] = exception.Message,
+                    ["attemptsRemaining"] = exception.AttemptsRemaining,
+                    ["retryAfterSeconds"] = exception.RetryAfterSeconds
+                };
+            }
+
             await WriteProblemDetails(
                 context,
                 StatusCodes.Status401Unauthorized,
                 "Unauthorized",
-                exception.Message);
+                detail);
         }
         catch (ForbiddenException exception)
         {
@@ -134,6 +147,22 @@ public sealed class ExceptionMiddleware
         if (detail is Dictionary<string, IEnumerable<string>> errors)
         {
             problem.Extensions["errors"] = errors;
+        }
+
+        if (detail is IDictionary<string, object?> extras)
+        {
+            foreach (var pair in extras)
+            {
+                if (pair.Value is not null)
+                {
+                    problem.Extensions[pair.Key] = pair.Value;
+
+                    if (pair.Key == "message")
+                    {
+                        problem.Detail = pair.Value?.ToString();
+                    }
+                }
+            }
         }
 
         await context.Response.WriteAsync(

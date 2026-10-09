@@ -1,4 +1,5 @@
 ﻿using EcoRuteando.Modules.Security.Application.Users.Commands.ForgotPassword;
+using EcoRuteando.Modules.Security.Application.Users.Commands.ChangeMyPassword;
 using EcoRuteando.Modules.Security.Application.Users.Commands.LoginOAuth;
 using EcoRuteando.Modules.Security.Application.Users.Commands.LoginUsers;
 using EcoRuteando.Modules.Security.Application.Users.Commands.LogoutUser;
@@ -72,6 +73,7 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
         }
 
 
+        [EnableRateLimiting("auth")]
         [HttpPost("refresh")]
         public async Task<IActionResult> Refresh(
         RefreshTokenRequest request,
@@ -139,6 +141,7 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
             });
         }
 
+        [EnableRateLimiting("sensitive")]
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword(
         ResetPasswordRequest request,
@@ -149,6 +152,36 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
                     request.Token,
                     request.NewPassword,
                     HttpContext.Connection.RemoteIpAddress?.ToString()),
+                cancellationToken);
+
+            return Ok(new
+            {
+                message = "La contraseña fue actualizada correctamente."
+            });
+        }
+
+        /// <summary>
+        /// El usuario autenticado cambia su contraseña confirmando la actual (CU12).
+        /// </summary>
+        [Authorize]
+        [EnableRateLimiting("sensitive")]
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword(
+            ChangeMyPasswordRequest request,
+            CancellationToken cancellationToken)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+
+            if (userIdClaim is null)
+            {
+                return Unauthorized();
+            }
+
+            await _mediator.Send(
+                new ChangeMyPasswordCommand(
+                    Guid.Parse(userIdClaim.Value),
+                    request.CurrentPassword,
+                    request.NewPassword),
                 cancellationToken);
 
             return Ok(new

@@ -5,16 +5,18 @@ using EcoRuteando.Modules.Mobility.Infrastructure;
 using EcoRuteando.Modules.Security.Application;
 using EcoRuteando.Modules.Security.Infrastructure;
 using EcoRuteando.Modules.Security.Infrastructure.Authorization;
+using EcoRuteando.Modules.Security.Infrastructure.Bootstrap;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 
 namespace EcoRuteando.Api
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -51,10 +53,13 @@ namespace EcoRuteando.Api
                     }
                 };
 
-                // Política para endpoints de auth: 5 requests por 5 min por IP
+                // Política para endpoints de auth: 20 requests por 5 min por IP.
+                // El control de reintentos por cuenta (escalonado) vive en la lógica de
+                // LoginUserCommandHandler; este límite por IP es solo una salvaguarda
+                // anti-fuerza-bruta global y no debe "tapar" ese escalonado.
                 options.AddFixedWindowLimiter("auth", opt =>
                 {
-                    opt.PermitLimit = 5;
+                    opt.PermitLimit = 20;
                     opt.Window = TimeSpan.FromMinutes(5);
                     opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
                     opt.QueueLimit = 0;
@@ -88,8 +93,8 @@ namespace EcoRuteando.Api
                         "http://localhost:3001",
                         "http://localhost:3007",
                         "http://localhost:3002")
-                        .AllowAnyHeader()
-                        .AllowAnyMethod()
+                        .WithHeaders("Authorization", "Content-Type")
+                        .WithMethods("GET", "POST", "PUT", "DELETE")
                         .AllowCredentials();
                 });
             });
@@ -135,6 +140,16 @@ namespace EcoRuteando.Api
 
 
             var app = builder.Build();
+
+            // Bootstrap del administrador inicial (Admin__*): crea el usuario,
+            // le asigna 'Admin' como rol principal y verifica su correo.
+            using (var scope = app.Services.CreateScope())
+            {
+                var adminBootstrap = scope.ServiceProvider
+                    .GetRequiredService<IAdminBootstrapService>();
+
+                await adminBootstrap.EnsureAdminAsync();
+            }
 
             // Detrás del proxy inverso (nginx): reconstruye la IP real del cliente
             // a partir de X-Forwarded-For para que el rate limiting sea por usuario
