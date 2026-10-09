@@ -120,6 +120,24 @@ public sealed class UsersController : ControllerBase
         return NoContent();
     }
 
+    [HttpDelete("me")]
+    public async Task<IActionResult> DeleteMyAccount(
+        CancellationToken cancellationToken)
+    {
+        var userId = GetAuthenticatedUserId();
+
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+
+        var command = new DeleteUserCommand(userId.Value);
+
+        await _mediator.Send(command, cancellationToken);
+
+        return NoContent();
+    }
+
     private Guid? GetAuthenticatedUserId()
     {
         var claim = User.FindFirst(ClaimTypes.NameIdentifier);
