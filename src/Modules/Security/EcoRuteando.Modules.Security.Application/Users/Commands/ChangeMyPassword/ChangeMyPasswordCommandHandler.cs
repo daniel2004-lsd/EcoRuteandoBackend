@@ -36,8 +36,13 @@ public sealed class ChangeMyPasswordCommandHandler
             throw new NotFoundException("Usuario no encontrado.");
         }
 
-        if (string.IsNullOrWhiteSpace(user.PasswordHash)
-            || !_passwordHasher.Verify(
+        if (string.IsNullOrWhiteSpace(user.PasswordHash))
+        {
+            throw new DomainException(
+                "Esta cuenta está vinculada a Google. La autenticación y contraseña son gestionadas directamente por Google.");
+        }
+
+        if (!_passwordHasher.Verify(
                 request.CurrentPassword,
                 user.PasswordHash))
         {

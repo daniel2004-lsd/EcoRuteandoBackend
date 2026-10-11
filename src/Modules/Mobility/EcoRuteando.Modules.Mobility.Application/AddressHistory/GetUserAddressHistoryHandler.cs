@@ -1,3 +1,4 @@
+using EcoRuteando.Modules.Mobility.Application.Abstractions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -26,8 +27,8 @@ public sealed class GetUserAddressHistoryHandler
                 Id = a.Id,
                 SearchText = a.SearchText,
                 PlaceId = a.PlaceId,
-                Latitude = a.Location.Value.Y,
-                Longitude = a.Location.Value.X,
+                Latitude = (decimal)a.Location.Y,
+                Longitude = (decimal)a.Location.X,
                 SearchType = a.SearchType,
                 CreatedAt = a.CreatedAt
             })

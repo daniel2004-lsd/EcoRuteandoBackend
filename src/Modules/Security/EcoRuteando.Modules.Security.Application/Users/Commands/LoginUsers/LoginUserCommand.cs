@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +10,7 @@ namespace EcoRuteando.Modules.Security.Application.Users.Commands.LoginUsers
     public sealed record LoginUserCommand
     (
         string Email,
-        string Password
+        string Password,
+        string? TrustedDeviceToken = null
     ) : IRequest<LoginResponse>;
 }

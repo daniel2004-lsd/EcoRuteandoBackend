@@ -1,4 +1,4 @@
-﻿using EcoRuteando.Modules.Security.Application.Users.Commands.ForgotPassword;
+using EcoRuteando.Modules.Security.Application.Users.Commands.ForgotPassword;
 using EcoRuteando.Modules.Security.Application.Users.Commands.ChangeMyPassword;
 using EcoRuteando.Modules.Security.Application.Users.Commands.LoginOAuth;
 using EcoRuteando.Modules.Security.Application.Users.Commands.LoginUsers;
@@ -62,7 +62,8 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
         {
             var command = new LoginUserCommand(
                 request.Email,
-                request.Password);
+                request.Password,
+                request.TrustedDeviceToken);
 
             var token = await _mediator.Send(
                 command,
@@ -331,11 +332,11 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
             var userId = Guid.Parse(
                 User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
-            await _mediator.Send(
-                new VerifyTwoFactorAuthCommand(userId, request.Code),
+            var result = await _mediator.Send(
+                new VerifyTwoFactorAuthCommand(userId, request.Code, request.RememberDevice),
                 cancellationToken);
 
-            return Ok(new { message = "2FA activado correctamente." });
+            return Ok(result);
         }
 
         [Authorize]

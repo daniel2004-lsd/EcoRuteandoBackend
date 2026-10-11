@@ -1,11 +1,11 @@
+using EcoRuteando.Modules.Mobility.Application.Abstractions;
 using EcoRuteando.Modules.Mobility.Domain.Entities;
 using EcoRuteando.Modules.Mobility.Infrastructure.Persistence.Configurations;
-using EcoRuteando.Shared.Abstractions.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace EcoRuteando.Modules.Mobility.Infrastructure.Persistence;
 
-public class MobilityDbContext : DbContext, IMobilityUnitOfWork
+public class MobilityDbContext : DbContext, IMobilityDbContext
 {
     public MobilityDbContext(DbContextOptions<MobilityDbContext> options)
         : base(options)
@@ -29,6 +29,8 @@ public class MobilityDbContext : DbContext, IMobilityUnitOfWork
     public DbSet<Rating> Ratings => Set<Rating>();
 
     public DbSet<ObstacleReport> ObstacleReports => Set<ObstacleReport>();
+
+    public DbSet<AddressHistory> AddressHistory => Set<AddressHistory>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

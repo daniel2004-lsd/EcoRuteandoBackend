@@ -6,7 +6,8 @@ public sealed record EnableTwoFactorAuthResponse(
     string[] RecoveryCodes);
 
 public sealed record VerifyTwoFactorAuthRequest(
-    string Code);
+    string Code,
+    bool RememberDevice = false);
 
 public sealed record DisableTwoFactorAuthRequest(
     string Code);
