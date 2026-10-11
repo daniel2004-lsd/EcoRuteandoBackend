@@ -22,6 +22,8 @@ public static class DependencyInjection
             }));
 
         services.AddScoped<ISupportTicketRepository, SupportTicketRepository>();
+        services.AddScoped<ISystemConfigurationRepository, SystemConfigurationRepository>();
+        services.AddScoped<ITransportFactorRepository, TransportFactorRepository>();
 
         return services;
     }
