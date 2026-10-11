@@ -1,4 +1,5 @@
-﻿using EcoRuteando.Modules.Security.Domain.Repositories;
+using EcoRuteando.Modules.Security.Domain.Entities;
+using EcoRuteando.Modules.Security.Domain.Repositories;
 using EcoRuteando.Shared.Exceptions;
 using MediatR;
 
@@ -8,11 +9,14 @@ public sealed class GetCurrentUserQueryHandler
     : IRequestHandler<GetCurrentUserQuery, CurrentUserResponse>
 {
     private readonly IUserRepository _userRepository;
+    private readonly ITwoFactorAuthRepository _twoFactorAuthRepository;
 
     public GetCurrentUserQueryHandler(
-        IUserRepository userRepository)
+        IUserRepository userRepository,
+        ITwoFactorAuthRepository twoFactorAuthRepository)
     {
         _userRepository = userRepository;
+        _twoFactorAuthRepository = twoFactorAuthRepository;
     }
 
     public async Task<CurrentUserResponse> Handle(
@@ -33,12 +37,24 @@ public sealed class GetCurrentUserQueryHandler
             throw new DomainException("El usuario no tiene un rol asignado.");
         }
 
+        var twoFactor = await _twoFactorAuthRepository.GetByUserIdAndMethodAsync(
+            request.UserId,
+            TwoFactorMethod.TOTP,
+            cancellationToken);
+
+        bool isTwoFactorEnabled = twoFactor is { IsActive: true };
+        bool hasPassword = !string.IsNullOrWhiteSpace(user.PasswordHash);
+        string authProvider = hasPassword ? "local" : "google";
+
         return new CurrentUserResponse(
             user.Id,
             user.FirstName,
             user.LastName,
             user.Email,
             user.PhoneNumber,
-            user.PrimaryRole.Name);
+            user.PrimaryRole.Name,
+            hasPassword,
+            isTwoFactorEnabled,
+            authProvider);
     }
 }
