@@ -6,6 +6,7 @@ namespace EcoRuteando.Modules.Security.Infrastructure.Security;
 
 public sealed class TotpService : ITotpService
 {
+    private const string Base32Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
     private const int SecretLength = 20;
     private const int CodeLength = 6;
     private const int StepSeconds = 30;
@@ -14,30 +15,37 @@ public sealed class TotpService : ITotpService
     public string GenerateSecret()
     {
         var bytes = RandomNumberGenerator.GetBytes(SecretLength);
-        return Convert.ToBase64String(bytes).Replace("+", "-").Replace("/", "_").TrimEnd('=');
+        return Base32Encode(bytes);
     }
 
     public string GenerateQrCodeUri(string secret, string email, string issuer)
     {
         var encodedIssuer = Uri.EscapeDataString(issuer);
         var encodedEmail = Uri.EscapeDataString(email);
-        var encodedSecret = Uri.EscapeDataString(secret);
+        var cleanSecret = secret.Trim().ToUpperInvariant();
 
-        return $"otpauth://totp/{encodedIssuer}:{encodedEmail}?secret={encodedSecret}&issuer={encodedIssuer}&digits={CodeLength}&period={StepSeconds}";
+        return $"otpauth://totp/{encodedIssuer}:{encodedEmail}?secret={cleanSecret}&issuer={encodedIssuer}&algorithm=SHA1&digits={CodeLength}&period={StepSeconds}";
     }
 
     public bool ValidateCode(string secret, string code)
     {
+        if (string.IsNullOrWhiteSpace(code) || code.Length != CodeLength)
+        {
+            return false;
+        }
+
+        var cleanCode = code.Trim();
+        var cleanSecret = secret.Trim().ToUpperInvariant();
         var currentTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
         for (var i = -ValidationWindow; i <= ValidationWindow; i++)
         {
             var timeStep = (currentTime / StepSeconds) + i;
-            var expectedCode = ComputeTotp(secret, timeStep);
+            var expectedCode = ComputeTotp(cleanSecret, timeStep);
 
             if (CryptographicOperations.FixedTimeEquals(
                 Encoding.UTF8.GetBytes(expectedCode),
-                Encoding.UTF8.GetBytes(code)))
+                Encoding.UTF8.GetBytes(cleanCode)))
             {
                 return true;
             }
@@ -80,9 +88,34 @@ public sealed class TotpService : ITotpService
         return otp.ToString().PadLeft(CodeLength, '0');
     }
 
+    private static string Base32Encode(byte[] data)
+    {
+        var result = new StringBuilder((data.Length * 8 + 4) / 5);
+        int buffer = 0;
+        int bitsInBuffer = 0;
+
+        foreach (var b in data)
+        {
+            buffer = (buffer << 8) | b;
+            bitsInBuffer += 8;
+
+            while (bitsInBuffer >= 5)
+            {
+                bitsInBuffer -= 5;
+                result.Append(Base32Alphabet[(buffer >> bitsInBuffer) & 0x1F]);
+            }
+        }
+
+        if (bitsInBuffer > 0)
+        {
+            result.Append(Base32Alphabet[(buffer << (5 - bitsInBuffer)) & 0x1F]);
+        }
+
+        return result.ToString();
+    }
+
     private static byte[] Base32Decode(string input)
     {
-        const string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
         input = input.TrimEnd('=').ToUpperInvariant();
 
         var byteCount = input.Length * 5 / 8;
@@ -94,7 +127,7 @@ public sealed class TotpService : ITotpService
 
         foreach (var c in input)
         {
-            var val = alphabet.IndexOf(c);
+            var val = Base32Alphabet.IndexOf(c);
             if (val < 0) continue;
 
             buffer = (buffer << 5) | val;
@@ -103,7 +136,10 @@ public sealed class TotpService : ITotpService
             if (bitsInBuffer >= 8)
             {
                 bitsInBuffer -= 8;
-                result[index++] = (byte)(buffer >> bitsInBuffer);
+                if (index < result.Length)
+                {
+                    result[index++] = (byte)(buffer >> bitsInBuffer);
+                }
             }
         }
 
