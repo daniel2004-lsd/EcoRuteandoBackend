@@ -63,6 +63,10 @@ public sealed class ObstacleReportConfiguration : IEntityTypeConfiguration<Obsta
         builder.Property(r => r.ExpiresAt)
             .HasColumnName("expires_at");
 
+        builder.Property(r => r.ConfidenceScore)
+            .HasColumnName("confidence_score")
+            .HasDefaultValue((short)40);
+
         builder.Property(r => r.CreatedAt)
             .HasColumnName("created_at")
             .HasDefaultValueSql("now()");
