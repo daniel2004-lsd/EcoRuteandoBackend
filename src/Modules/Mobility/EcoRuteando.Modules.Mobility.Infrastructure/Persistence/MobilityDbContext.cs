@@ -30,6 +30,8 @@ public class MobilityDbContext : DbContext, IMobilityDbContext
 
     public DbSet<ObstacleReport> ObstacleReports => Set<ObstacleReport>();
 
+    public DbSet<ReportVote> ReportVotes => Set<ReportVote>();
+
     public DbSet<AddressHistory> AddressHistory => Set<AddressHistory>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -65,5 +67,6 @@ public class MobilityDbContext : DbContext, IMobilityDbContext
         modelBuilder.ApplyConfiguration(new SharedRouteConfiguration());
         modelBuilder.ApplyConfiguration(new RatingConfiguration());
         modelBuilder.ApplyConfiguration(new ObstacleReportConfiguration());
+        modelBuilder.ApplyConfiguration(new ReportVoteConfiguration());
     }
 }
