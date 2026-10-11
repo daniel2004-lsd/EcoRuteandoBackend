@@ -17,6 +17,30 @@ public interface IObstacleReportRepository
         ReportStatus? status = null,
         CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<ObstacleReport>> GetActiveReportsAsync(
+        double? latitude = null,
+        double? longitude = null,
+        double? radiusKm = null,
+        CancellationToken cancellationToken = default);
+
+    Task<ReportVote?> GetVoteAsync(
+        Guid reportId,
+        Guid userId,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<ReportVote>> GetVotesForReportAsync(
+        Guid reportId,
+        CancellationToken cancellationToken = default);
+
+    Task<Dictionary<Guid, (int Confirms, int Rejections, bool? UserVote)>> GetVotesStatsAsync(
+        IEnumerable<Guid> reportIds,
+        Guid? currentUserId = null,
+        CancellationToken cancellationToken = default);
+
+    Task AddVoteAsync(
+        ReportVote vote,
+        CancellationToken cancellationToken = default);
+
     Task AddAsync(
         ObstacleReport report,
         CancellationToken cancellationToken = default);
