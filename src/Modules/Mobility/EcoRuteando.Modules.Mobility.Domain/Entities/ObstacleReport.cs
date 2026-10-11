@@ -36,6 +36,8 @@ public sealed class ObstacleReport : Entity<Guid>
 
     public DateTime? ExpiresAt { get; private set; }
 
+    public short ConfidenceScore { get; private set; }
+
     private ObstacleReport()
     {
     }
@@ -75,7 +77,28 @@ public sealed class ObstacleReport : Entity<Guid>
         PhotoUrl = string.IsNullOrWhiteSpace(photoUrl) ? null : photoUrl.Trim();
         Status = ReportStatus.Pending;
         IsActive = true;
+        ConfidenceScore = (short)(string.IsNullOrWhiteSpace(photoUrl) ? 40 : 50);
+        ExpiresAt = DateTime.UtcNow.AddHours(24);
         CreatedAt = DateTime.UtcNow;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdateConfidenceScore(short score)
+    {
+        ConfidenceScore = Math.Clamp(score, (short)0, (short)100);
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetStatus(ReportStatus status)
+    {
+        Status = status;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void Reactivate(DateTime? newExpiresAt = null)
+    {
+        IsActive = true;
+        ExpiresAt = newExpiresAt ?? DateTime.UtcNow.AddHours(24);
         UpdatedAt = DateTime.UtcNow;
     }
 
