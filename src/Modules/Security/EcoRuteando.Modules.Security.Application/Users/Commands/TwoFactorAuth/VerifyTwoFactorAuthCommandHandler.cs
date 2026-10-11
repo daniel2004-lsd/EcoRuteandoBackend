@@ -8,26 +8,44 @@ using MediatR;
 namespace EcoRuteando.Modules.Security.Application.Users.Commands.TwoFactorAuth;
 
 public sealed class VerifyTwoFactorAuthCommandHandler
-    : IRequestHandler<VerifyTwoFactorAuthCommand, bool>
+    : IRequestHandler<VerifyTwoFactorAuthCommand, VerifyTwoFactorAuthResponse>
 {
     private readonly ITotpService _totpService;
     private readonly IEncryptionService _encryptionService;
     private readonly ITwoFactorAuthRepository _twoFactorAuthRepository;
+    private readonly IUserRepository _userRepository;
+    private readonly IJwtProvider _jwtProvider;
+    private readonly IRefreshTokenService _refreshTokenService;
+    private readonly IRefreshTokenRepository _refreshTokenRepository;
+    private readonly ISessionRepository _sessionRepository;
+    private readonly ITrustedDeviceService _trustedDeviceService;
     private readonly ISecurityUnitOfWork _unitOfWork;
 
     public VerifyTwoFactorAuthCommandHandler(
         ITotpService totpService,
         IEncryptionService encryptionService,
         ITwoFactorAuthRepository twoFactorAuthRepository,
+        IUserRepository userRepository,
+        IJwtProvider jwtProvider,
+        IRefreshTokenService refreshTokenService,
+        IRefreshTokenRepository refreshTokenRepository,
+        ISessionRepository sessionRepository,
+        ITrustedDeviceService trustedDeviceService,
         ISecurityUnitOfWork unitOfWork)
     {
         _totpService = totpService;
         _encryptionService = encryptionService;
         _twoFactorAuthRepository = twoFactorAuthRepository;
+        _userRepository = userRepository;
+        _jwtProvider = jwtProvider;
+        _refreshTokenService = refreshTokenService;
+        _refreshTokenRepository = refreshTokenRepository;
+        _sessionRepository = sessionRepository;
+        _trustedDeviceService = trustedDeviceService;
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<bool> Handle(
+    public async Task<VerifyTwoFactorAuthResponse> Handle(
         VerifyTwoFactorAuthCommand request,
         CancellationToken cancellationToken)
     {
@@ -53,9 +71,53 @@ public sealed class VerifyTwoFactorAuthCommandHandler
         {
             twoFactorAuth.Enable();
             _twoFactorAuthRepository.Update(twoFactorAuth);
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
         }
 
-        return true;
+        var user = await _userRepository.GetByIdAsync(request.UserId, cancellationToken);
+        if (user is null)
+        {
+            throw new NotFoundException("Usuario no encontrado.");
+        }
+
+        var roleName = user.PrimaryRole?.Name ?? "user";
+        var accessToken = _jwtProvider.GenerateToken(
+            user.Id,
+            user.Email,
+            roleName);
+
+        var refreshToken = _refreshTokenService.GenerateRefreshToken();
+        var refreshTokenHash = _refreshTokenService.ComputeHash(refreshToken);
+
+        var refreshTokenEntity = new EcoRuteando.Modules.Security.Domain.Entities.RefreshToken(
+            user.Id,
+            refreshTokenHash,
+            DateTime.UtcNow.AddDays(7),
+            null);
+
+        await _refreshTokenRepository.AddAsync(refreshTokenEntity, cancellationToken);
+
+        var session = new Session(
+            user.Id,
+            refreshTokenHash,
+            null,
+            null,
+            null,
+            DateTime.UtcNow.AddDays(7));
+
+        await _sessionRepository.AddAsync(session, cancellationToken);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        string? trustedDeviceToken = null;
+        if (request.RememberDevice)
+        {
+            trustedDeviceToken = _trustedDeviceService.GenerateTrustedDeviceToken(user.Id, 30);
+        }
+
+        return new VerifyTwoFactorAuthResponse(
+            "2FA verificado correctamente.",
+            accessToken,
+            refreshToken,
+            trustedDeviceToken);
     }
 }

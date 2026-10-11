@@ -36,13 +36,16 @@ public sealed class UpdateMyProfileCommandHandler
             throw new NotFoundException("Usuario no encontrado.");
         }
 
-        if (string.IsNullOrWhiteSpace(user.PasswordHash)
-            || !_passwordHasher.Verify(
-                request.CurrentPassword,
-                user.PasswordHash))
+        if (!string.IsNullOrWhiteSpace(user.PasswordHash))
         {
-            throw new DomainException(
-                "La contraseña actual es incorrecta.");
+            if (string.IsNullOrWhiteSpace(request.CurrentPassword)
+                || !_passwordHasher.Verify(
+                    request.CurrentPassword,
+                    user.PasswordHash))
+            {
+                throw new DomainException(
+                    "La contraseña actual es incorrecta.");
+            }
         }
 
         var newEmail = request.Email.Trim().ToLowerInvariant();

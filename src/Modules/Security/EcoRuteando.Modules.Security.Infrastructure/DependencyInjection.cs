@@ -1,4 +1,4 @@
-﻿using EcoRuteando.Modules.Security.Application.Abstractions.BackgroundJobs;
+using EcoRuteando.Modules.Security.Application.Abstractions.BackgroundJobs;
 using EcoRuteando.Modules.Security.Application.Abstractions.Email;
 using EcoRuteando.Modules.Security.Application.Abstractions.Logging;
 using EcoRuteando.Modules.Security.Application.Abstractions.Security;
@@ -85,6 +85,7 @@ public static class DependencyInjection
         services.AddScoped<IEmailTemplateService, EmailTemplateService>();
         services.AddScoped<IOtpProvider, OtpProvider>();
         services.AddScoped<ITotpService, TotpService>();
+        services.AddScoped<ITrustedDeviceService, TrustedDeviceService>();
         services.AddScoped<IEncryptionService, AesEncryptionService>();
         services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
         services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();

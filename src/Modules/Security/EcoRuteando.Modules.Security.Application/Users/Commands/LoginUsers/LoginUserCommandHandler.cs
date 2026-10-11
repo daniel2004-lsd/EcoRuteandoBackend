@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using EcoRuteando.Modules.Security.Application.Abstractions.Logging;
 using EcoRuteando.Modules.Security.Application.Abstractions.Security;
 using EcoRuteando.Modules.Security.Domain.Entities;
@@ -21,6 +21,7 @@ public sealed class LoginUserCommandHandler
     private readonly ISessionRepository _sessionRepository;
     private readonly ITwoFactorAuthRepository _twoFactorAuthRepository;
     private readonly ITotpService _totpService;
+    private readonly ITrustedDeviceService _trustedDeviceService;
     private readonly ISecurityUnitOfWork _unitOfWork;
     private readonly IAuditLogService _auditLogService;
 
@@ -34,6 +35,7 @@ public sealed class LoginUserCommandHandler
         ISessionRepository sessionRepository,
         ITwoFactorAuthRepository twoFactorAuthRepository,
         ITotpService totpService,
+        ITrustedDeviceService trustedDeviceService,
         ISecurityUnitOfWork unitOfWork,
         IAuditLogService auditLogService)
     {
@@ -46,6 +48,7 @@ public sealed class LoginUserCommandHandler
         _sessionRepository = sessionRepository;
         _twoFactorAuthRepository = twoFactorAuthRepository;
         _totpService = totpService;
+        _trustedDeviceService = trustedDeviceService;
         _unitOfWork = unitOfWork;
         _auditLogService = auditLogService;
     }
@@ -132,26 +135,32 @@ public sealed class LoginUserCommandHandler
 
         if (twoFactorAuth is { IsActive: true })
         {
-            // Generate a temporary token for 2FA verification
-            var twoFactorToken = _jwtProvider.GenerateToken(
-                user.Id,
-                user.Email,
-                "two_factor_pending");
+            var isTrustedDevice = _trustedDeviceService.ValidateTrustedDeviceToken(
+                request.TrustedDeviceToken, user.Id);
 
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            if (!isTrustedDevice)
+            {
+                // Generate a temporary token for 2FA verification
+                var twoFactorToken = _jwtProvider.GenerateToken(
+                    user.Id,
+                    user.Email,
+                    "two_factor_pending");
 
-            await _auditLogService.LogAsync(
-                user.Id,
-                "user.login_2fa_required",
-                entityName: "users",
-                entityId: user.Id.ToString(),
-                cancellationToken: cancellationToken);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            return new LoginResponse(
-                AccessToken: string.Empty,
-                RefreshToken: string.Empty,
-                RequiresTwoFactor: true,
-                TwoFactorToken: twoFactorToken);
+                await _auditLogService.LogAsync(
+                    user.Id,
+                    "user.login_2fa_required",
+                    entityName: "users",
+                    entityId: user.Id.ToString(),
+                    cancellationToken: cancellationToken);
+
+                return new LoginResponse(
+                    AccessToken: string.Empty,
+                    RefreshToken: string.Empty,
+                    RequiresTwoFactor: true,
+                    TwoFactorToken: twoFactorToken);
+            }
         }
 
         // No 2FA — proceed with normal login

@@ -39,5 +39,8 @@ public sealed class SharedRouteConfiguration
         builder.Property(sr => sr.CreatedAt)
             .HasColumnName("created_at")
             .HasDefaultValueSql("now()");
+
+        builder.Property(sr => sr.UpdatedAt)
+            .HasColumnName("updated_at");
     }
 }

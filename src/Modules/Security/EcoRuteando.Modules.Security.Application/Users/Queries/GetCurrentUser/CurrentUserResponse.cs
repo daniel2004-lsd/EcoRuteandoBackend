@@ -1,4 +1,4 @@
-﻿namespace EcoRuteando.Modules.Security.Application.Users.Queries.GetCurrentUser;
+namespace EcoRuteando.Modules.Security.Application.Users.Queries.GetCurrentUser;
 
 public sealed record CurrentUserResponse(
     Guid Id,
@@ -6,4 +6,7 @@ public sealed record CurrentUserResponse(
     string? LastName,
     string Email,
     string? PhoneNumber,
-    string Role);
+    string Role,
+    bool HasPassword = true,
+    bool TwoFactorEnabled = false,
+    string? AuthProvider = "local");

@@ -1,3 +1,4 @@
+using EcoRuteando.Modules.Mobility.Application.Abstractions;
 using EcoRuteando.Modules.Mobility.Application.Abstractions.Export;
 using EcoRuteando.Modules.Mobility.Application.Abstractions.GoogleMaps;
 using EcoRuteando.Modules.Mobility.Application.Abstractions.Weather;
@@ -42,6 +43,9 @@ public static class DependencyInjection
         });
 
         services.AddScoped<IMobilityUnitOfWork>(sp =>
+            sp.GetRequiredService<MobilityDbContext>());
+
+        services.AddScoped<IMobilityDbContext>(sp =>
             sp.GetRequiredService<MobilityDbContext>());
 
         // Repositorios
