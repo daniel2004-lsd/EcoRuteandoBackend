@@ -24,6 +24,7 @@ public static class DependencyInjection
 
         services.AddScoped<IAirQualityDataRepository, AirQualityDataRepository>();
         services.AddScoped<IWeatherDataRepository, WeatherDataRepository>();
+        services.AddScoped<IApiCacheRepository, ApiCacheRepository>();
 
         return services;
     }
