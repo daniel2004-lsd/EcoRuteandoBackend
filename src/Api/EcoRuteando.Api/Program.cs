@@ -2,6 +2,8 @@ using System.Threading.RateLimiting;
 using EcoRuteando.Api.Middlewares;
 using EcoRuteando.Modules.Admin.Application;
 using EcoRuteando.Modules.Admin.Infrastructure;
+using EcoRuteando.Modules.Integrations.Application;
+using EcoRuteando.Modules.Integrations.Infrastructure;
 using EcoRuteando.Modules.Mobility.Application;
 using EcoRuteando.Modules.Mobility.Infrastructure;
 using EcoRuteando.Modules.Notifications.Application;
@@ -29,12 +31,14 @@ namespace EcoRuteando.Api
             builder.Services.AddMobilityApplication();
             builder.Services.AddNotificationsApplication();
             builder.Services.AddAdminApplication();
+            builder.Services.AddIntegrationsApplication();
 
             // Registrar Infrastructure
             builder.Services.AddSecurityInfrastructure(builder.Configuration);
             builder.Services.AddMobilityInfrastructure(builder.Configuration);
             builder.Services.AddNotificationsInfrastructure(builder.Configuration);
             builder.Services.AddAdminInfrastructure(builder.Configuration);
+            builder.Services.AddIntegrationsInfrastructure(builder.Configuration);
             builder.Services.AddAuthorization();
             builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
             builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();

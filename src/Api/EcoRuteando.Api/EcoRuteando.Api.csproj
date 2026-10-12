@@ -20,6 +20,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Modules\Admin\EcoRuteando.Modules.Admin.Infrastructure\EcoRuteando.Modules.Admin.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Admin\EcoRuteando.Modules.Admin.Presentation\EcoRuteando.Modules.Admin.Presentation.csproj" />
+    <ProjectReference Include="..\..\Modules\Integrations\EcoRuteando.Modules.Integrations.Infrastructure\EcoRuteando.Modules.Integrations.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Integrations\EcoRuteando.Modules.Integrations.Presentation\EcoRuteando.Modules.Integrations.Presentation.csproj" />
     <ProjectReference Include="..\..\Modules\Mobility\EcoRuteando.Modules.Mobility.Infrastructure\EcoRuteando.Modules.Mobility.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Mobility\EcoRuteando.Modules.Mobility.Presentation\EcoRuteando.Modules.Mobility.Presentation.csproj" />
     <ProjectReference Include="..\..\Modules\Notifications\EcoRuteando.Modules.Notifications.Infrastructure\EcoRuteando.Modules.Notifications.Infrastructure.csproj" />
