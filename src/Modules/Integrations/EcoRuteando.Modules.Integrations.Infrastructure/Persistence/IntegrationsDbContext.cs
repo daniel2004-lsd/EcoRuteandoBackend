@@ -12,6 +12,7 @@ public class IntegrationsDbContext : DbContext
 
     public DbSet<AirQualityData> AirQualityData => Set<AirQualityData>();
     public DbSet<WeatherData> WeatherData => Set<WeatherData>();
+    public DbSet<ApiCacheEntry> ApiCache => Set<ApiCacheEntry>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
