@@ -24,6 +24,8 @@ public static class DependencyInjection
         services.AddScoped<ISupportTicketRepository, SupportTicketRepository>();
         services.AddScoped<ISystemConfigurationRepository, SystemConfigurationRepository>();
         services.AddScoped<ITransportFactorRepository, TransportFactorRepository>();
+        services.AddScoped<IDailyStatisticRepository, DailyStatisticRepository>();
+        services.AddScoped<IAdminExportRepository, AdminExportRepository>();
 
         return services;
     }

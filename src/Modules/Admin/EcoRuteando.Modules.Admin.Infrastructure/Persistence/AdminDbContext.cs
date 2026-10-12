@@ -14,6 +14,8 @@ public class AdminDbContext : DbContext
     public DbSet<SupportMessage> SupportMessages => Set<SupportMessage>();
     public DbSet<SystemConfiguration> SystemConfigurations => Set<SystemConfiguration>();
     public DbSet<TransportFactor> TransportFactors => Set<TransportFactor>();
+    public DbSet<DailyStatistic> DailyStatistics => Set<DailyStatistic>();
+    public DbSet<AdminExport> Exports => Set<AdminExport>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
