@@ -12,6 +12,8 @@ public class AdminDbContext : DbContext
 
     public DbSet<SupportTicket> SupportTickets => Set<SupportTicket>();
     public DbSet<SupportMessage> SupportMessages => Set<SupportMessage>();
+    public DbSet<SystemConfiguration> SystemConfigurations => Set<SystemConfiguration>();
+    public DbSet<TransportFactor> TransportFactors => Set<TransportFactor>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
