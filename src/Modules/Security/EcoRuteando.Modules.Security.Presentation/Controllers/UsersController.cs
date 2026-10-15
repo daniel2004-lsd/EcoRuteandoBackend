@@ -1,5 +1,6 @@
 ﻿using EcoRuteando.Modules.Security.Application.Users.Commands.UpdateUser;
 using EcoRuteando.Modules.Security.Application.Users.Commands.UpdateMyProfile;
+using EcoRuteando.Modules.Security.Application.Users.Commands.UpdateMyPhoto;
 using EcoRuteando.Modules.Security.Application.Users.Queries.GetUserById;
 using EcoRuteando.Modules.Security.Application.Users.Queries.GetUsers;
 using EcoRuteando.Modules.Security.Presentation.Contracts.Users;
@@ -136,6 +137,31 @@ public sealed class UsersController : ControllerBase
         await _mediator.Send(command, cancellationToken);
 
         return NoContent();
+    }
+
+    /// <summary>
+    /// El usuario autenticado actualiza su foto de perfil (base64 data URI).
+    /// Enviar photoBase64: null para eliminar la foto.
+    /// </summary>
+    [HttpPut("me/photo")]
+    public async Task<IActionResult> UpdateMyPhoto(
+        UpdateMyPhotoRequest request,
+        CancellationToken cancellationToken)
+    {
+        var userId = GetAuthenticatedUserId();
+
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+
+        var command = new UpdateMyPhotoCommand(
+            userId.Value,
+            request.PhotoBase64);
+
+        var response = await _mediator.Send(command, cancellationToken);
+
+        return Ok(response);
     }
 
     private Guid? GetAuthenticatedUserId()

@@ -31,6 +31,7 @@ public sealed class RoutesController : ControllerBase
     public async Task<IActionResult> GetRoutes(
         [FromQuery] string? transportType,
         [FromQuery] bool? includeInactive,
+        [FromQuery] bool? mine,
         CancellationToken cancellationToken)
     {
         TransportType? type = null;
@@ -41,8 +42,11 @@ public sealed class RoutesController : ControllerBase
             type = parsed;
         }
 
+        // Si mine=true, filtrar solo las rutas creadas por el usuario autenticado
+        Guid? createdBy = mine == true ? GetUserId() : null;
+
         var routes = await _mediator.Send(
-            new GetRoutesQuery(type, includeInactive ?? false),
+            new GetRoutesQuery(type, includeInactive ?? false, createdBy),
             cancellationToken);
 
         return Ok(routes);

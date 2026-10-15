@@ -12,5 +12,5 @@ public sealed record UpdateMyProfileCommand(
     string? LastName,
     string Email,
     string? PhoneNumber,
-    string CurrentPassword
+    string? CurrentPassword = null
 ) : IRequest<UpdateMyProfileResponse>;

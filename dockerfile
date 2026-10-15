@@ -19,6 +19,18 @@ COPY src/Modules/Mobility/EcoRuteando.Modules.Mobility.Domain/EcoRuteando.Module
 COPY src/Modules/Mobility/EcoRuteando.Modules.Mobility.Application/EcoRuteando.Modules.Mobility.Application.csproj src/Modules/Mobility/EcoRuteando.Modules.Mobility.Application/
 COPY src/Modules/Mobility/EcoRuteando.Modules.Mobility.Infrastructure/EcoRuteando.Modules.Mobility.Infrastructure.csproj src/Modules/Mobility/EcoRuteando.Modules.Mobility.Infrastructure/
 COPY src/Modules/Mobility/EcoRuteando.Modules.Mobility.Presentation/EcoRuteando.Modules.Mobility.Presentation.csproj src/Modules/Mobility/EcoRuteando.Modules.Mobility.Presentation/
+COPY src/Modules/Notifications/EcoRuteando.Modules.Notifications.Domain/EcoRuteando.Modules.Notifications.Domain.csproj src/Modules/Notifications/EcoRuteando.Modules.Notifications.Domain/
+COPY src/Modules/Notifications/EcoRuteando.Modules.Notifications.Application/EcoRuteando.Modules.Notifications.Application.csproj src/Modules/Notifications/EcoRuteando.Modules.Notifications.Application/
+COPY src/Modules/Notifications/EcoRuteando.Modules.Notifications.Infrastructure/EcoRuteando.Modules.Notifications.Infrastructure.csproj src/Modules/Notifications/EcoRuteando.Modules.Notifications.Infrastructure/
+COPY src/Modules/Notifications/EcoRuteando.Modules.Notifications.Presentation/EcoRuteando.Modules.Notifications.Presentation.csproj src/Modules/Notifications/EcoRuteando.Modules.Notifications.Presentation/
+COPY src/Modules/Admin/EcoRuteando.Modules.Admin.Domain/EcoRuteando.Modules.Admin.Domain.csproj src/Modules/Admin/EcoRuteando.Modules.Admin.Domain/
+COPY src/Modules/Admin/EcoRuteando.Modules.Admin.Application/EcoRuteando.Modules.Admin.Application.csproj src/Modules/Admin/EcoRuteando.Modules.Admin.Application/
+COPY src/Modules/Admin/EcoRuteando.Modules.Admin.Infrastructure/EcoRuteando.Modules.Admin.Infrastructure.csproj src/Modules/Admin/EcoRuteando.Modules.Admin.Infrastructure/
+COPY src/Modules/Admin/EcoRuteando.Modules.Admin.Presentation/EcoRuteando.Modules.Admin.Presentation.csproj src/Modules/Admin/EcoRuteando.Modules.Admin.Presentation/
+COPY src/Modules/Integrations/EcoRuteando.Modules.Integrations.Domain/EcoRuteando.Modules.Integrations.Domain.csproj src/Modules/Integrations/EcoRuteando.Modules.Integrations.Domain/
+COPY src/Modules/Integrations/EcoRuteando.Modules.Integrations.Application/EcoRuteando.Modules.Integrations.Application.csproj src/Modules/Integrations/EcoRuteando.Modules.Integrations.Application/
+COPY src/Modules/Integrations/EcoRuteando.Modules.Integrations.Infrastructure/EcoRuteando.Modules.Integrations.Infrastructure.csproj src/Modules/Integrations/EcoRuteando.Modules.Integrations.Infrastructure/
+COPY src/Modules/Integrations/EcoRuteando.Modules.Integrations.Presentation/EcoRuteando.Modules.Integrations.Presentation.csproj src/Modules/Integrations/EcoRuteando.Modules.Integrations.Presentation/
 COPY src/Api/EcoRuteando.Api/EcoRuteando.Api.csproj src/Api/EcoRuteando.Api/
 
 # Restaurar dependencias
