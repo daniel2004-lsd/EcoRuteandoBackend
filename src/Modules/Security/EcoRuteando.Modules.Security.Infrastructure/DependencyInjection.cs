@@ -1,3 +1,4 @@
+using EcoRuteando.Modules.Security.Application.Users.Commands.ForgotPassword;
 using EcoRuteando.Modules.Security.Application.Abstractions.BackgroundJobs;
 using EcoRuteando.Modules.Security.Application.Abstractions.Email;
 using EcoRuteando.Modules.Security.Application.Abstractions.Logging;
@@ -64,6 +65,8 @@ public static class DependencyInjection
         services.AddScoped<IRolePermissionRepository, RolePermissionRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IPasswordRecoveryRepository, PasswordRecoveryRepository>();
+        // Limitador de forgot-password: singleton para mantener estado entre requests
+        services.AddSingleton<IForgotPasswordRateLimiter, InMemoryForgotPasswordRateLimiter>();
         services.AddScoped<ISecurityPolicyRepository, SecurityPolicyRepository>();
         services.AddScoped<IEmailVerificationRepository, EmailVerificationRepository>();
         services.AddScoped<IOAuthAccountRepository, OAuthAccountRepository>();
