@@ -1,0 +1,40 @@
+# Render Blueprint: Web Service del backend EcoRuteando (.NET 9).
+# Builda desde el Dockerfile del repo y se conecta al Render Postgres vinculado.
+services:
+  - type: web
+    name: ecoruteando-backend
+    runtime: docker
+    dockerfilePath: ./src/Api/EcoRuteando.Api/Dockerfile
+    # El Dockerfile builda desde la raíz (COPY . . y WORKDIR /src/src/Api/...)
+    dockerContext: .
+    # Puerto del contenedor. El Dockerfile hace EXPOSE 8080 y ASP.NET Core
+    # escucha en 8080 por defecto. Render mapea su PORT externo a este.
+    envVars:
+      # Render asigna el puerto de forma dinámica; ASP.NET Core lo lee de $PORT.
+      - key: ASPNETCORE_URLS
+        value: http://+:8080
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      # Cadena de conexión al Render Postgres vinculado (se inyecta automáticamente
+      # al vincular la BD a este servicio en el dashboard).
+      - key: ConnectionStrings__DefaultConnection
+        fromDatabase:
+          name: ecoruteando-db
+          property: connectionString
+      # El resto de secretos se definen como "Secret" en el dashboard de Render
+      # (sync: false) para que no se commiteen: Jwt__SecretKey, Admin__Password,
+      # Google__*, EmailSettings__Password, GoogleMaps__ApiKey, etc.
+      - key: Jwt__SecretKey
+        sync: false
+      - key: Admin__Email
+        sync: false
+      - key: Admin__Password
+        sync: false
+      - key: GoogleMaps__ApiKey
+        sync: false
+      - key: Google__ClientId
+        sync: false
+      - key: Google__ClientSecret
+        sync: false
+      - key: EmailSettings__Password
+        sync: false
