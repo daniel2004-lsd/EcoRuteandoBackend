@@ -124,7 +124,9 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
             return Ok(user);
         }
 
-        [EnableRateLimiting("sensitive")]
+        // Rate limiting por email con lockout escalonado se maneja en el handler
+        // (IForgotPasswordRateLimiter). No usar "sensitive" aquí: era 3/hora por IP
+        // y bloqueaba al usuario legítimo demasiado rápido.
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword(
         ForgotPasswordRequest request,

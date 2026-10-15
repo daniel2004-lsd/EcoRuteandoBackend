@@ -23,6 +23,7 @@ public sealed class ForgotPasswordCommandHandler
     private readonly IEmailService _emailService;
     private readonly IEmailTemplateService _templateService;
     private readonly IAuditLogService _auditLogService;
+    private readonly IForgotPasswordRateLimiter _rateLimiter;
 
     public ForgotPasswordCommandHandler(
     IUserRepository userRepository,
@@ -31,7 +32,8 @@ public sealed class ForgotPasswordCommandHandler
     IOtpProvider otpProvider,
     IEmailService emailService,
     IEmailTemplateService templateService,
-    IAuditLogService auditLogService)
+    IAuditLogService auditLogService,
+    IForgotPasswordRateLimiter rateLimiter)
     {
         _userRepository = userRepository;
         _passwordRecoveryRepository = passwordRecoveryRepository;
@@ -40,12 +42,17 @@ public sealed class ForgotPasswordCommandHandler
         _emailService = emailService;
         _templateService = templateService;
         _auditLogService = auditLogService;
+        _rateLimiter = rateLimiter;
     }
 
     public async Task Handle(
     ForgotPasswordCommand request,
     CancellationToken cancellationToken)
     {
+        // Lockout escalonado por email: 4 intentos → 1min → 3min → 5min → 15min
+        // Lanza TooManyRequestsException (429) si está bloqueado o excede el máximo.
+        _rateLimiter.RegisterAttempt(request.Email);
+
         var user = await _userRepository.GetByEmailAsync(request.Email);
 
         if (user is null)
