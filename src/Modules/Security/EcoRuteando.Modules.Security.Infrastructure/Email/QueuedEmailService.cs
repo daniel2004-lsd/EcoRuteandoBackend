@@ -22,14 +22,14 @@ public sealed class QueuedEmailService : IEmailService
         string subject,
         string htmlBody)
     {
-        await _queue.EnqueueAsync<SmtpEmailService>(async (smtpEmailService, _) =>
+        await _queue.EnqueueAsync<ResendEmailService>(async (resendEmailService, _) =>
         {
             try
             {
-                await smtpEmailService.SendAsync(to, subject, htmlBody);
+                await resendEmailService.SendAsync(to, subject, htmlBody);
 
                 _logger.LogInformation(
-                    "Email enviado en segundo plano → Para: {To} | Asunto: {Subject}",
+                    "Email encolado para envío → Para: {To} | Asunto: {Subject}",
                     to, subject);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
