@@ -25,6 +25,14 @@ public sealed class GetRoutesQueryHandler
                 request.TransportType,
                 cancellationToken);
 
+        // Filtrar por usuario si se solicita (mine=true)
+        if (request.CreatedBy.HasValue)
+        {
+            routes = routes
+                .Where(r => r.CreatedBy == request.CreatedBy.Value)
+                .ToList();
+        }
+
         return routes
             .Select(r => new GetRoutesResponse(
                 r.Id,

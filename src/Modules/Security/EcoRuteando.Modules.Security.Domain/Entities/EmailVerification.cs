@@ -37,4 +37,14 @@ public sealed class EmailVerification : Entity<Guid>
         VerifiedAt = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
     }
+
+    public void UpdateToken(string tokenHash, DateTime expiresAt, IPAddress? requestIp)
+    {
+        TokenHash = tokenHash;
+        ExpiresAt = expiresAt;
+        RequestIp = requestIp;
+        IsVerified = false;
+        VerifiedAt = null;
+        UpdatedAt = DateTime.UtcNow;
+    }
 }
