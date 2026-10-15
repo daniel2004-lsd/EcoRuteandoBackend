@@ -51,11 +51,6 @@ public sealed class SendVerificationEmailCommandHandler
         var existingVerification = await _emailVerificationRepository
             .GetActiveByUserIdAsync(user.Id, cancellationToken);
 
-        if (existingVerification is not null)
-        {
-            return;
-        }
-
         var code = RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
         var tokenHash = ComputeSha256(code);
 
@@ -65,13 +60,22 @@ public sealed class SendVerificationEmailCommandHandler
             IPAddress.TryParse(request.RequestIp, out requestIp);
         }
 
-        var verification = new EmailVerification(
-            user.Id,
-            tokenHash,
-            DateTime.UtcNow.AddHours(24),
-            requestIp);
+        if (existingVerification is not null)
+        {
+            existingVerification.UpdateToken(tokenHash, DateTime.UtcNow.AddHours(24), requestIp);
+            _emailVerificationRepository.Update(existingVerification);
+        }
+        else
+        {
+            var verification = new EmailVerification(
+                user.Id,
+                tokenHash,
+                DateTime.UtcNow.AddHours(24),
+                requestIp);
 
-        await _emailVerificationRepository.AddAsync(verification, cancellationToken);
+            await _emailVerificationRepository.AddAsync(verification, cancellationToken);
+        }
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var body = _templateService.LoadTemplate("VerifyEmail.html");

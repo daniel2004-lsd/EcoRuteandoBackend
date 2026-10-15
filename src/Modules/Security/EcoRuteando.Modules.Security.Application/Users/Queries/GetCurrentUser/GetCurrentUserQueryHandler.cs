@@ -55,6 +55,7 @@ public sealed class GetCurrentUserQueryHandler
             user.PrimaryRole.Name,
             hasPassword,
             isTwoFactorEnabled,
-            authProvider);
+            authProvider,
+            user.ProfilePhotoUrl);
     }
 }

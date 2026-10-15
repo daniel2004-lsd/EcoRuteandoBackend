@@ -9,4 +9,5 @@ public sealed record CurrentUserResponse(
     string Role,
     bool HasPassword = true,
     bool TwoFactorEnabled = false,
-    string? AuthProvider = "local");
+    string? AuthProvider = "local",
+    string? ProfilePhotoUrl = null);

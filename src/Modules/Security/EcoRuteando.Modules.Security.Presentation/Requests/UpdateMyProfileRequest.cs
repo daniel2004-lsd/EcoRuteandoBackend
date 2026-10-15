@@ -5,5 +5,5 @@ public sealed record UpdateMyProfileRequest(
     string? LastName,
     [Required] [EmailAddress] string Email,
     string? PhoneNumber,
-    [Required] string CurrentPassword
+    string? CurrentPassword
 );
