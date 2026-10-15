@@ -89,6 +89,21 @@ public sealed class ExceptionMiddleware
                 "Forbidden",
                 exception.Message);
         }
+        catch (TooManyRequestsException exception)
+        {
+            // Enviar header Retry-After para clientes que lo usen
+            context.Response.Headers.RetryAfter = exception.RetryAfterSeconds.ToString();
+
+            await WriteProblemDetails(
+                context,
+                StatusCodes.Status429TooManyRequests,
+                "Too Many Requests",
+                new Dictionary<string, object?>
+                {
+                    ["message"] = exception.Message,
+                    ["retryAfterSeconds"] = exception.RetryAfterSeconds
+                });
+        }
         catch (DomainException exception)
         {
             await WriteProblemDetails(

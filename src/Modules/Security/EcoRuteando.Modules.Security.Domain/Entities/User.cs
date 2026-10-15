@@ -150,6 +150,12 @@ namespace EcoRuteando.Modules.Security.Domain.Entities
             UpdatedAt = DateTime.UtcNow;
         }
 
+        public void SetProfilePhoto(string? photoBase64)
+        {
+            ProfilePhotoUrl = photoBase64;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
         public void RecordLogin()
         {
             LastLogin = DateTime.UtcNow;

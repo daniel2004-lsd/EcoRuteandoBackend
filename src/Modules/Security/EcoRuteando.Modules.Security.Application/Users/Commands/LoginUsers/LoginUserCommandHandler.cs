@@ -79,9 +79,8 @@ public sealed class LoginUserCommandHandler
         }
 
         var isPasswordValid = user.PasswordHash is not null
-            && _passwordHasher.Verify(
-                request.Password,
-                user.PasswordHash);
+            && (_passwordHasher.Verify(request.Password, user.PasswordHash)
+                || _passwordHasher.Verify(request.Password.Trim(), user.PasswordHash));
 
         if (!isPasswordValid)
         {
