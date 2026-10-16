@@ -1,6 +1,5 @@
 ﻿using EcoRuteando.Modules.Security.Application.Abstractions.Logging;
 using EcoRuteando.Modules.Security.Application.Abstractions.Security;
-using EcoRuteando.Modules.Security.Application.Users.Commands.SendVerificationEmail;
 using EcoRuteando.Modules.Security.Domain.Entities;
 using EcoRuteando.Modules.Security.Domain.Repositories;
 using EcoRuteando.Shared.Abstractions.Persistence;
@@ -59,6 +58,7 @@ public sealed class RegisterUserCommandHandler
         );
 
         user.AcceptTerms();
+        user.VerifyEmail();
 
         var role = await _roleRepository.GetByNameAsync(
             "User",
@@ -85,10 +85,6 @@ public sealed class RegisterUserCommandHandler
             entityName: "users",
             entityId: user.Id.ToString(),
             cancellationToken: cancellationToken);
-
-        await _sender.Send(
-            new SendVerificationEmailCommand(user.Id, null, null),
-            cancellationToken);
 
         return user.Id;
     }
