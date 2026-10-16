@@ -11,6 +11,7 @@ using EcoRuteando.Modules.Security.Application.Users.Commands.Sessions;
 using EcoRuteando.Modules.Security.Application.Users.Commands.TwoFactorAuth;
 using EcoRuteando.Modules.Security.Application.Users.Commands.VerifyEmail;
 using EcoRuteando.Modules.Security.Application.Users.Queries.GetCurrentUser;
+using EcoRuteando.Modules.Security.Application.Users.Queries.GetEmailVerificationStatus;
 using EcoRuteando.Modules.Security.Presentation.Contracts.Auth;
 using EcoRuteando.Modules.Security.Presentation.Requests;
 using MediatR;
@@ -210,17 +211,45 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
                 userId = parsed;
             }
 
-            await _mediator.Send(
+            var alreadyVerified = await _mediator.Send(
                 new SendVerificationEmailCommand(
                     userId,
                     request?.Email,
                     HttpContext.Connection.RemoteIpAddress?.ToString()),
                 cancellationToken);
 
+            if (alreadyVerified)
+            {
+                return Ok(new
+                {
+                    message = "El correo electrónico ya está verificado.",
+                    alreadyVerified = true
+                });
+            }
+
             return Ok(new
             {
-                message = "Si el correo no fue verificado, se envió un código de verificación."
+                message = "Si el correo no fue verificado, se envió un código de verificación.",
+                alreadyVerified = false
             });
+        }
+
+        /// <summary>
+        /// Indica si un correo electrónico ya está verificado, para que la UI
+        /// pueda mostrar "cuenta ya activada" en lugar del formulario de código.
+        /// </summary>
+        [AllowAnonymous]
+        [EnableRateLimiting("auth")]
+        [HttpGet("verification-status")]
+        public async Task<IActionResult> GetVerificationStatus(
+            [FromQuery] string? email,
+            CancellationToken cancellationToken)
+        {
+            var result = await _mediator.Send(
+                new GetEmailVerificationStatusQuery(email),
+                cancellationToken);
+
+            return Ok(result);
         }
 
         [EnableRateLimiting("sensitive")]
