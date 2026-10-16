@@ -17,9 +17,10 @@ public class EmailSettings
     public string FromEmail { get; set; } = default!;
 
     /// <summary>
-    /// API key de Resend (https://resend.com/api-keys).
+    /// API key de Brevo (https://app.brevo.com/settings/keys-api).
     /// Render bloquea el SMTP outbound en planes gratis, así que el envío
-    /// se hace por la API HTTPS de Resend (puerto 443).
+    /// se hace por la API HTTPS de Brevo (puerto 443). Plan gratis: 300 emails/día.
+    /// FromEmail debe ser un remitente verificado en Brevo.
     /// </summary>
     public string ApiKey { get; set; } = default!;
 }
