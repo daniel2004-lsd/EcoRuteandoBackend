@@ -11,7 +11,7 @@ using System.Net;
 namespace EcoRuteando.Modules.Security.Application.Users.Commands.SendVerificationEmail;
 
 public sealed class SendVerificationEmailCommandHandler
-    : IRequestHandler<SendVerificationEmailCommand>
+    : IRequestHandler<SendVerificationEmailCommand, bool>
 {
     private readonly IUserRepository _userRepository;
     private readonly IEmailVerificationRepository _emailVerificationRepository;
@@ -33,7 +33,7 @@ public sealed class SendVerificationEmailCommandHandler
         _unitOfWork = unitOfWork;
     }
 
-    public async Task Handle(
+    public async Task<bool> Handle(
         SendVerificationEmailCommand request,
         CancellationToken cancellationToken)
     {
@@ -43,9 +43,14 @@ public sealed class SendVerificationEmailCommandHandler
                 ? null
                 : await _userRepository.GetByEmailAsync(request.Email, cancellationToken);
 
-        if (user is null || user.EmailVerified)
+        if (user is null)
         {
-            return;
+            return false;
+        }
+
+        if (user.EmailVerified)
+        {
+            return true;
         }
 
         var existingVerification = await _emailVerificationRepository
@@ -86,6 +91,8 @@ public sealed class SendVerificationEmailCommandHandler
             user.Email,
             "Verifica tu correo electrónico - EcoRuteando",
             body);
+
+        return false;
     }
 
     private static string ComputeSha256(string value)

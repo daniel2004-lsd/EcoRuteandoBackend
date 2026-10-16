@@ -6,4 +6,4 @@ public sealed record SendVerificationEmailCommand(
     Guid? UserId,
     string? Email,
     string? RequestIp)
-    : IRequest;
+    : IRequest<bool>;
