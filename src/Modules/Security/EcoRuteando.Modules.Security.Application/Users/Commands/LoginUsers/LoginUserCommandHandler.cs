@@ -112,14 +112,6 @@ public sealed class LoginUserCommandHandler
                 retryAfterSeconds: 0);
         }
 
-        if (!user.EmailVerified)
-        {
-            return new LoginResponse(
-                AccessToken: string.Empty,
-                RefreshToken: string.Empty,
-                RequiresEmailVerification: true);
-        }
-
         if (user.PrimaryRole is null)
         {
             throw new DomainException("El usuario no tiene un rol asignado.");
