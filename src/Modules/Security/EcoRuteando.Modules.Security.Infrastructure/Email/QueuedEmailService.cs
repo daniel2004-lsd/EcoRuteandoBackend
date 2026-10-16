@@ -22,11 +22,11 @@ public sealed class QueuedEmailService : IEmailService
         string subject,
         string htmlBody)
     {
-        await _queue.EnqueueAsync<ResendEmailService>(async (resendEmailService, _) =>
+        await _queue.EnqueueAsync<BrevoEmailService>(async (brevoEmailService, _) =>
         {
             try
             {
-                await resendEmailService.SendAsync(to, subject, htmlBody);
+                await brevoEmailService.SendAsync(to, subject, htmlBody);
 
                 _logger.LogInformation(
                     "Email encolado para envío → Para: {To} | Asunto: {Subject}",

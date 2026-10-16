@@ -82,9 +82,9 @@ public static class DependencyInjection
         services.AddScoped<ITokenProvider, TokenProvider>();
         services.Configure<EmailSettings>(configuration.GetSection("EmailSettings"));
         // Render bloquea el SMTP outbound (puertos 25/465/587) en planes gratis.
-        // El envío de email se hace por la API HTTPS de Resend (puerto 443).
-        services.AddHttpClient("resend");
-        services.AddScoped<ResendEmailService>();
+        // El envío de email se hace por la API HTTPS de Brevo (puerto 443).
+        services.AddHttpClient("brevo");
+        services.AddScoped<BrevoEmailService>();
         services.AddScoped<QueuedEmailService>();
         services.AddScoped<IEmailService>(sp =>
             sp.GetRequiredService<QueuedEmailService>());
