@@ -45,11 +45,15 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
                 request.Email,
                 request.Password);
 
-            var userId = await _mediator.Send(
+            var result = await _mediator.Send(
                 command,
                 cancellationToken);
 
-            return Ok(userId);
+            return Ok(new
+            {
+                userId = result.UserId,
+                verificationCode = result.VerificationCode
+            });
         }
 
 
