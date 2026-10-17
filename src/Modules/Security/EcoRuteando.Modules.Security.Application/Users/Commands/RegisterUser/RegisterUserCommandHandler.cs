@@ -1,4 +1,5 @@
 ﻿using EcoRuteando.Modules.Security.Application.Abstractions.Logging;
+using System.Security.Cryptography;
 using EcoRuteando.Modules.Security.Application.Users.Commands.SendVerificationEmail;
 using EcoRuteando.Modules.Security.Application.Abstractions.Security;
 using EcoRuteando.Modules.Security.Domain.Entities;
@@ -10,7 +11,7 @@ using MediatR;
 namespace EcoRuteando.Modules.Security.Application.Users.Commands.RegisterUser;
 
 public sealed class RegisterUserCommandHandler
-    : IRequestHandler<RegisterUserCommand, Guid>
+    : IRequestHandler<RegisterUserCommand, RegisterUserResponse>
 {
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHasher _passwordHasher;
@@ -35,7 +36,7 @@ public sealed class RegisterUserCommandHandler
         _auditLogService = auditLogService;
     }
 
-    public async Task<Guid> Handle(
+    public async Task<RegisterUserResponse> Handle(
         RegisterUserCommand request,
         CancellationToken cancellationToken)
     {
@@ -86,10 +87,12 @@ public sealed class RegisterUserCommandHandler
             entityId: user.Id.ToString(),
             cancellationToken: cancellationToken);
 
+        var verificationCode = RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
+
         await _sender.Send(
-            new SendVerificationEmailCommand(user.Id, null, null),
+            new SendVerificationEmailCommand(user.Id, null, null, verificationCode),
             cancellationToken);
 
-        return user.Id;
+        return new RegisterUserResponse(user.Id, verificationCode);
     }
 }
