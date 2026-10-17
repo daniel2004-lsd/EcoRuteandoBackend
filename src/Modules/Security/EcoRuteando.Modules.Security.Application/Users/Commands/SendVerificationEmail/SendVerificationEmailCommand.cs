@@ -5,5 +5,6 @@ namespace EcoRuteando.Modules.Security.Application.Users.Commands.SendVerificati
 public sealed record SendVerificationEmailCommand(
     Guid? UserId,
     string? Email,
-    string? RequestIp)
+    string? RequestIp,
+    string? Code = null)
     : IRequest<bool>;
