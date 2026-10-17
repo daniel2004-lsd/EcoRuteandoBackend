@@ -56,7 +56,7 @@ public sealed class SendVerificationEmailCommandHandler
         var existingVerification = await _emailVerificationRepository
             .GetActiveByUserIdAsync(user.Id, cancellationToken);
 
-        var code = RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
+        var code = request.Code ?? RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
         var tokenHash = ComputeSha256(code);
 
         IPAddress? requestIp = null;
