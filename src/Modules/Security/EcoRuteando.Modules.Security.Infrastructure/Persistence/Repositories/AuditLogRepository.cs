@@ -42,4 +42,14 @@ public sealed class AuditLogRepository : IAuditLogRepository
             .Take(100)
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<AuditLog>> GetAllAsync(
+        int take,
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.AuditLogs
+            .OrderByDescending(a => a.CreatedAt)
+            .Take(Math.Clamp(take, 1, 500))
+            .ToListAsync(cancellationToken);
+    }
 }
