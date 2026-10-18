@@ -14,4 +14,8 @@ public interface IAuditLogRepository
         string entityName,
         string entityId,
         CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<AuditLog>> GetAllAsync(
+        int take,
+        CancellationToken cancellationToken = default);
 }
