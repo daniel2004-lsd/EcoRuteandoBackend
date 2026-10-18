@@ -31,7 +31,7 @@ public sealed class UserRolesController : ControllerBase
         return NoContent();
     }
 
-    [HttpDelete("{userId:guid}/{roleId:int}")]
+    [HttpDelete("{userId:guid}/{roleId:guid}")]
     [HasPermission("userroles.remove")]
     public async Task<IActionResult> RemoveRole(
         Guid userId,
