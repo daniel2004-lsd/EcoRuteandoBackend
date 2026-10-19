@@ -7,6 +7,8 @@ public sealed record AuditLogResponse(
     string Action,
     string? EntityName,
     string? EntityId,
+    string? BeforeData,
+    string? AfterData,
     string? SourceIp,
     string? UserAgent,
     DateTime CreatedAt);
