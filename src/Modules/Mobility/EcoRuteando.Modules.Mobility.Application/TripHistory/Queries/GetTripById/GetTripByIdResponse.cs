@@ -31,7 +31,15 @@ public sealed record GetTripByIdResponse(
     int? ActualDurationMin,
     decimal? ActualCo2Kg,
     IReadOnlyList<TripGeoPointResponse>? ActualRoute,
-    JsonDocument? GpsData)
+    JsonDocument? GpsData,
+    string? EncodedPolyline = null,
+    double? StartLat = null,
+    double? StartLng = null,
+    double? EndLat = null,
+    double? EndLng = null,
+    decimal? EstimatedDistanceKm = null,
+    int? EstimatedDurationMin = null,
+    decimal? EstimatedCo2Kg = null)
 {
     /// <summary>
     /// Convierte el LINESTRING de geo (actual_route) a lista de puntos.

@@ -19,6 +19,7 @@ public static class DependencyInjection
             options.UseNpgsql(connectionString, npgsqlOptions =>
             {
                 npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "admin");
+                npgsqlOptions.MapEnum<EcoRuteando.Modules.Admin.Domain.Enums.SupportTicketStatus>("support_status", "admin");
             }));
 
         services.AddScoped<ISupportTicketRepository, SupportTicketRepository>();

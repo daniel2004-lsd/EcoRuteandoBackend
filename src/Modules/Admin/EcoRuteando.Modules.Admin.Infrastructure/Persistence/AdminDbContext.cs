@@ -20,6 +20,12 @@ public class AdminDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema("admin");
+
+        modelBuilder.HasPostgresEnum(
+            "admin",
+            "support_status",
+            new[] { "pending", "in_progress", "resolved", "closed" });
+
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AdminDbContext).Assembly);
         base.OnModelCreating(modelBuilder);
     }

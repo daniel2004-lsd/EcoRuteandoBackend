@@ -27,6 +27,18 @@ public class GetTicketByIdQueryHandler : IRequestHandler<GetTicketByIdQuery, Sup
             return null;
         }
 
-        return SupportTicketDto.FromEntity(ticket);
+        string? email = null;
+        string? name = null;
+        if (ticket.UserId.HasValue)
+        {
+            var userDetails = await _repository.GetUserDetailsAsync(new[] { ticket.UserId.Value }, cancellationToken);
+            if (userDetails.TryGetValue(ticket.UserId.Value, out var u))
+            {
+                email = u.Email;
+                name = u.Name;
+            }
+        }
+
+        return SupportTicketDto.FromEntity(ticket, email, name);
     }
 }
