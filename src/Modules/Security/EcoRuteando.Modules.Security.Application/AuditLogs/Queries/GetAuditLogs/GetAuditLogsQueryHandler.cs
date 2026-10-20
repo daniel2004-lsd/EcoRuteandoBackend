@@ -51,6 +51,8 @@ public sealed class GetAuditLogsQueryHandler
                 l.Action,
                 l.EntityName,
                 l.EntityId,
+                l.BeforeData,
+                l.AfterData,
                 l.SourceIp?.ToString(),
                 l.UserAgent,
                 l.CreatedAt))

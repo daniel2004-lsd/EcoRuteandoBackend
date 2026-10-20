@@ -118,9 +118,10 @@ public class SupportTicketsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var adminId = GetRequiredUserId();
+        var status = ParseStatus(request.Status);
 
         var success = await _mediator.Send(
-            new UpdateTicketStatusCommand(id, request.Status, request.AssignToMe ? adminId : null),
+            new UpdateTicketStatusCommand(id, status, request.AssignToMe ? adminId : null),
             cancellationToken);
 
         if (!success)
@@ -131,9 +132,23 @@ public class SupportTicketsController : ControllerBase
         return NoContent();
     }
 
+    private static SupportTicketStatus ParseStatus(string? statusStr)
+    {
+        if (string.IsNullOrWhiteSpace(statusStr)) return SupportTicketStatus.Pending;
+        var s = statusStr.Trim().ToLowerInvariant().Replace("_", "");
+        return s switch
+        {
+            "open" or "pending" => SupportTicketStatus.Pending,
+            "inprogress" => SupportTicketStatus.InProgress,
+            "resolved" => SupportTicketStatus.Resolved,
+            "closed" => SupportTicketStatus.Closed,
+            _ => Enum.TryParse<SupportTicketStatus>(statusStr, true, out var parsed) ? parsed : SupportTicketStatus.Pending
+        };
+    }
+
     private Guid GetRequiredUserId()
     {
-        var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+        var claim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("sub");
         if (claim == null || !Guid.TryParse(claim.Value, out var userId))
         {
             throw new UnauthorizedAccessException("Usuario no autenticado.");
@@ -158,6 +173,6 @@ public sealed class AddMessageApiRequest
 
 public sealed class UpdateStatusApiRequest
 {
-    public SupportTicketStatus Status { get; init; }
+    public string Status { get; init; } = string.Empty;
     public bool AssignToMe { get; init; } = false;
 }

@@ -45,7 +45,13 @@ public sealed class GetRoutesQueryHandler
                 r.EstimatedTimeMin,
                 r.Co2SavedKg,
                 r.DifficultyLevel,
-                r.PhotoUrl))
+                r.PhotoUrl,
+                r.EncodedPolyline,
+                r.StartLocation?.Y,
+                r.StartLocation?.X,
+                r.EndLocation?.Y,
+                r.EndLocation?.X,
+                r.EstimatedCalories))
             .ToList();
     }
 }

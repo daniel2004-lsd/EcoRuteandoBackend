@@ -65,6 +65,55 @@ public class SupportTicketRepository : ISupportTicketRepository
         await _context.SupportMessages.AddAsync(message, cancellationToken);
     }
 
+    public async Task<Dictionary<Guid, (string Email, string Name)>> GetUserDetailsAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken = default)
+    {
+        var dict = new Dictionary<Guid, (string Email, string Name)>();
+        var distinctIds = userIds.Distinct().ToArray();
+        if (distinctIds.Length == 0) return dict;
+
+        var conn = _context.Database.GetDbConnection();
+        var shouldClose = false;
+        if (conn.State != System.Data.ConnectionState.Open)
+        {
+            await conn.OpenAsync(cancellationToken);
+            shouldClose = true;
+        }
+
+        try
+        {
+            await using var cmd = conn.CreateCommand();
+            cmd.CommandText = "SELECT id, email, first_name, last_name FROM security.users WHERE id = ANY(@ids)";
+            var param = cmd.CreateParameter();
+            param.ParameterName = "ids";
+            param.Value = distinctIds;
+            cmd.Parameters.Add(param);
+
+            await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                var id = reader.GetGuid(0);
+                var email = reader.IsDBNull(1) ? "" : reader.GetString(1);
+                var first = reader.IsDBNull(2) ? "" : reader.GetString(2);
+                var last = reader.IsDBNull(3) ? "" : reader.GetString(3);
+                var fullName = $"{first} {last}".Trim();
+                dict[id] = (email, string.IsNullOrWhiteSpace(fullName) ? email : fullName);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error obteniendo detalles de usuario para soporte: {ex.Message}");
+        }
+        finally
+        {
+            if (shouldClose)
+            {
+                await conn.CloseAsync();
+            }
+        }
+
+        return dict;
+    }
+
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         await _context.SaveChangesAsync(cancellationToken);

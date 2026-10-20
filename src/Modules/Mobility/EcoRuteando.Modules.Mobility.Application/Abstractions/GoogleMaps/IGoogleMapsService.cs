@@ -48,6 +48,18 @@ public sealed class PlaceResult
 public sealed class DirectionsResponse
 {
     public string Status { get; init; } = string.Empty;
+    public string? Summary { get; init; }
+    public string? EncodedPolyline { get; init; }
+    public DistanceInfo? Distance { get; init; }
+    public DurationInfo? Duration { get; init; }
+    public List<RouteStep>? Steps { get; init; }
+    public ViewportBounds? Bounds { get; init; }
+    public List<DirectionsAlternative>? Alternatives { get; init; }
+}
+
+public sealed class DirectionsAlternative
+{
+    public string Summary { get; init; } = string.Empty;
     public string? EncodedPolyline { get; init; }
     public DistanceInfo? Distance { get; init; }
     public DurationInfo? Duration { get; init; }

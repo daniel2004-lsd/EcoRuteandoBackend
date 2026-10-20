@@ -43,10 +43,6 @@ public class SupportTicket
 
     public void AssignAdmin(Guid adminId)
     {
-        if (adminId == UserId)
-        {
-            throw new InvalidOperationException("Un administrador no puede auto-atender su propio ticket.");
-        }
         AdminId = adminId;
         if (Status == SupportTicketStatus.Pending)
         {
