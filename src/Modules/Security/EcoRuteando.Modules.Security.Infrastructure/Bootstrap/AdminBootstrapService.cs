@@ -129,6 +129,17 @@ public sealed class AdminBootstrapService : IAdminBootstrapService
             changed = true;
         }
 
+        if (string.IsNullOrWhiteSpace(existingUser.PasswordHash)
+            || !_passwordHasher.Verify(_options.Password, existingUser.PasswordHash))
+        {
+            var newHash = _passwordHasher.Hash(_options.Password);
+            existingUser.ChangePassword(newHash);
+            changed = true;
+            _logger.LogWarning(
+                "Contraseña del administrador {Email} sincronizada con la configuración de arranque (Admin__Password).",
+                email);
+        }
+
         if (!changed)
         {
             _logger.LogInformation(

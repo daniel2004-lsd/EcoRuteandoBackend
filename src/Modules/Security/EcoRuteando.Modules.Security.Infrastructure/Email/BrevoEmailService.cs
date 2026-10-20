@@ -37,8 +37,35 @@ public sealed class BrevoEmailService : IEmailService
     {
         if (string.IsNullOrWhiteSpace(_settings.ApiKey))
         {
+            if (!string.IsNullOrWhiteSpace(_settings.Host) && !string.IsNullOrWhiteSpace(_settings.Username))
+            {
+                try
+                {
+                    using var smtp = new System.Net.Mail.SmtpClient(_settings.Host, _settings.Port)
+                    {
+                        Credentials = new System.Net.NetworkCredential(_settings.Username, _settings.Password),
+                        EnableSsl = _settings.EnableSsl
+                    };
+                    var mail = new System.Net.Mail.MailMessage
+                    {
+                        From = new System.Net.Mail.MailAddress(_settings.FromEmail, _settings.FromName),
+                        Subject = subject,
+                        Body = htmlBody,
+                        IsBodyHtml = true
+                    };
+                    mail.To.Add(to);
+                    await smtp.SendMailAsync(mail);
+                    _logger.LogInformation("Email enviado vía SMTP ({Host}) → Para: {To} | Asunto: {Subject}", _settings.Host, to, subject);
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error al enviar email vía SMTP ({Host}) → Para: {To}", _settings.Host, to);
+                }
+            }
+
             _logger.LogWarning(
-                "Brevo no configurado (falta EmailSettings__ApiKey). Email NO enviado → Para: {To} | Asunto: {Subject}",
+                "Email no configurado (falta Brevo ApiKey o credenciales SMTP válidas). Email NO enviado → Para: {To} | Asunto: {Subject}",
                 to, subject);
             return;
         }
