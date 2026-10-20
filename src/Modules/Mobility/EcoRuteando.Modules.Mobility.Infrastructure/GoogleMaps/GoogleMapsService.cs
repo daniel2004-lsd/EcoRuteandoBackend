@@ -43,6 +43,7 @@ public sealed class GoogleMapsService : IGoogleMapsService
                       $"?origin={origin}" +
                       $"&destination={destination}" +
                       $"&mode={travelMode}" +
+                      $"&alternatives=true" +
                       $"&key={_options.ApiKey}";
 
             var response = await _httpClient.GetAsync(url, cancellationToken);
@@ -83,6 +84,9 @@ public sealed class GoogleMapsService : IGoogleMapsService
 
             var route = routes[0];
             var leg = route.GetProperty("legs")[0];
+            var summary = route.TryGetProperty("summary", out var s0) && !string.IsNullOrWhiteSpace(s0.GetString())
+                ? s0.GetString()!
+                : "Ruta recomendada";
 
             var encodedPolyline = route
                 .GetProperty("overview_polyline")
@@ -108,14 +112,54 @@ public sealed class GoogleMapsService : IGoogleMapsService
 
             var bounds = ParseBounds(route.GetProperty("bounds"));
 
+            var alternatives = new List<DirectionsAlternative>();
+            for (var i = 1; i < routes.GetArrayLength(); i++)
+            {
+                var altRoute = routes[i];
+                var altLeg = altRoute.GetProperty("legs")[0];
+                var altSummary = altRoute.TryGetProperty("summary", out var sAlt) && !string.IsNullOrWhiteSpace(sAlt.GetString())
+                    ? sAlt.GetString()!
+                    : $"Alternativa {i}";
+
+                var altPolyline = altRoute.GetProperty("overview_polyline").GetProperty("points").GetString();
+                var altDistance = altLeg.GetProperty("distance");
+                var altDuration = altLeg.GetProperty("duration");
+
+                var altSteps = new List<RouteStep>();
+                foreach (var step in altLeg.GetProperty("steps").EnumerateArray())
+                {
+                    altSteps.Add(new RouteStep
+                    {
+                        HtmlInstructions = step.GetProperty("html_instructions").GetString() ?? string.Empty,
+                        Distance = ParseDistance(step.GetProperty("distance")),
+                        Duration = ParseDuration(step.GetProperty("duration")),
+                        TravelMode = step.GetProperty("travel_mode").GetString(),
+                        StartLocation = ParseLocation(step.GetProperty("start_location")),
+                        EndLocation = ParseLocation(step.GetProperty("end_location"))
+                    });
+                }
+
+                alternatives.Add(new DirectionsAlternative
+                {
+                    Summary = altSummary,
+                    EncodedPolyline = altPolyline,
+                    Distance = ParseDistance(altDistance),
+                    Duration = ParseDuration(altDuration),
+                    Steps = altSteps,
+                    Bounds = ParseBounds(altRoute.GetProperty("bounds"))
+                });
+            }
+
             return new DirectionsResponse
             {
                 Status = status,
+                Summary = summary,
                 EncodedPolyline = encodedPolyline,
                 Distance = ParseDistance(distance),
                 Duration = ParseDuration(duration),
                 Steps = steps,
-                Bounds = bounds
+                Bounds = bounds,
+                Alternatives = alternatives
             };
         }
         catch (Exception ex)

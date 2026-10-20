@@ -16,6 +16,19 @@ public class GetAllTicketsQueryHandler : IRequestHandler<GetAllTicketsQuery, IRe
     public async Task<IReadOnlyList<SupportTicketDto>> Handle(GetAllTicketsQuery request, CancellationToken cancellationToken)
     {
         var tickets = await _repository.GetAllAsync(request.Status, request.Priority, cancellationToken);
-        return tickets.Select(SupportTicketDto.FromEntity).ToList();
+        var userIds = tickets.Where(t => t.UserId.HasValue).Select(t => t.UserId!.Value).Distinct();
+        var userDetails = await _repository.GetUserDetailsAsync(userIds, cancellationToken);
+
+        return tickets.Select(t =>
+        {
+            string? email = null;
+            string? name = null;
+            if (t.UserId.HasValue && userDetails.TryGetValue(t.UserId.Value, out var u))
+            {
+                email = u.Email;
+                name = u.Name;
+            }
+            return SupportTicketDto.FromEntity(t, email, name);
+        }).ToList();
     }
 }

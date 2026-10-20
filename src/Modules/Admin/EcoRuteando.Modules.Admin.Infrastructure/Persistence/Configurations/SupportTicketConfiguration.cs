@@ -27,15 +27,6 @@ public class SupportTicketConfiguration : IEntityTypeConfiguration<SupportTicket
 
         builder.Property(t => t.Status)
             .HasColumnName("status")
-            .HasConversion(
-                v => v == SupportTicketStatus.Pending ? "pending" :
-                     v == SupportTicketStatus.InProgress ? "in_progress" :
-                     v == SupportTicketStatus.Resolved ? "resolved" :
-                     v == SupportTicketStatus.Closed ? "closed" : "pending",
-                v => v == "pending" ? SupportTicketStatus.Pending :
-                     v == "in_progress" ? SupportTicketStatus.InProgress :
-                     v == "resolved" ? SupportTicketStatus.Resolved :
-                     v == "closed" ? SupportTicketStatus.Closed : SupportTicketStatus.Pending)
             .HasColumnType("admin.support_status")
             .HasDefaultValue(SupportTicketStatus.Pending)
             .IsRequired();

@@ -28,16 +28,23 @@ public sealed class GetTripHistoryQueryHandler
                 u.Id,
                 u.RouteId,
                 u.Route?.Name ?? "Ruta eliminada",
-                u.TransportMode?.ToPgName(),
+                u.TransportMode?.ToPgName() ?? u.Route?.TransportType.ToPgName(),
                 u.Source.ToPgName(),
                 u.StartedAt,
                 u.EndedAt,
                 u.Completed,
                 u.Interrupted,
-                u.ActualDistanceKm,
-                u.ActualDurationMin,
-                u.ActualCo2Kg,
-                u.Route?.EstimatedCalories))
+                u.ActualDistanceKm ?? u.Route?.DistanceKm,
+                u.ActualDurationMin ?? u.Route?.EstimatedTimeMin,
+                u.ActualCo2Kg ?? u.Route?.Co2SavedKg,
+                u.Route?.EstimatedCalories,
+                u.Route?.StartName ?? "Origen",
+                u.Route?.DestinationName ?? "Destino",
+                u.Route?.EncodedPolyline,
+                u.Route?.StartLocation?.Y,
+                u.Route?.StartLocation?.X,
+                u.Route?.EndLocation?.Y,
+                u.Route?.EndLocation?.X))
             .ToList();
     }
 }
