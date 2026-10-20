@@ -14,4 +14,10 @@ public sealed record GetRoutesResponse(
     int? EstimatedTimeMin,
     decimal? Co2SavedKg,
     short? DifficultyLevel,
-    string? PhotoUrl);
+    string? PhotoUrl,
+    string? EncodedPolyline = null,
+    double? StartLat = null,
+    double? StartLng = null,
+    double? EndLat = null,
+    double? EndLng = null,
+    decimal? EstimatedCalories = null);

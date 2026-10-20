@@ -28,22 +28,34 @@ public sealed class GetTripByIdQueryHandler
         if (usage is null)
             throw new NotFoundException("El trayecto no existe.");
 
+        var distance = usage.ActualDistanceKm ?? usage.Route?.DistanceKm;
+        var duration = usage.ActualDurationMin ?? usage.Route?.EstimatedTimeMin;
+        var co2 = usage.ActualCo2Kg ?? usage.Route?.Co2SavedKg;
+
         return new GetTripByIdResponse(
             usage.Id,
             usage.RouteId,
             usage.Route?.Name ?? "Ruta eliminada",
             usage.Route?.StartName ?? "Origen",
             usage.Route?.DestinationName ?? "Destino",
-            usage.TransportMode?.ToPgName(),
+            usage.TransportMode?.ToPgName() ?? usage.Route?.TransportType.ToPgName(),
             usage.Source.ToPgName(),
             usage.StartedAt,
             usage.EndedAt,
             usage.Completed,
             usage.Interrupted,
-            usage.ActualDistanceKm,
-            usage.ActualDurationMin,
-            usage.ActualCo2Kg,
+            distance,
+            duration,
+            co2,
             GetTripByIdResponse.ToRoutePoints(usage.ActualRoute),
-            usage.GpsData);
+            usage.GpsData,
+            usage.Route?.EncodedPolyline,
+            usage.Route?.StartLocation?.Y,
+            usage.Route?.StartLocation?.X,
+            usage.Route?.EndLocation?.Y,
+            usage.Route?.EndLocation?.X,
+            usage.Route?.DistanceKm,
+            usage.Route?.EstimatedTimeMin,
+            usage.Route?.Co2SavedKg);
     }
 }

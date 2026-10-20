@@ -16,4 +16,11 @@ public sealed record GetTripHistoryResponse(
     decimal? ActualDistanceKm,
     int? ActualDurationMin,
     decimal? ActualCo2Kg,
-    decimal? EstimatedCalories);
+    decimal? EstimatedCalories,
+    string? StartName = null,
+    string? DestinationName = null,
+    string? EncodedPolyline = null,
+    double? StartLat = null,
+    double? StartLng = null,
+    double? EndLat = null,
+    double? EndLng = null);

@@ -31,9 +31,11 @@ public record SupportTicketDto(
     short Priority,
     DateTime CreatedAt,
     DateTime? ClosedAt,
-    IReadOnlyList<SupportMessageDto> Messages)
+    IReadOnlyList<SupportMessageDto> Messages,
+    string? UserEmail = null,
+    string? UserName = null)
 {
-    public static SupportTicketDto FromEntity(SupportTicket entity) =>
+    public static SupportTicketDto FromEntity(SupportTicket entity, string? userEmail = null, string? userName = null) =>
         new(
             entity.Id,
             entity.UserId,
@@ -43,5 +45,7 @@ public record SupportTicketDto(
             entity.Priority,
             entity.CreatedAt,
             entity.ClosedAt,
-            entity.Messages.Select(SupportMessageDto.FromEntity).ToList());
+            entity.Messages.Select(SupportMessageDto.FromEntity).ToList(),
+            userEmail,
+            userName);
 }

@@ -16,6 +16,6 @@ public class GetMyTicketsQueryHandler : IRequestHandler<GetMyTicketsQuery, IRead
     public async Task<IReadOnlyList<SupportTicketDto>> Handle(GetMyTicketsQuery request, CancellationToken cancellationToken)
     {
         var tickets = await _repository.GetByUserIdAsync(request.UserId, cancellationToken);
-        return tickets.Select(SupportTicketDto.FromEntity).ToList();
+        return tickets.Select(t => SupportTicketDto.FromEntity(t)).ToList();
     }
 }

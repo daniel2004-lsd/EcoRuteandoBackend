@@ -13,7 +13,8 @@ public sealed class GoogleMapsController : ControllerBase
     private static readonly HashSet<string> AllowedPlaceTypes =
         new(StringComparer.OrdinalIgnoreCase)
         {
-            "restaurant", "hotel", "church", "park", "cafe", "bar", "museum"
+            "restaurant", "hotel", "lodging", "church", "park", "cafe", "bar", "museum",
+            "pharmacy", "gas_station", "supermarket", "bank", "atm", "tourist_attraction"
         };
 
     private const double MaxPlacesRadius = 50_000;
