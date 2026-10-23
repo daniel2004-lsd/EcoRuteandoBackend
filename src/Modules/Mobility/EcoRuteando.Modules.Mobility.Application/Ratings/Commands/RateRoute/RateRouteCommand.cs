@@ -6,6 +6,6 @@ public sealed record RateRouteCommand(
     Guid RouteId,
     short RatingValue,
     string? Comment,
-    long? UsageId,
+    Guid? UsageId,
     Guid UserId)
     : IRequest;
