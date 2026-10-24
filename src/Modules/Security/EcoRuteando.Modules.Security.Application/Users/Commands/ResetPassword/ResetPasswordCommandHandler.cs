@@ -1,4 +1,4 @@
-﻿using EcoRuteando.Modules.Security.Application.Abstractions.Logging;
+using EcoRuteando.Modules.Security.Application.Abstractions.Logging;
 using EcoRuteando.Modules.Security.Application.Abstractions.Security;
 using EcoRuteando.Modules.Security.Domain.Repositories;
 using EcoRuteando.Shared.Abstractions.Persistence;
@@ -62,6 +62,13 @@ public sealed class ResetPasswordCommandHandler
             throw new NotFoundException("Usuario no encontrado.");
         }
 
+        // Regla de vinculación estricta de identidad token-usuario (H-41)
+        if (!string.IsNullOrWhiteSpace(request.Email) &&
+            !string.Equals(user.Email, request.Email.Trim(), StringComparison.OrdinalIgnoreCase))
+        {
+            throw new UnauthorizedException("El código no corresponde al correo indicado.");
+        }
+
         IPAddress? usageIp = null;
 
         if (!string.IsNullOrWhiteSpace(request.UsageIp))
@@ -73,9 +80,17 @@ public sealed class ResetPasswordCommandHandler
 
         user.ChangePassword(passwordHash);
 
+        // Invalidar inmediatamente el token consumido (H-60)
         recovery.MarkAsUsed(usageIp);
-
         _passwordRecoveryRepository.Update(recovery);
+
+        // Invalidar de forma atómica cualquier otro token de recuperación pendiente para este usuario
+        var activeTokens = await _passwordRecoveryRepository.GetByUserIdAsync(user.Id);
+        foreach (var extra in activeTokens.Where(t => !t.IsUsed && t.Id != recovery.Id))
+        {
+            extra.MarkAsUsed(usageIp);
+            _passwordRecoveryRepository.Update(extra);
+        }
 
         await _userRepository.UpdateAsync(user, cancellationToken);
 
