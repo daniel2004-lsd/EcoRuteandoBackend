@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,5 +12,9 @@ namespace EcoRuteando.Modules.Security.Application.Abstractions.Security
             Guid userId,
             string email,
             string role);
+
+        string GenerateTwoFactorToken(
+            Guid userId,
+            string email);
     }
 }

@@ -82,7 +82,13 @@ public sealed class PoisController : ControllerBase
             });
         }
 
-        await _mediator.Send(command, cancellationToken);
+        await _mediator.Send(
+            command with
+            {
+                RequestedByUserId = GetUserId(),
+                IsAdmin = IsAdminUser()
+            },
+            cancellationToken);
 
         return NoContent();
     }
@@ -94,7 +100,10 @@ public sealed class PoisController : ControllerBase
         CancellationToken cancellationToken)
     {
         await _mediator.Send(
-            new DeactivatePoiCommand(id),
+            new DeactivatePoiCommand(
+                id,
+                RequestedByUserId: GetUserId(),
+                IsAdmin: IsAdminUser()),
             cancellationToken);
 
         return NoContent();
@@ -111,4 +120,7 @@ public sealed class PoisController : ControllerBase
 
         return null;
     }
+
+    private bool IsAdminUser() =>
+        User.IsInRole("Admin") || User.IsInRole("SuperAdmin");
 }

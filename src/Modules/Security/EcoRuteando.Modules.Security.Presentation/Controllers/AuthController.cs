@@ -52,7 +52,7 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
             return Ok(new
             {
                 userId = result.UserId,
-                verificationCode = result.VerificationCode
+                message = result.Message
             });
         }
 
@@ -159,7 +159,8 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
                 new ResetPasswordCommand(
                     request.Token,
                     request.NewPassword,
-                    HttpContext.Connection.RemoteIpAddress?.ToString()),
+                    HttpContext.Connection.RemoteIpAddress?.ToString(),
+                    request.Email),
                 cancellationToken);
 
             return Ok(new

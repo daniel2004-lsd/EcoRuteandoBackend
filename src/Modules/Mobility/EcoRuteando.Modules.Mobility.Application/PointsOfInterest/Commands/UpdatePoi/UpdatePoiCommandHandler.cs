@@ -33,6 +33,15 @@ public sealed class UpdatePoiCommandHandler
             throw new NotFoundException("El punto de interés no existe.");
         }
 
+        // Regla de control de acceso y propiedad (H-15 / Anti-IDOR)
+        if (!request.IsAdmin
+            && (poi.CreatedBy is null
+                || poi.CreatedBy != request.RequestedByUserId))
+        {
+            throw new ForbiddenException(
+                "Solo puedes modificar los puntos de interés que tú mismo creaste.");
+        }
+
         Point? location = null;
         if (request.Lat.HasValue && request.Lng.HasValue)
         {

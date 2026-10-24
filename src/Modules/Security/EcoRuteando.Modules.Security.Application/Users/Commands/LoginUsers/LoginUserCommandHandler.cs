@@ -139,11 +139,10 @@ public sealed class LoginUserCommandHandler
 
             if (!isTrustedDevice)
             {
-                // Generate a temporary token for 2FA verification
-                var twoFactorToken = _jwtProvider.GenerateToken(
+                // Generate a temporary token for 2FA verification (5 min TTL, token_type=two_factor_temp)
+                var twoFactorToken = _jwtProvider.GenerateTwoFactorToken(
                     user.Id,
-                    user.Email,
-                    "two_factor_pending");
+                    user.Email);
 
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
 
