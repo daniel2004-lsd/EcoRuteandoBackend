@@ -1,4 +1,4 @@
-﻿
+
 using EcoRuteando.Modules.Security.Domain.Entities;
 using EcoRuteando.Modules.Security.Infrastructure.Persistence.Configurations;
 using EcoRuteando.Shared.Abstractions;
@@ -41,6 +41,8 @@ namespace EcoRuteando.Modules.Security.Infrastructure.Persistence
 
         public DbSet<ErrorLog> ErrorLogs => Set<ErrorLog>();
 
+        public DbSet<TrustedDevice> TrustedDevices => Set<TrustedDevice>();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -69,6 +71,7 @@ namespace EcoRuteando.Modules.Security.Infrastructure.Persistence
             modelBuilder.ApplyConfiguration(new TwoFactorAuthConfiguration());
             modelBuilder.ApplyConfiguration(new AuditLogConfiguration());
             modelBuilder.ApplyConfiguration(new ErrorLogConfiguration());
+            modelBuilder.ApplyConfiguration(new TrustedDeviceConfiguration());
         }
     }
 }

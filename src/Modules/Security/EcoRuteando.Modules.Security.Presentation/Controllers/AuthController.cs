@@ -95,6 +95,7 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
             return Ok(tokens);
         }
 
+        [EnableRateLimiting("auth")]
         [HttpPost("logout")]
         public async Task<IActionResult> Logout(
         LogoutRequest request,
@@ -129,9 +130,9 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
             return Ok(user);
         }
 
-        // Rate limiting por email con lockout escalonado se maneja en el handler
-        // (IForgotPasswordRateLimiter). No usar "sensitive" aquí: era 3/hora por IP
-        // y bloqueaba al usuario legítimo demasiado rápido.
+        // Rate limiting por IP particionado (sensitive: 3/hora por IP) combinado
+        // con el rate limiter escalonado por email en el handler (IForgotPasswordRateLimiter).
+        [EnableRateLimiting("sensitive")]
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword(
         ForgotPasswordRequest request,
@@ -345,6 +346,7 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
         // ── Two-Factor Authentication ─────────────────────────────
 
         [Authorize]
+        [EnableRateLimiting("auth")]
         [HttpPost("2fa/enable")]
         public async Task<IActionResult> EnableTwoFactorAuth(
             CancellationToken cancellationToken)
@@ -360,6 +362,7 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
         }
 
         [Authorize]
+        [EnableRateLimiting("auth")]
         [HttpPost("2fa/verify")]
         public async Task<IActionResult> VerifyTwoFactorAuth(
             VerifyTwoFactorAuthRequest request,
@@ -376,6 +379,7 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
         }
 
         [Authorize]
+        [EnableRateLimiting("auth")]
         [HttpPost("2fa/disable")]
         public async Task<IActionResult> DisableTwoFactorAuth(
             DisableTwoFactorAuthRequest request,

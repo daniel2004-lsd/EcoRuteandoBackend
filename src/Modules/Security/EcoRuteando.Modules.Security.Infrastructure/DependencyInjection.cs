@@ -77,6 +77,7 @@ public static class DependencyInjection
         services.AddScoped<ITwoFactorAuthRepository, TwoFactorAuthRepository>();
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
         services.AddScoped<IErrorLogRepository, ErrorLogRepository>();
+        services.AddScoped<ITrustedDeviceRepository, TrustedDeviceRepository>();
 
         // Servicios
         services.AddScoped<IPasswordHasher, BCryptPasswordHasher>();
