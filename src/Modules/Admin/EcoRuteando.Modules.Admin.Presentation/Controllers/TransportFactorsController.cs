@@ -23,7 +23,7 @@ public class TransportFactorsController : ControllerBase
     /// Lista todos los factores de transporte y emisión registrados.
     /// </summary>
     [HttpGet]
-    [Authorize]
+    [Authorize(Roles = "Admin,SuperAdmin")]
     public async Task<IActionResult> GetAll(
         [FromQuery] bool onlyActive = false,
         CancellationToken cancellationToken = default)
@@ -47,7 +47,7 @@ public class TransportFactorsController : ControllerBase
     /// Registra un nuevo factor de emisión para un medio de transporte.
     /// </summary>
     [HttpPost]
-    [Authorize]
+    [Authorize(Roles = "Admin,SuperAdmin")]
     public async Task<IActionResult> Create(
         [FromBody] CreateTransportFactorApiRequest request,
         CancellationToken cancellationToken)
@@ -68,7 +68,7 @@ public class TransportFactorsController : ControllerBase
     /// Actualiza un factor de emisión existente.
     /// </summary>
     [HttpPut("{id:guid}")]
-    [Authorize]
+    [Authorize(Roles = "Admin,SuperAdmin")]
     public async Task<IActionResult> Update(
         Guid id,
         [FromBody] UpdateTransportFactorApiRequest request,
