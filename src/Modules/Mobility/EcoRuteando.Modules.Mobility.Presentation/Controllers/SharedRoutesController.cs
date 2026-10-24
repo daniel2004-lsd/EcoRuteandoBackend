@@ -4,6 +4,7 @@ using EcoRuteando.Shared.Authorization;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 
 namespace EcoRuteando.Modules.Mobility.Presentation.Controllers;
@@ -11,6 +12,7 @@ namespace EcoRuteando.Modules.Mobility.Presentation.Controllers;
 [ApiController]
 [Route("api/shared-routes")]
 [Authorize]
+[EnableRateLimiting("api")]
 public sealed class SharedRoutesController : ControllerBase
 {
     private readonly IMediator _mediator;

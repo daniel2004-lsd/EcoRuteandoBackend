@@ -7,12 +7,14 @@ using EcoRuteando.Shared.Authorization;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 
 namespace EcoRuteando.Modules.Mobility.Presentation.Controllers;
 
 [ApiController]
 [Route("api/pois")]
+[EnableRateLimiting("api")]
 public sealed class PoisController : ControllerBase
 {
     private readonly IMediator _mediator;
