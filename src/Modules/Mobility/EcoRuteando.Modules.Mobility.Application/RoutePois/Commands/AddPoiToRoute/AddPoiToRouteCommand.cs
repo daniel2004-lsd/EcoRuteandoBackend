@@ -5,5 +5,7 @@ namespace EcoRuteando.Modules.Mobility.Application.RoutePois.Commands.AddPoiToRo
 public sealed record AddPoiToRouteCommand(
     Guid RouteId,
     Guid PoiId,
-    short? SortOrder = null)
+    short? SortOrder = null,
+    Guid? RequestedByUserId = null,
+    bool IsAdmin = false)
     : IRequest;

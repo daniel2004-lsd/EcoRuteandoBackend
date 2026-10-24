@@ -154,7 +154,12 @@ public sealed class RoutesController : ControllerBase
         CancellationToken cancellationToken)
     {
         await _mediator.Send(
-            new AddPoiToRouteCommand(id, poiId, sortOrder),
+            new AddPoiToRouteCommand(
+                id,
+                poiId,
+                sortOrder,
+                RequestedByUserId: GetUserId(),
+                IsAdmin: IsAdminUser()),
             cancellationToken);
 
         return NoContent();
@@ -171,7 +176,11 @@ public sealed class RoutesController : ControllerBase
         CancellationToken cancellationToken)
     {
         await _mediator.Send(
-            new RemovePoiFromRouteCommand(id, poiId),
+            new RemovePoiFromRouteCommand(
+                id,
+                poiId,
+                RequestedByUserId: GetUserId(),
+                IsAdmin: IsAdminUser()),
             cancellationToken);
 
         return NoContent();

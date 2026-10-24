@@ -4,5 +4,6 @@ namespace EcoRuteando.Modules.Mobility.Application.RoutePois.Commands.RemovePoiF
 
 public sealed record RemovePoiFromRouteCommand(
     Guid RouteId,
-    Guid PoiId)
-    : IRequest;
+    Guid PoiId,
+    Guid? RequestedByUserId = null,
+    bool IsAdmin = false) : IRequest;
