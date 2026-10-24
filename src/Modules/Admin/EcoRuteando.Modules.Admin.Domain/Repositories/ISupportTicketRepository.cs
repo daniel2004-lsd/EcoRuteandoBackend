@@ -10,6 +10,5 @@ public interface ISupportTicketRepository
     Task<IReadOnlyList<SupportTicket>> GetAllAsync(SupportTicketStatus? status = null, short? priority = null, CancellationToken cancellationToken = default);
     Task AddAsync(SupportTicket ticket, CancellationToken cancellationToken = default);
     Task AddMessageAsync(SupportMessage message, CancellationToken cancellationToken = default);
-    Task<Dictionary<Guid, (string Email, string Name)>> GetUserDetailsAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken = default);
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
 }
