@@ -32,7 +32,9 @@ public sealed class RoutesController : ControllerBase
         [FromQuery] string? transportType,
         [FromQuery] bool? includeInactive,
         [FromQuery] bool? mine,
-        CancellationToken cancellationToken)
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 50,
+        CancellationToken cancellationToken = default)
     {
         TransportType? type = null;
 
@@ -43,10 +45,20 @@ public sealed class RoutesController : ControllerBase
         }
 
         // Si mine=true, filtrar solo las rutas creadas por el usuario autenticado
-        Guid? createdBy = mine == true ? GetUserId() : null;
+        var currentUserId = GetUserId();
+        Guid? createdBy = mine == true ? currentUserId : null;
+
+        // Solo un administrador o el propio autor (con mine=true) pueden consultar rutas inactivas
+        var canIncludeInactive = (mine == true && createdBy.HasValue) || IsAdminUser();
+        var effectiveIncludeInactive = (includeInactive == true) && canIncludeInactive;
 
         var routes = await _mediator.Send(
-            new GetRoutesQuery(type, includeInactive ?? false, createdBy),
+            new GetRoutesQuery(
+                type,
+                effectiveIncludeInactive,
+                createdBy,
+                page,
+                pageSize),
             cancellationToken);
 
         return Ok(routes);
@@ -59,7 +71,10 @@ public sealed class RoutesController : ControllerBase
         CancellationToken cancellationToken)
     {
         var route = await _mediator.Send(
-            new GetRouteByIdQuery(id),
+            new GetRouteByIdQuery(
+                id,
+                RequestedByUserId: GetUserId(),
+                IsAdmin: IsAdminUser()),
             cancellationToken);
 
         return Ok(route);
@@ -173,4 +188,7 @@ public sealed class RoutesController : ControllerBase
 
         return null;
     }
+
+    private bool IsAdminUser() =>
+        User.IsInRole("Admin") || User.IsInRole("SuperAdmin");
 }

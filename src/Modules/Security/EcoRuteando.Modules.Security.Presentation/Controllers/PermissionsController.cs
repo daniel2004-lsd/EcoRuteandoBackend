@@ -35,7 +35,7 @@ public sealed class PermissionsController : ControllerBase
         return Ok(permissions);
     }
 
-    [HttpGet("{id:int}")]
+    [HttpGet("{id:guid}")]
     [HasPermission("permissions.read")]
     public async Task<IActionResult> GetPermissionById(
         Guid id,
@@ -68,7 +68,7 @@ public sealed class PermissionsController : ControllerBase
             null);
     }
 
-    [HttpPut("{id:int}")]
+    [HttpPut("{id:guid}")]
     [HasPermission("permissions.update")]
     public async Task<IActionResult> UpdatePermission(
         Guid id,
@@ -87,7 +87,7 @@ public sealed class PermissionsController : ControllerBase
         return NoContent();
     }
 
-    [HttpDelete("{id:int}")]
+    [HttpDelete("{id:guid}")]
     [HasPermission("permissions.delete")]
     public async Task<IActionResult> DeletePermission(
         Guid id,

@@ -1,3 +1,5 @@
+using EcoRuteando.Shared.Abstractions.Users;
+using EcoRuteando.Modules.Security.Infrastructure.Services;
 using EcoRuteando.Modules.Security.Application.Users.Commands.ForgotPassword;
 using EcoRuteando.Modules.Security.Application.Abstractions.BackgroundJobs;
 using EcoRuteando.Modules.Security.Application.Abstractions.Email;
@@ -59,6 +61,7 @@ public static class DependencyInjection
 
         // Repositorios
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IUserLookupService, UserLookupService>();
         services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<IPermissionRepository, PermissionRepository>();
         services.AddScoped<IUserRoleRepository, UserRoleRepository>();

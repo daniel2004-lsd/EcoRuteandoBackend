@@ -21,6 +21,17 @@ public interface IRouteRepository
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Consulta paginada y filtrada a nivel de base de datos para aislamiento y rendimiento.
+    /// </summary>
+    Task<IReadOnlyList<Route>> GetRoutesAsync(
+        TransportType? transportType = null,
+        bool includeInactive = false,
+        Guid? createdBy = null,
+        int page = 1,
+        int pageSize = 50,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Comprueba si ya existe una ruta con el mismo nombre (regla de negocio CU03:
     /// no permitir rutas duplicadas). <paramref name="excludeId"/> permite excluir
     /// la propia ruta en una actualización.
