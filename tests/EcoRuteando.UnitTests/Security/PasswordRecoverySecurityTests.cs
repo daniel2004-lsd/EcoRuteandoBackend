@@ -21,6 +21,9 @@ public class PasswordRecoverySecurityTests
     private readonly Mock<IPasswordRecoveryRepository> _recoveryRepoMock = new();
     private readonly Mock<IUserRepository> _userRepoMock = new();
     private readonly Mock<IPasswordHasher> _passwordHasherMock = new();
+    private readonly Mock<ISessionRepository> _sessionRepoMock = new();
+    private readonly Mock<IRefreshTokenRepository> _refreshTokenRepoMock = new();
+    private readonly Mock<ITrustedDeviceService> _trustedDeviceServiceMock = new();
     private readonly Mock<ISecurityUnitOfWork> _uowMock = new();
     private readonly Mock<IAuditLogService> _auditLogMock = new();
 
@@ -76,6 +79,9 @@ public class PasswordRecoverySecurityTests
             _recoveryRepoMock.Object,
             _userRepoMock.Object,
             _passwordHasherMock.Object,
+            _sessionRepoMock.Object,
+            _refreshTokenRepoMock.Object,
+            _trustedDeviceServiceMock.Object,
             _uowMock.Object,
             _auditLogMock.Object);
 
@@ -106,6 +112,9 @@ public class PasswordRecoverySecurityTests
             _recoveryRepoMock.Object,
             _userRepoMock.Object,
             _passwordHasherMock.Object,
+            _sessionRepoMock.Object,
+            _refreshTokenRepoMock.Object,
+            _trustedDeviceServiceMock.Object,
             _uowMock.Object,
             _auditLogMock.Object);
 
@@ -139,6 +148,9 @@ public class PasswordRecoverySecurityTests
             _recoveryRepoMock.Object,
             _userRepoMock.Object,
             _passwordHasherMock.Object,
+            _sessionRepoMock.Object,
+            _refreshTokenRepoMock.Object,
+            _trustedDeviceServiceMock.Object,
             _uowMock.Object,
             _auditLogMock.Object);
 
@@ -167,6 +179,9 @@ public class PasswordRecoverySecurityTests
             _recoveryRepoMock.Object,
             _userRepoMock.Object,
             _passwordHasherMock.Object,
+            _sessionRepoMock.Object,
+            _refreshTokenRepoMock.Object,
+            _trustedDeviceServiceMock.Object,
             _uowMock.Object,
             _auditLogMock.Object);
 
