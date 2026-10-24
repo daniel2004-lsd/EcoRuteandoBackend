@@ -188,4 +188,7 @@ public sealed class RoutesController : ControllerBase
 
         return null;
     }
+
+    private bool IsAdminUser() =>
+        User.IsInRole("Admin") || User.IsInRole("SuperAdmin");
 }
