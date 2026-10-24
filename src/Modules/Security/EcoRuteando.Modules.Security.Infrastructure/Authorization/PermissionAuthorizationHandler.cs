@@ -40,10 +40,10 @@ public sealed class PermissionAuthorizationHandler
             return;
         }
 
-     var hasPermission = await _dbContext.UserRoles
-        .Where(ur => ur.UserId == userId)
-        .SelectMany(ur => ur.Role.RolePermissions)
-        .AnyAsync(rp => rp.Permission.Name == requirement.Permission);
+        var hasPermission = await _dbContext.UserRoles
+           .Where(ur => ur.UserId == userId)
+           .SelectMany(ur => ur.Role.RolePermissions)
+           .AnyAsync(rp => rp.Permission.Name == requirement.Permission);
 
         if (hasPermission)
         {

@@ -6,5 +6,5 @@ namespace EcoRuteando.Modules.Security.Presentation.Contracts.Auth
     [MaxLength(50)] string FirstName,
     [MaxLength(50)] string? LastName,
     [EmailAddress] string Email,
-    [MinLength(8)] [MaxLength(128)] string Password);
+    [MinLength(8)][MaxLength(128)] string Password);
 }

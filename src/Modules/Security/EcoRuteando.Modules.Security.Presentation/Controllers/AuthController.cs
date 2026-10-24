@@ -117,7 +117,7 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
 
             if (userIdClaim is null)
             {
-                return   Unauthorized();
+                return Unauthorized();
             }
 
             var query = new GetCurrentUserQuery(

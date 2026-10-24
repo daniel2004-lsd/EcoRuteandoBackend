@@ -10,12 +10,12 @@ namespace EcoRuteando.Modules.Security.Domain.Entities
 {
     public sealed class User : Entity<Guid>
     {
-        public string FirstName {get; private set;} = string.Empty;
-        public string? LastName {get; private set;}
-        public string Email {get; private set;} = string.Empty;
-        public string? PasswordHash {get; private set;}
+        public string FirstName { get; private set; } = string.Empty;
+        public string? LastName { get; private set; }
+        public string Email { get; private set; } = string.Empty;
+        public string? PasswordHash { get; private set; }
         public string Status { get; private set; } = "active";
-        public string? PhoneNumber {get; private set; }
+        public string? PhoneNumber { get; private set; }
         public bool AcceptedTerms { get; private set; }
         public DateTime? TermsAcceptedAt { get; private set; }
         public string? ProfilePhotoUrl { get; private set; }
@@ -41,14 +41,14 @@ namespace EcoRuteando.Modules.Security.Domain.Entities
         private User()
         {
         }
-        
-        public User(string firstName, string? lastName, string email, string? passwordHash ,string? phoneNumber)
+
+        public User(string firstName, string? lastName, string email, string? passwordHash, string? phoneNumber)
         {
-            if(string.IsNullOrWhiteSpace(firstName))
+            if (string.IsNullOrWhiteSpace(firstName))
             {
                 throw new DomainException("El nombre es obligatorio");
             }
-            if(string.IsNullOrWhiteSpace(email))
+            if (string.IsNullOrWhiteSpace(email))
             {
                 throw new DomainException("El correo electrónico es obligatorio.");
             }
@@ -96,7 +96,7 @@ namespace EcoRuteando.Modules.Security.Domain.Entities
             PrimaryRole = role;
             PrimaryRoleId = role.Id;
         }
-        
+
         public void Update(
          string firstName,
         string? lastName,

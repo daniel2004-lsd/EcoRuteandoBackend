@@ -16,7 +16,7 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers;
 
 [ApiController]
 [Route("api/users")]
-[Authorize] 
+[Authorize]
 public sealed class UsersController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -38,7 +38,7 @@ public sealed class UsersController : ControllerBase
         return Ok(users);
     }
 
-    
+
     [HttpGet("{id:guid}")]
     [HasPermission("users.read")]
     public async Task<IActionResult> GetUserById(
@@ -51,7 +51,7 @@ public sealed class UsersController : ControllerBase
 
         return Ok(user);
     }
-    
+
 
 
 
@@ -91,7 +91,7 @@ public sealed class UsersController : ControllerBase
      Guid id,
     UpdateUserRequest request,
     CancellationToken cancellationToken)
-{
+    {
         var command = new UpdateUserCommand(
 
                 id,
@@ -106,7 +106,7 @@ public sealed class UsersController : ControllerBase
         await _mediator.Send(command, cancellationToken);
 
         return NoContent();
-}
+    }
 
     [HttpDelete("{id:guid}")]
     [HasPermission("users.delete")]
