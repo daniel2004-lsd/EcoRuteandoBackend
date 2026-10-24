@@ -35,7 +35,7 @@ public sealed class RolesController : ControllerBase
         return Ok(roles);
     }
 
-    [HttpGet("{id:int}")]
+    [HttpGet("{id:guid}")]
     [HasPermission("roles.read")]
     public async Task<IActionResult> GetRoleById(
         Guid id,
@@ -68,7 +68,7 @@ public sealed class RolesController : ControllerBase
             null);
     }
 
-    [HttpPut("{id:int}")]
+    [HttpPut("{id:guid}")]
     [HasPermission("roles.update")]
     public async Task<IActionResult> UpdateRole(
         Guid id,
@@ -87,7 +87,7 @@ public sealed class RolesController : ControllerBase
         return NoContent();
     }
 
-    [HttpDelete("{id:int}")]
+    [HttpDelete("{id:guid}")]
     [HasPermission("roles.delete")]
     public async Task<IActionResult> DeleteRole(
         Guid id,
