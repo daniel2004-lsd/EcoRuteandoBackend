@@ -119,19 +119,40 @@ namespace EcoRuteando.Api
                             QueueLimit = 0
                         }));
             });
+
+            var configuredOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+                ?? Array.Empty<string>();
+
+            var allowedOrigins = (configuredOrigins.Length > 0)
+                ? configuredOrigins
+                : (builder.Environment.IsDevelopment()
+                    ? new[]
+                    {
+                        "http://localhost:3000",
+                        "http://localhost:3001",
+                        "http://localhost:3002",
+                        "http://localhost:3007"
+                    }
+                    : Array.Empty<string>());
+
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("ReactPolicy", policy =>
                 {
-                    policy
-                        .WithOrigins(
-                        "http://localhost:3000",
-                        "http://localhost:3001",
-                        "http://localhost:3007",
-                        "http://localhost:3002")
-                        .WithHeaders("Authorization", "Content-Type")
-                        .WithMethods("GET", "POST", "PUT", "DELETE")
-                        .AllowCredentials();
+                    if (allowedOrigins.Length > 0)
+                    {
+                        policy
+                            .WithOrigins(allowedOrigins)
+                            .WithHeaders("Authorization", "Content-Type", "Accept")
+                            .WithMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
+                            .AllowCredentials();
+                    }
+                    else
+                    {
+                        policy
+                            .WithHeaders("Authorization", "Content-Type", "Accept")
+                            .WithMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS");
+                    }
                 });
             });
             builder.Services.AddEndpointsApiExplorer();
@@ -208,12 +229,19 @@ namespace EcoRuteando.Api
             }
             app.UseForwardedHeaders(forwardedHeaders);
 
+            if (!app.Environment.IsDevelopment())
+            {
+                app.UseHsts();
+            }
+
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+
             app.UseMiddleware<ExceptionMiddleware>();
+            app.UseMiddleware<SecurityHeadersMiddleware>();
 
             app.UseHttpsRedirection();
 
