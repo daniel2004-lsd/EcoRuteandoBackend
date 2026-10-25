@@ -42,6 +42,7 @@ namespace EcoRuteando.Api
             builder.Services.AddAuthorization();
             builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
             builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
+            builder.Services.AddHealthChecks();
 
             // Controllers + Swagger
             builder.Services.AddControllers()
@@ -253,9 +254,9 @@ namespace EcoRuteando.Api
 
             app.UseRateLimiter();
 
+            app.MapHealthChecks("/health").AllowAnonymous();
+
             app.MapControllers();
-
-
 
             app.Run();
         }
