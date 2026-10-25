@@ -31,11 +31,6 @@ public sealed class TrustedDeviceService : ITrustedDeviceService
         _unitOfWork = unitOfWork;
     }
 
-    public string GenerateTrustedDeviceToken(Guid userId, int days = 30)
-    {
-        return GenerateTrustedDeviceTokenAsync(userId, days).GetAwaiter().GetResult();
-    }
-
     public async Task<string> GenerateTrustedDeviceTokenAsync(
         Guid userId,
         int days = 30,
@@ -82,11 +77,6 @@ public sealed class TrustedDeviceService : ITrustedDeviceService
             signingCredentials: signingCredentials);
 
         return new JwtSecurityTokenHandler().WriteToken(token);
-    }
-
-    public bool ValidateTrustedDeviceToken(string? token, Guid userId)
-    {
-        return ValidateTrustedDeviceTokenAsync(token, userId).GetAwaiter().GetResult();
     }
 
     public async Task<bool> ValidateTrustedDeviceTokenAsync(

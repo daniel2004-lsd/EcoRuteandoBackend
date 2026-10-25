@@ -8,6 +8,7 @@ using EcoRuteando.Modules.Security.Application.Users.Commands.ChangeMyPassword;
 using EcoRuteando.Modules.Security.Application.Users.Commands.RefreshToken;
 using EcoRuteando.Modules.Security.Application.Users.Commands.ResetPassword;
 using EcoRuteando.Modules.Security.Application.Users.Commands.Sessions;
+using EcoRuteando.Modules.Security.Application.Users.Commands.TrustedDevices;
 using EcoRuteando.Modules.Security.Application.Users.Commands.TwoFactorAuth;
 using EcoRuteando.Modules.Security.Domain.Entities;
 using EcoRuteando.Modules.Security.Domain.Repositories;
@@ -338,5 +339,128 @@ public class SessionAndTrustedDeviceRevocationTests
 
         // Assert
         Assert.False(isValid, "Token with no database record must be rejected");
+    }
+
+    [Fact]
+    public async Task GetTrustedDevicesQueryHandler_ShouldReturnActiveDevicesForUser()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var device1 = new TrustedDevice(Guid.NewGuid(), userId, DateTime.UtcNow.AddDays(30), "Chrome on macOS");
+        var device2 = new TrustedDevice(Guid.NewGuid(), userId, DateTime.UtcNow.AddDays(15), "EcoRuteando Android");
+
+        _trustedDeviceRepoMock.Setup(r => r.GetActiveByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<TrustedDevice> { device1, device2 });
+
+        var handler = new GetTrustedDevicesQueryHandler(_trustedDeviceRepoMock.Object);
+
+        // Act
+        var result = await handler.Handle(new GetTrustedDevicesQuery(userId), CancellationToken.None);
+
+        // Assert
+        Assert.Equal(2, result.Count);
+        Assert.Contains(result, d => d.DeviceName == "Chrome on macOS");
+        Assert.Contains(result, d => d.DeviceName == "EcoRuteando Android");
+        Assert.All(result, d => Assert.True(d.IsActive));
+        Assert.All(result, d => Assert.False(d.IsRevoked));
+    }
+
+    [Fact]
+    public async Task RevokeTrustedDeviceCommandHandler_WhenDeviceBelongsToUser_ShouldRevokeAndSaveChanges()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var device = new TrustedDevice(Guid.NewGuid(), userId, DateTime.UtcNow.AddDays(30), "Firefox on Linux");
+        var deviceId = device.Id;
+
+        _trustedDeviceRepoMock.Setup(r => r.GetByIdAsync(deviceId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(device);
+
+        var handler = new RevokeTrustedDeviceCommandHandler(
+            _trustedDeviceRepoMock.Object,
+            _uowMock.Object);
+
+        // Act
+        await handler.Handle(new RevokeTrustedDeviceCommand(userId, deviceId), CancellationToken.None);
+
+        // Assert
+        Assert.True(device.IsRevoked);
+        Assert.False(device.IsActive);
+        Assert.NotNull(device.RevokedAt);
+        _trustedDeviceRepoMock.Verify(r => r.Update(device), Times.Once);
+        _uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task RevokeTrustedDeviceCommandHandler_WhenDeviceBelongsToAnotherUser_ShouldThrowNotFoundException()
+    {
+        // Arrange
+        var userA = Guid.NewGuid();
+        var userB = Guid.NewGuid();
+        var deviceOfUserB = new TrustedDevice(Guid.NewGuid(), userB, DateTime.UtcNow.AddDays(30), "Safari on iPhone");
+
+        _trustedDeviceRepoMock.Setup(r => r.GetByIdAsync(deviceOfUserB.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(deviceOfUserB);
+
+        var handler = new RevokeTrustedDeviceCommandHandler(
+            _trustedDeviceRepoMock.Object,
+            _uowMock.Object);
+
+        // Act & Assert (User A attempts to revoke User B's device -> must return NotFound, not revealing existence)
+        var ex = await Assert.ThrowsAsync<NotFoundException>(() =>
+            handler.Handle(new RevokeTrustedDeviceCommand(userA, deviceOfUserB.Id), CancellationToken.None));
+
+        Assert.Contains("no encontrado", ex.Message);
+        Assert.False(deviceOfUserB.IsRevoked, "Foreign device must not be revoked");
+        _trustedDeviceRepoMock.Verify(r => r.Update(It.IsAny<TrustedDevice>()), Times.Never);
+        _uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task RevokeTrustedDeviceCommandHandler_WhenDeviceNotFound_ShouldThrowNotFoundException()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var nonExistentDeviceId = Guid.NewGuid();
+
+        _trustedDeviceRepoMock.Setup(r => r.GetByIdAsync(nonExistentDeviceId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TrustedDevice?)null);
+
+        var handler = new RevokeTrustedDeviceCommandHandler(
+            _trustedDeviceRepoMock.Object,
+            _uowMock.Object);
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<NotFoundException>(() =>
+            handler.Handle(new RevokeTrustedDeviceCommand(userId, nonExistentDeviceId), CancellationToken.None));
+
+        Assert.Contains("no encontrado", ex.Message);
+        _uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task RevokeTrustedDeviceCommandHandler_WhenAlreadyRevoked_ShouldBeIdempotent()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var device = new TrustedDevice(Guid.NewGuid(), userId, DateTime.UtcNow.AddDays(30), "Chrome on Windows");
+        device.Revoke(); // Already revoked
+        var firstRevokedAt = device.RevokedAt;
+
+        _trustedDeviceRepoMock.Setup(r => r.GetByIdAsync(device.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(device);
+
+        var handler = new RevokeTrustedDeviceCommandHandler(
+            _trustedDeviceRepoMock.Object,
+            _uowMock.Object);
+
+        // Act
+        await handler.Handle(new RevokeTrustedDeviceCommand(userId, device.Id), CancellationToken.None);
+
+        // Assert
+        Assert.True(device.IsRevoked);
+        Assert.Equal(firstRevokedAt, device.RevokedAt); // Timestamp preserved
+        _trustedDeviceRepoMock.Verify(r => r.Update(It.IsAny<TrustedDevice>()), Times.Never);
+        _uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 }

@@ -8,6 +8,7 @@ using EcoRuteando.Modules.Security.Application.Users.Commands.RegisterUser;
 using EcoRuteando.Modules.Security.Application.Users.Commands.ResetPassword;
 using EcoRuteando.Modules.Security.Application.Users.Commands.SendVerificationEmail;
 using EcoRuteando.Modules.Security.Application.Users.Commands.Sessions;
+using EcoRuteando.Modules.Security.Application.Users.Commands.TrustedDevices;
 using EcoRuteando.Modules.Security.Application.Users.Commands.TwoFactorAuth;
 using EcoRuteando.Modules.Security.Application.Users.Commands.VerifyEmail;
 using EcoRuteando.Modules.Security.Application.Users.Queries.GetCurrentUser;
@@ -393,6 +394,39 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
                 cancellationToken);
 
             return Ok(new { message = "2FA desactivado correctamente." });
+        }
+
+        // ── Trusted Devices ───────────────────────────────────────
+
+        [Authorize]
+        [HttpGet("trusted-devices")]
+        public async Task<IActionResult> GetTrustedDevices(
+            CancellationToken cancellationToken)
+        {
+            var userId = Guid.Parse(
+                User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var devices = await _mediator.Send(
+                new GetTrustedDevicesQuery(userId),
+                cancellationToken);
+
+            return Ok(devices);
+        }
+
+        [Authorize]
+        [HttpDelete("trusted-devices/{deviceId:guid}")]
+        public async Task<IActionResult> RevokeTrustedDevice(
+            Guid deviceId,
+            CancellationToken cancellationToken)
+        {
+            var userId = Guid.Parse(
+                User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            await _mediator.Send(
+                new RevokeTrustedDeviceCommand(userId, deviceId),
+                cancellationToken);
+
+            return NoContent();
         }
     }
 }
