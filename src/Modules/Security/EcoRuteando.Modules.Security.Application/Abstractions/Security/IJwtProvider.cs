@@ -11,7 +11,8 @@ namespace EcoRuteando.Modules.Security.Application.Abstractions.Security
         string GenerateToken(
             Guid userId,
             string email,
-            string role);
+            string role,
+            Guid? sessionId = null);
 
         string GenerateTwoFactorToken(
             Guid userId,

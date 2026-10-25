@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text;
 using EcoRuteando.Modules.Security.Application.Abstractions.Security;
+using EcoRuteando.Modules.Security.Domain.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -42,13 +43,13 @@ public static class JwtAuthenticationExtensions
 
                 options.Events = new JwtBearerEvents
                 {
-                    OnTokenValidated = context =>
+                    OnTokenValidated = async context =>
                     {
                         var principal = context.Principal;
                         if (principal == null)
                         {
                             context.Fail("Principal no disponible.");
-                            return Task.CompletedTask;
+                            return;
                         }
 
                         var tokenType = principal.FindFirst("token_type")?.Value;
@@ -58,7 +59,7 @@ public static class JwtAuthenticationExtensions
                         if (tokenType == "trusted_device")
                         {
                             context.Fail("Token de dispositivo confiable no puede utilizarse como token de acceso.");
-                            return Task.CompletedTask;
+                            return;
                         }
 
                         // Los tokens temporales de 2FA únicamente se admiten para completar la verificación de 2FA
@@ -69,10 +70,33 @@ public static class JwtAuthenticationExtensions
                         if (isTwoFactorTemp && !is2FaEndpoint)
                         {
                             context.Fail("Token temporal de 2FA no autorizado para acceder a este recurso.");
-                            return Task.CompletedTask;
+                            return;
                         }
 
-                        return Task.CompletedTask;
+                        // SEC-03: Validación activa de sesión para tokens de acceso
+                        if (tokenType == "access")
+                        {
+                            var sessionIdClaim = principal.FindFirst("session_id")?.Value;
+                            if (string.IsNullOrWhiteSpace(sessionIdClaim) || !Guid.TryParse(sessionIdClaim, out var sessionId))
+                            {
+                                context.Fail("Token de acceso sin identificador de sesión válido.");
+                                return;
+                            }
+
+                            var sessionRepository = context.HttpContext.RequestServices.GetService<ISessionRepository>();
+                            if (sessionRepository == null)
+                            {
+                                context.Fail("Servicio de validación de sesiones no disponible.");
+                                return;
+                            }
+
+                            var session = await sessionRepository.GetByIdAsync(sessionId, context.HttpContext.RequestAborted);
+                            if (session == null || !session.IsActive || session.ExpiresAt < DateTime.UtcNow)
+                            {
+                                context.Fail("La sesión ha sido revocada o ha expirado.");
+                                return;
+                            }
+                        }
                     }
                 };
             });

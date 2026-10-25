@@ -46,6 +46,7 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
                 ["Jwt:Issuer"] = "EcoRuteando",
                 ["Jwt:Audience"] = "EcoRuteandoUsers",
                 ["Jwt:AccessTokenExpirationMinutes"] = "15",
+                ["Jwt:ExpirationMinutes"] = "15",
                 ["Jwt:RefreshTokenExpirationDays"] = "7",
                 ["Admin:Email"] = "admin_test@ecoruteando.com",
                 ["Admin:Password"] = "Admin1234!",

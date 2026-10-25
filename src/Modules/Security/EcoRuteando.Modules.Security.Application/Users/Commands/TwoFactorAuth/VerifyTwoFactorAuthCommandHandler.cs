@@ -79,12 +79,6 @@ public sealed class VerifyTwoFactorAuthCommandHandler
             throw new NotFoundException("Usuario no encontrado.");
         }
 
-        var roleName = user.PrimaryRole?.Name ?? "user";
-        var accessToken = _jwtProvider.GenerateToken(
-            user.Id,
-            user.Email,
-            roleName);
-
         var refreshToken = _refreshTokenService.GenerateRefreshToken();
         var refreshTokenHash = _refreshTokenService.ComputeHash(refreshToken);
 
@@ -105,6 +99,13 @@ public sealed class VerifyTwoFactorAuthCommandHandler
             DateTime.UtcNow.AddDays(7));
 
         await _sessionRepository.AddAsync(session, cancellationToken);
+
+        var roleName = user.PrimaryRole?.Name ?? "user";
+        var accessToken = _jwtProvider.GenerateToken(
+            user.Id,
+            user.Email,
+            roleName,
+            session.Id);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
