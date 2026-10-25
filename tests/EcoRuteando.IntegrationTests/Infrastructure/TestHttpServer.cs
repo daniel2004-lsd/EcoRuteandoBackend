@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
+[assembly: Xunit.CollectionBehavior(DisableTestParallelization = true)]
+
 namespace EcoRuteando.IntegrationTests.Infrastructure;
 
 public sealed class DummyEmailService : IEmailService
