@@ -176,10 +176,12 @@ public class SessionAndTrustedDeviceRevocationTests
     {
         // Arrange
         var user = CreateTestUser();
+        var currentHash = user.PasswordHash;
+        Assert.NotNull(currentHash);
 
         _userRepoMock.Setup(r => r.GetByIdAsync(user.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
-        _passwordHasherMock.Setup(h => h.Verify("CurrentPassword123!", user.PasswordHash))
+        _passwordHasherMock.Setup(h => h.Verify("CurrentPassword123!", currentHash))
             .Returns(true);
         _passwordHasherMock.Setup(h => h.Hash("NewPassword456!"))
             .Returns("NewHashedPassword456");
