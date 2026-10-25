@@ -162,11 +162,6 @@ public sealed class LoginUserCommandHandler
         }
 
         // No 2FA — proceed with normal login
-        var accessToken = _jwtProvider.GenerateToken(
-            user.Id,
-            user.Email,
-            user.PrimaryRole.Name);
-
         var refreshToken = _refreshTokenService.GenerateRefreshToken();
         var refreshTokenHash = _refreshTokenService.ComputeHash(refreshToken);
 
@@ -193,6 +188,12 @@ public sealed class LoginUserCommandHandler
             DateTime.UtcNow.AddDays(7));
 
         await _sessionRepository.AddAsync(session, cancellationToken);
+
+        var accessToken = _jwtProvider.GenerateToken(
+            user.Id,
+            user.Email,
+            user.PrimaryRole.Name,
+            session.Id);
 
         await _userRepository.UpdateAsync(user, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

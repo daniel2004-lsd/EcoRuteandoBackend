@@ -16,7 +16,7 @@ public sealed class JwtProvider : IJwtProvider
         _jwtOptions = options.Value;
     }
 
-    public string GenerateToken(Guid userId, string email, string role)
+    public string GenerateToken(Guid userId, string email, string role, Guid? sessionId = null)
     {
         var claims = new List<Claim>
         {
@@ -26,6 +26,11 @@ public sealed class JwtProvider : IJwtProvider
             new Claim(ClaimTypes.Role, role),
             new Claim("token_type", "access")
         };
+
+        if (sessionId.HasValue)
+        {
+            claims.Add(new Claim("session_id", sessionId.Value.ToString()));
+        }
 
         var securityKey = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(_jwtOptions.SecretKey));

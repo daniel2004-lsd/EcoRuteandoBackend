@@ -71,11 +71,6 @@ public sealed class RefreshTokenCommandHandler
             throw new DomainException("El usuario no tiene un rol asignado.");
         }
 
-        var accessToken = _jwtProvider.GenerateToken(
-            user.Id,
-            user.Email,
-            user.PrimaryRole.Name);
-
         var newRefreshToken =
             _refreshTokenService.GenerateRefreshToken();
 
@@ -113,6 +108,12 @@ public sealed class RefreshTokenCommandHandler
         await _refreshTokenRepository.AddAsync(
             refreshTokenEntity,
             cancellationToken);
+
+        var accessToken = _jwtProvider.GenerateToken(
+            user.Id,
+            user.Email,
+            user.PrimaryRole.Name,
+            newSession.Id);
 
         await _refreshTokenRepository.UpdateAsync(
             refreshToken,

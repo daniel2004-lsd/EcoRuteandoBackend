@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
+[assembly: Xunit.CollectionBehavior(DisableTestParallelization = true)]
+
 namespace EcoRuteando.IntegrationTests.Infrastructure;
 
 public sealed class DummyEmailService : IEmailService
@@ -46,6 +48,7 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
                 ["Jwt:Issuer"] = "EcoRuteando",
                 ["Jwt:Audience"] = "EcoRuteandoUsers",
                 ["Jwt:AccessTokenExpirationMinutes"] = "15",
+                ["Jwt:ExpirationMinutes"] = "15",
                 ["Jwt:RefreshTokenExpirationDays"] = "7",
                 ["Admin:Email"] = "admin_test@ecoruteando.com",
                 ["Admin:Password"] = "Admin1234!",

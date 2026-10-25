@@ -12,9 +12,15 @@ using EcoRuteando.Modules.Security.Application.Users.Commands.TrustedDevices;
 using EcoRuteando.Modules.Security.Application.Users.Commands.TwoFactorAuth;
 using EcoRuteando.Modules.Security.Domain.Entities;
 using EcoRuteando.Modules.Security.Domain.Repositories;
+using EcoRuteando.Modules.Security.Infrastructure;
 using EcoRuteando.Modules.Security.Infrastructure.Security;
 using EcoRuteando.Shared.Abstractions.Persistence;
 using EcoRuteando.Shared.Exceptions;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Moq;
@@ -462,5 +468,304 @@ public class SessionAndTrustedDeviceRevocationTests
         Assert.Equal(firstRevokedAt, device.RevokedAt); // Timestamp preserved
         _trustedDeviceRepoMock.Verify(r => r.Update(It.IsAny<TrustedDevice>()), Times.Never);
         _uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public void JwtProvider_WhenSessionIdProvided_ShouldEmbedSessionIdClaim()
+    {
+        // Arrange
+        var jwtOptions = Options.Create(new JwtOptions
+        {
+            SecretKey = "a_very_secret_signing_key_for_testing_purposes_only_12345",
+            Issuer = "EcoRuteando",
+            Audience = "EcoRuteandoUsers",
+            ExpirationMinutes = 15
+        });
+
+        var provider = new JwtProvider(jwtOptions);
+        var userId = Guid.NewGuid();
+        var sessionId = Guid.NewGuid();
+
+        // Act
+        var tokenString = provider.GenerateToken(userId, "test@ecoruteando.com", "user", sessionId);
+
+        // Assert
+        var handler = new JwtSecurityTokenHandler();
+        var jwt = handler.ReadJwtToken(tokenString);
+
+        var sessionClaim = jwt.Claims.FirstOrDefault(c => c.Type == "session_id");
+        Assert.NotNull(sessionClaim);
+        Assert.Equal(sessionId.ToString(), sessionClaim.Value);
+    }
+
+    [Fact]
+    public void JwtProvider_WhenSessionIdNotProvided_ShouldNotEmbedSessionIdClaim()
+    {
+        // Arrange
+        var jwtOptions = Options.Create(new JwtOptions
+        {
+            SecretKey = "a_very_secret_signing_key_for_testing_purposes_only_12345",
+            Issuer = "EcoRuteando",
+            Audience = "EcoRuteandoUsers",
+            ExpirationMinutes = 15
+        });
+
+        var provider = new JwtProvider(jwtOptions);
+        var userId = Guid.NewGuid();
+
+        // Act
+        var tokenString = provider.GenerateToken(userId, "test@ecoruteando.com", "user");
+
+        // Assert
+        var handler = new JwtSecurityTokenHandler();
+        var jwt = handler.ReadJwtToken(tokenString);
+
+        var sessionClaim = jwt.Claims.FirstOrDefault(c => c.Type == "session_id");
+        Assert.Null(sessionClaim);
+    }
+
+    private static IServiceProvider CreateServiceProviderWithSessionRepo(ISessionRepository sessionRepo)
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton(sessionRepo);
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Jwt:SecretKey"] = "a_very_secret_signing_key_for_testing_purposes_only_12345",
+                ["Jwt:Issuer"] = "EcoRuteando",
+                ["Jwt:Audience"] = "EcoRuteandoUsers",
+                ["Jwt:ExpirationMinutes"] = "15"
+            })
+            .Build();
+
+        services.AddJwtAuthentication(config);
+        return services.BuildServiceProvider();
+    }
+
+    [Fact]
+    public async Task OnTokenValidated_WhenAccessTokenHasActiveSession_ShouldSucceed()
+    {
+        // Arrange
+        var sessionId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var session = new Session(userId, "hash", IPAddress.Loopback, "Agent", "PC", DateTime.UtcNow.AddDays(7));
+        typeof(Session).GetProperty("Id")?.SetValue(session, sessionId);
+
+        _sessionRepoMock.Setup(r => r.GetByIdAsync(sessionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(session);
+
+        var sp = CreateServiceProviderWithSessionRepo(_sessionRepoMock.Object);
+        var jwtOptions = sp.GetRequiredService<IOptionsMonitor<JwtBearerOptions>>().Get(JwtBearerDefaults.AuthenticationScheme);
+
+        var httpContext = new DefaultHttpContext { RequestServices = sp };
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+            new Claim("token_type", "access"),
+            new Claim("session_id", sessionId.ToString())
+        };
+        var context = new TokenValidatedContext(
+            httpContext,
+            new AuthenticationScheme("Bearer", "Bearer", typeof(JwtBearerHandler)),
+            jwtOptions)
+        {
+            Principal = new ClaimsPrincipal(new ClaimsIdentity(claims, "Bearer"))
+        };
+
+        // Act
+        await jwtOptions.Events.OnTokenValidated(context);
+
+        // Assert
+        Assert.Null(context.Result?.Failure);
+    }
+
+    [Fact]
+    public async Task OnTokenValidated_WhenAccessTokenHasRevokedSession_ShouldFail()
+    {
+        // Arrange
+        var sessionId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var session = new Session(userId, "hash", IPAddress.Loopback, "Agent", "PC", DateTime.UtcNow.AddDays(7));
+        typeof(Session).GetProperty("Id")?.SetValue(session, sessionId);
+        session.Revoke();
+
+        _sessionRepoMock.Setup(r => r.GetByIdAsync(sessionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(session);
+
+        var sp = CreateServiceProviderWithSessionRepo(_sessionRepoMock.Object);
+        var jwtOptions = sp.GetRequiredService<IOptionsMonitor<JwtBearerOptions>>().Get(JwtBearerDefaults.AuthenticationScheme);
+
+        var httpContext = new DefaultHttpContext { RequestServices = sp };
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+            new Claim("token_type", "access"),
+            new Claim("session_id", sessionId.ToString())
+        };
+        var context = new TokenValidatedContext(
+            httpContext,
+            new AuthenticationScheme("Bearer", "Bearer", typeof(JwtBearerHandler)),
+            jwtOptions)
+        {
+            Principal = new ClaimsPrincipal(new ClaimsIdentity(claims, "Bearer"))
+        };
+
+        // Act
+        await jwtOptions.Events.OnTokenValidated(context);
+
+        // Assert
+        Assert.NotNull(context.Result?.Failure);
+        Assert.Contains("revocada", context.Result!.Failure!.Message);
+    }
+
+    [Fact]
+    public async Task OnTokenValidated_WhenAccessTokenHasExpiredSession_ShouldFail()
+    {
+        // Arrange
+        var sessionId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        // Session expired in the past
+        var session = new Session(userId, "hash", IPAddress.Loopback, "Agent", "PC", DateTime.UtcNow.AddMinutes(-5));
+        typeof(Session).GetProperty("Id")?.SetValue(session, sessionId);
+
+        _sessionRepoMock.Setup(r => r.GetByIdAsync(sessionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(session);
+
+        var sp = CreateServiceProviderWithSessionRepo(_sessionRepoMock.Object);
+        var jwtOptions = sp.GetRequiredService<IOptionsMonitor<JwtBearerOptions>>().Get(JwtBearerDefaults.AuthenticationScheme);
+
+        var httpContext = new DefaultHttpContext { RequestServices = sp };
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+            new Claim("token_type", "access"),
+            new Claim("session_id", sessionId.ToString())
+        };
+        var context = new TokenValidatedContext(
+            httpContext,
+            new AuthenticationScheme("Bearer", "Bearer", typeof(JwtBearerHandler)),
+            jwtOptions)
+        {
+            Principal = new ClaimsPrincipal(new ClaimsIdentity(claims, "Bearer"))
+        };
+
+        // Act
+        await jwtOptions.Events.OnTokenValidated(context);
+
+        // Assert
+        Assert.NotNull(context.Result?.Failure);
+        Assert.Contains("expirado", context.Result!.Failure!.Message);
+    }
+
+    [Fact]
+    public async Task OnTokenValidated_WhenAccessTokenSessionNotFoundInDb_ShouldFail()
+    {
+        // Arrange
+        var sessionId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+
+        _sessionRepoMock.Setup(r => r.GetByIdAsync(sessionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Session?)null);
+
+        var sp = CreateServiceProviderWithSessionRepo(_sessionRepoMock.Object);
+        var jwtOptions = sp.GetRequiredService<IOptionsMonitor<JwtBearerOptions>>().Get(JwtBearerDefaults.AuthenticationScheme);
+
+        var httpContext = new DefaultHttpContext { RequestServices = sp };
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+            new Claim("token_type", "access"),
+            new Claim("session_id", sessionId.ToString())
+        };
+        var context = new TokenValidatedContext(
+            httpContext,
+            new AuthenticationScheme("Bearer", "Bearer", typeof(JwtBearerHandler)),
+            jwtOptions)
+        {
+            Principal = new ClaimsPrincipal(new ClaimsIdentity(claims, "Bearer"))
+        };
+
+        // Act
+        await jwtOptions.Events.OnTokenValidated(context);
+
+        // Assert
+        Assert.NotNull(context.Result?.Failure);
+        Assert.Contains("revocada", context.Result!.Failure!.Message);
+    }
+
+    [Fact]
+    public async Task OnTokenValidated_WhenAccessTokenMissingSessionIdClaim_ShouldFail()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var sp = CreateServiceProviderWithSessionRepo(_sessionRepoMock.Object);
+        var jwtOptions = sp.GetRequiredService<IOptionsMonitor<JwtBearerOptions>>().Get(JwtBearerDefaults.AuthenticationScheme);
+
+        var httpContext = new DefaultHttpContext { RequestServices = sp };
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+            new Claim("token_type", "access")
+            // No session_id claim
+        };
+        var context = new TokenValidatedContext(
+            httpContext,
+            new AuthenticationScheme("Bearer", "Bearer", typeof(JwtBearerHandler)),
+            jwtOptions)
+        {
+            Principal = new ClaimsPrincipal(new ClaimsIdentity(claims, "Bearer"))
+        };
+
+        // Act
+        await jwtOptions.Events.OnTokenValidated(context);
+
+        // Assert
+        Assert.NotNull(context.Result?.Failure);
+        Assert.Contains("sin identificador de sesión", context.Result!.Failure!.Message);
+    }
+
+    [Fact]
+    public async Task RefreshTokenCommandHandler_PassesNewSessionIdToJwtProvider()
+    {
+        // Arrange
+        var user = CreateTestUser();
+        const string rawToken = "raw_refresh_token_active";
+        const string tokenHash = "computed_hash_active";
+
+        var refreshToken = new RefreshToken(user.Id, tokenHash, DateTime.UtcNow.AddDays(7), "127.0.0.1");
+        typeof(RefreshToken).GetProperty("User")?.SetValue(refreshToken, user);
+
+        var session = new Session(user.Id, tokenHash, IPAddress.Loopback, "Browser", "PC", DateTime.UtcNow.AddDays(7));
+
+        _refreshTokenServiceMock.Setup(s => s.ComputeHash(rawToken)).Returns(tokenHash);
+        _refreshTokenServiceMock.Setup(s => s.GenerateRefreshToken()).Returns("new_raw_refresh_token");
+        _refreshTokenServiceMock.Setup(s => s.ComputeHash("new_raw_refresh_token")).Returns("new_computed_hash");
+
+        _refreshTokenRepoMock.Setup(r => r.GetByHashAsync(tokenHash, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(refreshToken);
+        _sessionRepoMock.Setup(r => r.GetByRefreshTokenHashAsync(tokenHash, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(session);
+
+        _jwtProviderMock.Setup(j => j.GenerateToken(user.Id, user.Email, user.PrimaryRole!.Name, It.IsNotNull<Guid?>()))
+            .Returns("new_valid_access_token");
+
+        var handler = new RefreshTokenCommandHandler(
+            _refreshTokenRepoMock.Object,
+            _refreshTokenServiceMock.Object,
+            _jwtProviderMock.Object,
+            _sessionRepoMock.Object,
+            _uowMock.Object);
+
+        // Act
+        var response = await handler.Handle(new RefreshTokenCommand(rawToken), CancellationToken.None);
+
+        // Assert
+        Assert.Equal("new_valid_access_token", response.AccessToken);
+        _jwtProviderMock.Verify(j => j.GenerateToken(
+            user.Id,
+            user.Email,
+            user.PrimaryRole!.Name,
+            It.Is<Guid?>(id => id.HasValue && id.Value != Guid.Empty)), Times.Once);
+        _sessionRepoMock.Verify(r => r.AddAsync(It.IsAny<Session>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 }
