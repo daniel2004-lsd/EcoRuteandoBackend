@@ -1,4 +1,6 @@
+using System.Security.Cryptography;
 using EcoRuteando.Modules.Security.Application.Abstractions.Security;
+using EcoRuteando.Modules.Security.Application.Users.Commands.SendVerificationEmail;
 using EcoRuteando.Modules.Security.Domain.Repositories;
 using EcoRuteando.Shared.Abstractions.Persistence;
 using EcoRuteando.Shared.Exceptions;
@@ -12,15 +14,18 @@ public sealed class UpdateMyProfileCommandHandler
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHasher _passwordHasher;
     private readonly ISecurityUnitOfWork _unitOfWork;
+    private readonly ISender _sender;
 
     public UpdateMyProfileCommandHandler(
         IUserRepository userRepository,
         IPasswordHasher passwordHasher,
-        ISecurityUnitOfWork unitOfWork)
+        ISecurityUnitOfWork unitOfWork,
+        ISender sender)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
         _unitOfWork = unitOfWork;
+        _sender = sender;
     }
 
     public async Task<UpdateMyProfileResponse> Handle(
@@ -36,10 +41,23 @@ public sealed class UpdateMyProfileCommandHandler
             throw new NotFoundException("Usuario no encontrado.");
         }
 
+        // CU12 / RF12.2: Confirmación de identidad obligatoria para usuarios con contraseña
+        if (!string.IsNullOrWhiteSpace(user.PasswordHash))
+        {
+            if (string.IsNullOrWhiteSpace(request.CurrentPassword)
+                || !_passwordHasher.Verify(
+                    request.CurrentPassword,
+                    user.PasswordHash))
+            {
+                throw new DomainException(
+                    "La contraseña actual es incorrecta.");
+            }
+        }
 
         var newEmail = request.Email.Trim().ToLowerInvariant();
+        var emailChanged = newEmail != user.Email;
 
-        if (newEmail != user.Email)
+        if (emailChanged)
         {
             var emailOwner = await _userRepository.GetByEmailAsync(
                 newEmail,
@@ -62,6 +80,14 @@ public sealed class UpdateMyProfileCommandHandler
             cancellationToken);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        if (emailChanged)
+        {
+            var verificationCode = RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
+            await _sender.Send(
+                new SendVerificationEmailCommand(user.Id, user.Email, null, verificationCode),
+                cancellationToken);
+        }
 
         return new UpdateMyProfileResponse(
             user.Id,

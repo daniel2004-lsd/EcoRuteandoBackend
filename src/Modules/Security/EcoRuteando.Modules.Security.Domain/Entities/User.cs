@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -126,6 +126,8 @@ namespace EcoRuteando.Modules.Security.Domain.Entities
         /// Actualiza los datos personales del propio usuario (CU12/RF5).
         /// Requiere que la identidad ya haya sido confirmada con la
         /// contraseña actual a nivel de aplicación.
+        /// Si el correo electrónico cambia, se invalida la verificación previa
+        /// para exigir la comprobación del nuevo correo (prevención de account takeover).
         /// </summary>
         public void UpdateProfile(
             string firstName,
@@ -143,9 +145,15 @@ namespace EcoRuteando.Modules.Security.Domain.Entities
                 throw new DomainException("El correo electrónico es obligatorio.");
             }
 
+            var normalizedEmail = email.Trim().ToLowerInvariant();
+            if (normalizedEmail != Email)
+            {
+                Email = normalizedEmail;
+                EmailVerified = false;
+            }
+
             FirstName = firstName.Trim();
             LastName = lastName?.Trim();
-            Email = email.Trim().ToLowerInvariant();
             PhoneNumber = phoneNumber?.Trim();
             UpdatedAt = DateTime.UtcNow;
         }
