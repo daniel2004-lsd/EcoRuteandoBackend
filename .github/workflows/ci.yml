@@ -20,9 +20,56 @@ jobs:
     name: Build, Test & Security Audit
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgis/postgis:16-3.5
+        env:
+          POSTGRES_DB: ecoruteando_test_e2e
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5450:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
+
+      - name: Checkout database repository
+        uses: actions/checkout@v5
+        with:
+          repository: daniel2004-lsd/EcoRuteandoDb
+          ref: develop
+          path: EcoRuteandoDb
+
+      - name: Verify PostgreSQL readiness
+        run: |
+          for i in {1..30}; do
+            if docker exec ${{ job.services.postgres.id }} pg_isready -U postgres -d ecoruteando_test_e2e; then
+              echo "PostgreSQL is ready and accepting connections."
+              exit 0
+            fi
+            echo "Waiting for PostgreSQL ($i/30)..."
+            sleep 1
+          done
+          echo "ERROR: PostgreSQL did not become ready in time."
+          exit 1
+
+      - name: Apply database migrations with Liquibase
+        run: |
+          docker run --rm --network host \
+            -v ${{ github.workspace }}/EcoRuteandoDb:/workspace \
+            -w /workspace \
+            liquibase/liquibase:4.33 \
+            --url="jdbc:postgresql://localhost:5450/ecoruteando_test_e2e" \
+            --username=postgres \
+            --password=postgres \
+            --changeLogFile=changelog/db.changelog-master.yaml \
+            update
 
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v5
@@ -47,6 +94,9 @@ jobs:
         run: dotnet build --no-restore --nologo
 
       - name: Run automated tests
+        env:
+          ConnectionStrings__DefaultConnection: "Host=localhost;Port=5450;Database=ecoruteando_test_e2e;Username=postgres;Password=postgres"
+          Encryption__TotpSecretKey: "MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTI="
         run: dotnet test --no-build --nologo
 
       - name: Audit vulnerable packages

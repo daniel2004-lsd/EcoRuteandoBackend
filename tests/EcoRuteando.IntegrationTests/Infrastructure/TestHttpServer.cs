@@ -19,7 +19,9 @@ public sealed class DummyEmailService : IEmailService
 
 public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
 {
-    public const string ConnectionString = "Host=localhost;Port=5450;Database=ecoruteando_test_e2e;Username=postgres;Password=postgres";
+    public static readonly string ConnectionString =
+        Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
+        ?? "Host=localhost;Port=5450;Database=ecoruteando_test_e2e;Username=postgres;Password=postgres";
     public const string AesKeyBase64 = "MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTI="; // 32 bytes AES-256 key
 
     static TestWebApplicationFactory()
