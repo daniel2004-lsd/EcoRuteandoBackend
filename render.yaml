@@ -38,3 +38,8 @@ services:
         sync: false
       - key: EmailSettings__Password
         sync: false
+      # ForwardedHeaders para proxy inverso: Render enruta tráfico vía su gateway interno en red privada.
+      # No se confía en proxies arbitrarios por defecto. Si se requiere confiar en el proxy interno de Render,
+      # defina la variable en el dashboard con la red CIDR correspondiente (ej. 10.0.0.0/8).
+      - key: ForwardedHeaders__KnownNetworks__0
+        sync: false
