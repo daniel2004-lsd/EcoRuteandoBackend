@@ -121,7 +121,7 @@ public sealed class RoutesController : ControllerBase
             command with
             {
                 RequestedByUserId = GetUserId(),
-                IsAdmin = User.IsInRole("Admin")
+                IsAdmin = IsAdminUser()
             },
             cancellationToken);
 
@@ -138,7 +138,7 @@ public sealed class RoutesController : ControllerBase
             new DeleteRouteCommand(
                 id,
                 RequestedByUserId: GetUserId(),
-                IsAdmin: User.IsInRole("Admin")),
+                IsAdmin: IsAdminUser()),
             cancellationToken);
 
         return NoContent();

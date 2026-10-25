@@ -155,4 +155,60 @@ public class TwoFactorTokenIsolationTests
         Assert.NotNull(tokenValidatedContext.Result?.Failure);
         Assert.Equal("Token de dispositivo confiable no puede utilizarse como token de acceso.", tokenValidatedContext.Result.Failure.Message);
     }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("unknown")]
+    [InlineData("refresh")]
+    public void TokenWithMissingOrInvalidTokenType_MustBeRejectedOnGeneralEndpoints(string? invalidTokenType)
+    {
+        var httpContext = new DefaultHttpContext();
+        httpContext.Request.Path = "/api/routes";
+
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString())
+        };
+        if (invalidTokenType != null)
+        {
+            claims.Add(new Claim("token_type", invalidTokenType));
+        }
+
+        var identity = new ClaimsIdentity(claims, "Bearer");
+        var principal = new ClaimsPrincipal(identity);
+
+        var authScheme = new AuthenticationScheme("Bearer", "Bearer", typeof(JwtBearerHandler));
+        var options = new JwtBearerOptions();
+        var tokenValidatedContext = new TokenValidatedContext(httpContext, authScheme, options)
+        {
+            Principal = principal
+        };
+
+        var tokenType = principal.FindFirst("token_type")?.Value;
+        var role = principal.FindFirst(ClaimTypes.Role)?.Value;
+
+        if (tokenType == "trusted_device")
+        {
+            tokenValidatedContext.Fail("Token de dispositivo confiable no puede utilizarse como token de acceso.");
+        }
+
+        var isTwoFactorTemp = tokenType == "two_factor_temp" || role == "two_factor_pending";
+        var requestPath = (httpContext.Request.Path.Value ?? string.Empty).TrimEnd('/');
+        var is2FaEndpoint = requestPath.EndsWith("/api/auth/2fa/verify", StringComparison.OrdinalIgnoreCase);
+
+        if (isTwoFactorTemp)
+        {
+            if (!is2FaEndpoint)
+            {
+                tokenValidatedContext.Fail("Token temporal de 2FA no autorizado para acceder a este recurso.");
+            }
+        }
+        else if (tokenType != "access")
+        {
+            tokenValidatedContext.Fail("Tipo de token no válido como token de acceso.");
+        }
+
+        Assert.NotNull(tokenValidatedContext.Result?.Failure);
+        Assert.Equal("Tipo de token no válido como token de acceso.", tokenValidatedContext.Result.Failure.Message);
+    }
 }

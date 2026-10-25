@@ -35,6 +35,7 @@
     <ProjectReference Include="..\..\src\Modules\Notifications\EcoRuteando.Modules.Notifications.Application\EcoRuteando.Modules.Notifications.Application.csproj" />
     <ProjectReference Include="..\..\src\Modules\Integrations\EcoRuteando.Modules.Integrations.Domain\EcoRuteando.Modules.Integrations.Domain.csproj" />
     <ProjectReference Include="..\..\src\Modules\Integrations\EcoRuteando.Modules.Integrations.Application\EcoRuteando.Modules.Integrations.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Integrations\EcoRuteando.Modules.Integrations.Presentation\EcoRuteando.Modules.Integrations.Presentation.csproj" />
     <ProjectReference Include="..\..\src\Api\EcoRuteando.Api\EcoRuteando.Api.csproj" />
   </ItemGroup>
 

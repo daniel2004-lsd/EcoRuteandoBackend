@@ -10,7 +10,7 @@ namespace EcoRuteando.Modules.Integrations.Presentation.Controllers;
 
 [ApiController]
 [Route("api/integrations/cache")]
-[Authorize]
+[Authorize(Roles = "Admin,SuperAdmin")]
 public class ApiCacheController : ControllerBase
 {
     private readonly IMediator _mediator;

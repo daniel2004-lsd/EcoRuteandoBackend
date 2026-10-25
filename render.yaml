@@ -4,15 +4,15 @@ services:
   - type: web
     name: ecoruteando-backend
     runtime: docker
-    dockerfilePath: ./src/Api/EcoRuteando.Api/Dockerfile
-    # El Dockerfile builda desde la raíz (COPY . . y WORKDIR /src/src/Api/...)
+    dockerfilePath: ./dockerfile
+    # El Dockerfile builda desde la raíz con optimización de caché multi-etapa
     dockerContext: .
-    # Puerto del contenedor. El Dockerfile hace EXPOSE 8080 y ASP.NET Core
-    # escucha en 8080 por defecto. Render mapea su PORT externo a este.
+    healthCheckPath: /health
+    # Puerto del contenedor: 5124 unificado con dockerfile y docker-compose.
     envVars:
-      # Render asigna el puerto de forma dinámica; ASP.NET Core lo lee de $PORT.
+      # Render asigna el puerto de forma dinámica; ASP.NET Core lo lee de $PORT si se define.
       - key: ASPNETCORE_URLS
-        value: http://+:8080
+        value: http://+:5124
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
       # Cadena de conexión al Render Postgres vinculado (se inyecta automáticamente
