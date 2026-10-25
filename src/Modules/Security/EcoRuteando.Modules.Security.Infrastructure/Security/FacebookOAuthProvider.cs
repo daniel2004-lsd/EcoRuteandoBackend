@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using EcoRuteando.Modules.Security.Application.Abstractions.Security;
 
@@ -16,8 +17,17 @@ public sealed class FacebookOAuthProvider : IOAuthProvider
 
     public async Task<OAuthUserInfo?> GetUserInfoAsync(string accessToken)
     {
-        var response = await _httpClient.GetAsync(
-            $"https://graph.facebook.com/me?fields=id,email,name,picture.type(large)&access_token={accessToken}");
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            return null;
+        }
+
+        using var request = new HttpRequestMessage(
+            HttpMethod.Get,
+            "https://graph.facebook.com/me?fields=id,email,name,picture.type(large)");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Trim());
+
+        var response = await _httpClient.SendAsync(request);
 
         if (!response.IsSuccessStatusCode)
         {
