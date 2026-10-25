@@ -64,12 +64,12 @@ public class TwoFactorTokenIsolationTests
     }
 
     [Fact]
-    public void TrustedDeviceToken_ShouldHaveTrustedDeviceType()
+    public async Task TrustedDeviceToken_ShouldHaveTrustedDeviceType()
     {
         var service = new TrustedDeviceService(Options.Create(_options));
         var userId = Guid.NewGuid();
 
-        var tokenString = service.GenerateTrustedDeviceToken(userId, 30);
+        var tokenString = await service.GenerateTrustedDeviceTokenAsync(userId, 30);
         Assert.NotNull(tokenString);
 
         var handler = new JwtSecurityTokenHandler();

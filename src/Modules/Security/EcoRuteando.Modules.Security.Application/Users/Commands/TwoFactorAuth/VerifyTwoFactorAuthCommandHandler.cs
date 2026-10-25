@@ -111,7 +111,8 @@ public sealed class VerifyTwoFactorAuthCommandHandler
         string? trustedDeviceToken = null;
         if (request.RememberDevice)
         {
-            trustedDeviceToken = _trustedDeviceService.GenerateTrustedDeviceToken(user.Id, 30);
+            trustedDeviceToken = await _trustedDeviceService.GenerateTrustedDeviceTokenAsync(
+                user.Id, 30, cancellationToken);
         }
 
         return new VerifyTwoFactorAuthResponse(

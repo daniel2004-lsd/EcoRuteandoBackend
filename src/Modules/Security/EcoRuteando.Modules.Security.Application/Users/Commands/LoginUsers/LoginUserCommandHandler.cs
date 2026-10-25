@@ -134,8 +134,8 @@ public sealed class LoginUserCommandHandler
 
         if (twoFactorAuth is { IsActive: true })
         {
-            var isTrustedDevice = _trustedDeviceService.ValidateTrustedDeviceToken(
-                request.TrustedDeviceToken, user.Id);
+            var isTrustedDevice = await _trustedDeviceService.ValidateTrustedDeviceTokenAsync(
+                request.TrustedDeviceToken, user.Id, cancellationToken);
 
             if (!isTrustedDevice)
             {
