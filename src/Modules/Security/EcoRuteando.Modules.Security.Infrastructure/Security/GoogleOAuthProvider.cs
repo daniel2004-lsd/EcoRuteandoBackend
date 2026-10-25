@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using EcoRuteando.Modules.Security.Application.Abstractions.Security;
 using Microsoft.Extensions.Options;
@@ -19,8 +20,17 @@ public sealed class GoogleOAuthProvider : IOAuthProvider
 
     public async Task<OAuthUserInfo?> GetUserInfoAsync(string accessToken)
     {
-        var response = await _httpClient.GetAsync(
-            $"https://www.googleapis.com/oauth2/v2/userinfo?access_token={accessToken}");
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            return null;
+        }
+
+        using var request = new HttpRequestMessage(
+            HttpMethod.Get,
+            "https://www.googleapis.com/oauth2/v2/userinfo");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Trim());
+
+        var response = await _httpClient.SendAsync(request);
 
         if (!response.IsSuccessStatusCode)
         {
