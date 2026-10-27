@@ -9,7 +9,7 @@ namespace EcoRuteando.Modules.Admin.Presentation.Controllers;
 
 [ApiController]
 [Route("api/admin/statistics")]
-[Authorize]
+[Authorize(Roles = "Admin,SuperAdmin")]
 public class StatisticsController : ControllerBase
 {
     private readonly IMediator _mediator;

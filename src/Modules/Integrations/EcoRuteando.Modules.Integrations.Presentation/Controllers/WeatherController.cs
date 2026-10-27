@@ -39,7 +39,7 @@ public class WeatherController : ControllerBase
     /// Registra una nueva lectura meteorológica desde un servicio o estación de clima.
     /// </summary>
     [HttpPost("ingest")]
-    [Authorize]
+    [Authorize(Roles = "Admin,SuperAdmin")]
     public async Task<IActionResult> Ingest(
         [FromBody] IngestWeatherApiRequest request,
         CancellationToken cancellationToken)

@@ -32,6 +32,15 @@ public sealed class RemovePoiFromRouteCommandHandler
             throw new NotFoundException("La ruta no existe.");
         }
 
+        // Regla de control de acceso y propiedad (H-15)
+        if (!request.IsAdmin
+            && (route.CreatedBy is null
+                || route.CreatedBy != request.RequestedByUserId))
+        {
+            throw new ForbiddenException(
+                "Solo puedes modificar los puntos de interés de las rutas que tú mismo creaste.");
+        }
+
         var routePoi = route.RoutePois.FirstOrDefault(
             rp => rp.PoiId == request.PoiId);
 

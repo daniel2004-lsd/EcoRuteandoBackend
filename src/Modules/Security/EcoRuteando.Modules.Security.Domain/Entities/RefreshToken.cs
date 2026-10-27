@@ -28,7 +28,7 @@ public sealed class RefreshToken : Entity<Guid>
 
     public DateTime ExpiresAt { get; private set; }
 
- 
+
 
     public DateTime? RevokedAt { get; private set; }
 

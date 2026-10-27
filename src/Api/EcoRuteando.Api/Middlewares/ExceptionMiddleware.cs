@@ -1,4 +1,4 @@
-﻿
+
 using EcoRuteando.Shared.Exceptions;
 using EcoRuteando.Modules.Security.Application.Abstractions.BackgroundJobs;
 using EcoRuteando.Modules.Security.Application.Abstractions.Logging;
@@ -114,6 +114,8 @@ public sealed class ExceptionMiddleware
         }
         catch (Exception exception)
         {
+            _logger.LogError(exception, "Unhandled exception in ExceptionMiddleware for path {Path}: {Message}", context.Request.Path, exception.Message);
+
             await LogErrorInBackgroundAsync(exception);
 
             await WriteProblemDetails(

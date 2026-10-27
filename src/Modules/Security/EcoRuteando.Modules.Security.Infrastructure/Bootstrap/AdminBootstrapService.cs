@@ -3,6 +3,7 @@ using EcoRuteando.Modules.Security.Application.Validation;
 using EcoRuteando.Modules.Security.Domain.Entities;
 using EcoRuteando.Modules.Security.Domain.Repositories;
 using EcoRuteando.Shared.Abstractions.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -94,7 +95,17 @@ public sealed class AdminBootstrapService : IAdminBootstrapService
 
             user.UserRoles.Add(new UserRole(user.Id, adminRole.Id));
 
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            try
+            {
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+            }
+            catch (DbUpdateException ex) when (ex.InnerException is Npgsql.PostgresException pg && pg.SqlState == "23505")
+            {
+                _logger.LogInformation(
+                    "El administrador inicial {Email} ya fue creado concurrentemente.",
+                    email);
+                return;
+            }
 
             _logger.LogWarning(
                 "Administrador inicial creado: {Email} con rol '{Role}'.",

@@ -39,7 +39,7 @@ public class AirQualityController : ControllerBase
     /// Registra una nueva lectura de calidad del aire desde una estación o servicio externo.
     /// </summary>
     [HttpPost("ingest")]
-    [Authorize]
+    [Authorize(Roles = "Admin,SuperAdmin")]
     public async Task<IActionResult> Ingest(
         [FromBody] IngestAirQualityApiRequest request,
         CancellationToken cancellationToken)

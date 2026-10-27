@@ -9,24 +9,40 @@ services:
     container_name: ecoruteando-backend
 
     ports:
-      - "5124:5124"
+      - "${PORT:-5124}:5124"
 
     environment:
-      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
 
-      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=ecoRuteando_db;Username=${DB_USERNAME};Password=${DB_PASSWORD}"
+      ConnectionStrings__DefaultConnection: "Host=${DB_HOST:-postgres};Port=${DB_PORT:-5432};Database=${DB_NAME:-ecoRuteando_db};Username=${DB_USERNAME:?DB_USERNAME is required};Password=${DB_PASSWORD:?DB_PASSWORD is required}"
 
-      Jwt__SecretKey: "${Jwt__SecretKey}"
+      Jwt__Issuer: "${Jwt__Issuer:-EcoRuteando}"
+      Jwt__Audience: "${Jwt__Audience:-EcoRuteandoUsers}"
+      Jwt__SecretKey: "${Jwt__SecretKey:?Jwt__SecretKey is required}"
+      Jwt__ExpirationMinutes: "${Jwt__ExpirationMinutes:-15}"
 
-      Google__ClientId: "${Google__ClientId}"
-      Google__ClientSecret: "${Google__ClientSecret}"
+      Admin__Email: "${Admin__Email:-}"
+      Admin__Password: "${Admin__Password:-}"
 
-      Facebook__AppId: "${Facebook__AppId}"
-      Facebook__AppSecret: "${Facebook__AppSecret}"
+      Google__ClientId: "${Google__ClientId:-}"
+      Google__ClientSecret: "${Google__ClientSecret:-}"
 
-      EmailSettings__Username: "${EmailSettings__Username}"
-      EmailSettings__Password: "${EmailSettings__Password}"
-      EmailSettings__FromEmail: "${EmailSettings__FromEmail}"
+      Facebook__AppId: "${Facebook__AppId:-}"
+      Facebook__AppSecret: "${Facebook__AppSecret:-}"
+
+      EmailSettings__Host: "${EmailSettings__Host:-smtp.gmail.com}"
+      EmailSettings__Port: "${EmailSettings__Port:-587}"
+      EmailSettings__EnableSsl: "${EmailSettings__EnableSsl:-true}"
+      EmailSettings__Username: "${EmailSettings__Username:-}"
+      EmailSettings__Password: "${EmailSettings__Password:-}"
+      EmailSettings__FromName: "${EmailSettings__FromName:-EcoRuteando}"
+      EmailSettings__FromEmail: "${EmailSettings__FromEmail:-}"
+
+      GoogleMaps__ApiKey: "${GoogleMaps__ApiKey:-}"
+
+      ForwardedHeaders__KnownProxies__0: "${FORWARDED_KNOWN_PROXIES:-}"
+      ForwardedHeaders__KnownNetworks__0: "${FORWARDED_KNOWN_NETWORKS:-}"
+      ForwardedHeaders__ForwardedLimit: "${FORWARDED_LIMIT:-1}"
 
     networks:
       - ecoruteando_db_default

@@ -8,6 +8,7 @@ using EcoRuteando.Modules.Security.Application.Users.Commands.RegisterUser;
 using EcoRuteando.Modules.Security.Application.Users.Commands.ResetPassword;
 using EcoRuteando.Modules.Security.Application.Users.Commands.SendVerificationEmail;
 using EcoRuteando.Modules.Security.Application.Users.Commands.Sessions;
+using EcoRuteando.Modules.Security.Application.Users.Commands.TrustedDevices;
 using EcoRuteando.Modules.Security.Application.Users.Commands.TwoFactorAuth;
 using EcoRuteando.Modules.Security.Application.Users.Commands.VerifyEmail;
 using EcoRuteando.Modules.Security.Application.Users.Queries.GetCurrentUser;
@@ -52,7 +53,7 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
             return Ok(new
             {
                 userId = result.UserId,
-                verificationCode = result.VerificationCode
+                message = result.Message
             });
         }
 
@@ -95,6 +96,7 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
             return Ok(tokens);
         }
 
+        [EnableRateLimiting("auth")]
         [HttpPost("logout")]
         public async Task<IActionResult> Logout(
         LogoutRequest request,
@@ -116,7 +118,7 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
 
             if (userIdClaim is null)
             {
-                return   Unauthorized();
+                return Unauthorized();
             }
 
             var query = new GetCurrentUserQuery(
@@ -129,9 +131,9 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
             return Ok(user);
         }
 
-        // Rate limiting por email con lockout escalonado se maneja en el handler
-        // (IForgotPasswordRateLimiter). No usar "sensitive" aquí: era 3/hora por IP
-        // y bloqueaba al usuario legítimo demasiado rápido.
+        // Rate limiting por IP particionado (sensitive: 3/hora por IP) combinado
+        // con el rate limiter escalonado por email en el handler (IForgotPasswordRateLimiter).
+        [EnableRateLimiting("sensitive")]
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword(
         ForgotPasswordRequest request,
@@ -159,7 +161,8 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
                 new ResetPasswordCommand(
                     request.Token,
                     request.NewPassword,
-                    HttpContext.Connection.RemoteIpAddress?.ToString()),
+                    HttpContext.Connection.RemoteIpAddress?.ToString(),
+                    request.Email),
                 cancellationToken);
 
             return Ok(new
@@ -344,6 +347,7 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
         // ── Two-Factor Authentication ─────────────────────────────
 
         [Authorize]
+        [EnableRateLimiting("auth")]
         [HttpPost("2fa/enable")]
         public async Task<IActionResult> EnableTwoFactorAuth(
             CancellationToken cancellationToken)
@@ -359,6 +363,7 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
         }
 
         [Authorize]
+        [EnableRateLimiting("auth")]
         [HttpPost("2fa/verify")]
         public async Task<IActionResult> VerifyTwoFactorAuth(
             VerifyTwoFactorAuthRequest request,
@@ -375,6 +380,7 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
         }
 
         [Authorize]
+        [EnableRateLimiting("auth")]
         [HttpPost("2fa/disable")]
         public async Task<IActionResult> DisableTwoFactorAuth(
             DisableTwoFactorAuthRequest request,
@@ -388,6 +394,39 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
                 cancellationToken);
 
             return Ok(new { message = "2FA desactivado correctamente." });
+        }
+
+        // ── Trusted Devices ───────────────────────────────────────
+
+        [Authorize]
+        [HttpGet("trusted-devices")]
+        public async Task<IActionResult> GetTrustedDevices(
+            CancellationToken cancellationToken)
+        {
+            var userId = Guid.Parse(
+                User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var devices = await _mediator.Send(
+                new GetTrustedDevicesQuery(userId),
+                cancellationToken);
+
+            return Ok(devices);
+        }
+
+        [Authorize]
+        [HttpDelete("trusted-devices/{deviceId:guid}")]
+        public async Task<IActionResult> RevokeTrustedDevice(
+            Guid deviceId,
+            CancellationToken cancellationToken)
+        {
+            var userId = Guid.Parse(
+                User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            await _mediator.Send(
+                new RevokeTrustedDeviceCommand(userId, deviceId),
+                cancellationToken);
+
+            return NoContent();
         }
     }
 }

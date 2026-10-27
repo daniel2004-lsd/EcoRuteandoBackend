@@ -18,23 +18,23 @@ namespace EcoRuteando.Modules.Security.Infrastructure.Persistence.Configurations
             builder.HasKey(ur => new { ur.UserId, ur.RoleId });
             //°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 
-            builder.Property(ur=> ur.UserId)
+            builder.Property(ur => ur.UserId)
                 .HasColumnName("user_id");
 
-            builder.Property(ur=> ur.RoleId)
+            builder.Property(ur => ur.RoleId)
                 .HasColumnName("role_id");
 
 
-            builder.HasOne(ur=> ur.Role)
-                .WithMany(r=> r.UserRoles)
+            builder.HasOne(ur => ur.Role)
+                .WithMany(r => r.UserRoles)
                 .HasForeignKey(ur => ur.RoleId);
 
-            builder.HasOne(ur=> ur.User)
-                .WithMany(u=> u.UserRoles)
+            builder.HasOne(ur => ur.User)
+                .WithMany(u => u.UserRoles)
                 .HasForeignKey(ur => ur.UserId);
 
 
 
-        }   
+        }
     }
 }

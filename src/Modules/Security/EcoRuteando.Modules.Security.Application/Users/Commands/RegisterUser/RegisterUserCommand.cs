@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 
 namespace EcoRuteando.Modules.Security.Application.Users.Commands.RegisterUser;
 
@@ -11,4 +11,4 @@ public sealed record RegisterUserCommand(
 
 public sealed record RegisterUserResponse(
     Guid UserId,
-    string VerificationCode);
+    string Message = "Usuario registrado exitosamente. Se ha enviado un código de verificación a su correo electrónico.");

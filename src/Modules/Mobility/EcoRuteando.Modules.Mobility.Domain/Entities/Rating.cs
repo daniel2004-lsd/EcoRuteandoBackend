@@ -17,7 +17,7 @@ public sealed class Rating : Entity<Guid>
     /// <summary>
     /// Trayecto (route_usage) asociado a la valoración, si aplica.
     /// </summary>
-    public long? UsageId { get; private set; }
+    public Guid? UsageId { get; private set; }
 
     public short RatingValue { get; private set; }
 
@@ -38,7 +38,7 @@ public sealed class Rating : Entity<Guid>
         Guid routeId,
         short ratingValue,
         string? comment,
-        long? usageId = null)
+        Guid? usageId = null)
     {
         if (userId == Guid.Empty)
             throw new DomainException("El usuario es obligatorio.");
