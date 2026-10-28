@@ -26,12 +26,18 @@ public class GetTicketByIdQueryHandler : IRequestHandler<GetTicketByIdQuery, Sup
             return null;
         }
 
+        // Anti-IDOR: Si no es administrador, solo puede consultar sus propios tickets
+        if (!request.IsAdmin && (!ticket.UserId.HasValue || ticket.UserId.Value != request.RequestingUserId))
+        {
+            return null;
+        }
+
         string? email = null;
         string? name = null;
         if (ticket.UserId.HasValue)
         {
             var userDetails = await _userLookupService.GetUsersByIdsAsync(new[] { ticket.UserId.Value }, cancellationToken);
-            if (userDetails.TryGetValue(ticket.UserId.Value, out var u))
+            if (userDetails is not null && userDetails.TryGetValue(ticket.UserId.Value, out var u))
             {
                 email = u.Email;
                 name = u.Name;
