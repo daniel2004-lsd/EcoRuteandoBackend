@@ -131,7 +131,8 @@ namespace EcoRuteando.Api
                         "http://localhost:3000",
                         "http://localhost:3001",
                         "http://localhost:3002",
-                        "http://localhost:3007"
+                        "http://localhost:3007",
+                        "http://localhost:5173"
                     }
                     : Array.Empty<string>());
 
@@ -143,14 +144,14 @@ namespace EcoRuteando.Api
                     {
                         policy
                             .WithOrigins(allowedOrigins)
-                            .WithHeaders("Authorization", "Content-Type", "Accept")
+                            .WithHeaders("Authorization", "Content-Type", "Accept", "X-Client-Platform", "X-Requested-With", "X-CSRF-Token")
                             .WithMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
                             .AllowCredentials();
                     }
                     else
                     {
                         policy
-                            .WithHeaders("Authorization", "Content-Type", "Accept")
+                            .WithHeaders("Authorization", "Content-Type", "Accept", "X-Client-Platform", "X-Requested-With", "X-CSRF-Token")
                             .WithMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS");
                     }
                 });

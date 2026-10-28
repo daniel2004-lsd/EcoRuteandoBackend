@@ -17,8 +17,12 @@ using EcoRuteando.Modules.Security.Presentation.Contracts.Auth;
 using EcoRuteando.Modules.Security.Presentation.Requests;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using System.Security.Claims;
 
 namespace EcoRuteando.Modules.Security.Presentation.Controllers
@@ -27,11 +31,20 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
     [Route("api/auth")]
     public sealed class AuthController : ControllerBase
     {
-        private readonly IMediator _mediator;
+        private const string RefreshTokenCookieName = "refreshToken";
 
-        public AuthController(IMediator mediator)
+        private readonly IMediator _mediator;
+        private readonly IConfiguration _configuration;
+        private readonly IWebHostEnvironment _environment;
+
+        public AuthController(
+            IMediator mediator,
+            IConfiguration configuration,
+            IWebHostEnvironment environment)
         {
             _mediator = mediator;
+            _configuration = configuration;
+            _environment = environment;
         }
 
         [EnableRateLimiting("auth")]
@@ -57,9 +70,6 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
             });
         }
 
-
-
-
         [EnableRateLimiting("auth")]
         [HttpPost("login")]
         public async Task<IActionResult> Login(
@@ -75,23 +85,72 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
                 command,
                 cancellationToken);
 
+            if (!string.IsNullOrEmpty(token.RefreshToken))
+            {
+                SetRefreshTokenCookie(token.RefreshToken);
+            }
+
+            if (IsWebClient())
+            {
+                return Ok(new
+                {
+                    accessToken = token.AccessToken,
+                    requiresTwoFactor = token.RequiresTwoFactor,
+                    twoFactorToken = token.TwoFactorToken,
+                    requiresEmailVerification = token.RequiresEmailVerification
+                });
+            }
+
             return Ok(token);
-
         }
-
 
         [EnableRateLimiting("auth")]
         [HttpPost("refresh")]
         public async Task<IActionResult> Refresh(
-        RefreshTokenRequest request,
-        CancellationToken cancellationToken)
+            RefreshTokenRequest? request,
+            CancellationToken cancellationToken)
         {
-            var command = new RefreshTokenCommand(
-                request.RefreshToken);
+            var hasCookie = Request.Cookies.TryGetValue(RefreshTokenCookieName, out var cookieToken)
+                && !string.IsNullOrWhiteSpace(cookieToken);
+
+            var tokenFromRequest = request?.RefreshToken;
+            var isCookieAuth = string.IsNullOrWhiteSpace(tokenFromRequest) && hasCookie;
+            var refreshToken = isCookieAuth ? cookieToken : tokenFromRequest;
+
+            if (string.IsNullOrWhiteSpace(refreshToken))
+            {
+                return Unauthorized(new { message = "Refresh token no proporcionado o cookie ausente." });
+            }
+
+            if (isCookieAuth)
+            {
+                var origin = GetRequestOrigin();
+                if (string.IsNullOrEmpty(origin) || !IsAllowedOrigin(origin))
+                {
+                    return StatusCode(StatusCodes.Status403Forbidden, new { error = "Origen no autorizado o solicitud CSRF rechazada." });
+                }
+
+                if (!HasAntiCsrfHeader())
+                {
+                    return StatusCode(StatusCodes.Status403Forbidden, new { error = "Cabecera anti-CSRF ausente." });
+                }
+            }
+
+            var command = new RefreshTokenCommand(refreshToken);
 
             var tokens = await _mediator.Send(
                 command,
                 cancellationToken);
+
+            SetRefreshTokenCookie(tokens.RefreshToken);
+
+            if (IsWebClient() || isCookieAuth)
+            {
+                return Ok(new
+                {
+                    accessToken = tokens.AccessToken
+                });
+            }
 
             return Ok(tokens);
         }
@@ -99,12 +158,31 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
         [EnableRateLimiting("auth")]
         [HttpPost("logout")]
         public async Task<IActionResult> Logout(
-        LogoutRequest request,
-        CancellationToken cancellationToken)
+            LogoutRequest? request,
+            CancellationToken cancellationToken)
         {
-            await _mediator.Send(
-                new LogoutUserCommand(request.RefreshToken),
-                cancellationToken);
+            var hasCookie = Request.Cookies.TryGetValue(RefreshTokenCookieName, out var cookieToken)
+                && !string.IsNullOrWhiteSpace(cookieToken);
+
+            var refreshToken = !string.IsNullOrWhiteSpace(request?.RefreshToken)
+                ? request.RefreshToken
+                : (hasCookie ? cookieToken : null);
+
+            DeleteRefreshTokenCookie();
+
+            if (!string.IsNullOrWhiteSpace(refreshToken))
+            {
+                try
+                {
+                    await _mediator.Send(
+                        new LogoutUserCommand(refreshToken),
+                        cancellationToken);
+                }
+                catch
+                {
+                    // Ignore revocation error if token was already expired or invalid
+                }
+            }
 
             return NoContent();
         }
@@ -112,7 +190,7 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
         [Authorize]
         [HttpGet("me")]
         public async Task<IActionResult> Me(
-        CancellationToken cancellationToken)
+            CancellationToken cancellationToken)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
 
@@ -136,8 +214,8 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
         [EnableRateLimiting("sensitive")]
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword(
-        ForgotPasswordRequest request,
-        CancellationToken cancellationToken)
+            ForgotPasswordRequest request,
+            CancellationToken cancellationToken)
         {
             await _mediator.Send(
                 new ForgotPasswordCommand(
@@ -154,8 +232,8 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
         [EnableRateLimiting("sensitive")]
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword(
-        ResetPasswordRequest request,
-        CancellationToken cancellationToken)
+            ResetPasswordRequest request,
+            CancellationToken cancellationToken)
         {
             await _mediator.Send(
                 new ResetPasswordCommand(
@@ -289,6 +367,19 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
                 command,
                 cancellationToken);
 
+            if (!string.IsNullOrEmpty(tokens.RefreshToken))
+            {
+                SetRefreshTokenCookie(tokens.RefreshToken);
+            }
+
+            if (IsWebClient())
+            {
+                return Ok(new
+                {
+                    accessToken = tokens.AccessToken
+                });
+            }
+
             return Ok(new
             {
                 tokens.AccessToken,
@@ -376,6 +467,21 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
                 new VerifyTwoFactorAuthCommand(userId, request.Code, request.RememberDevice),
                 cancellationToken);
 
+            if (!string.IsNullOrEmpty(result.RefreshToken))
+            {
+                SetRefreshTokenCookie(result.RefreshToken);
+            }
+
+            if (IsWebClient())
+            {
+                return Ok(new
+                {
+                    message = result.Message,
+                    accessToken = result.AccessToken,
+                    trustedDeviceToken = result.TrustedDeviceToken
+                });
+            }
+
             return Ok(result);
         }
 
@@ -427,6 +533,102 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
                 cancellationToken);
 
             return NoContent();
+        }
+
+        // ── Private Cookie & CSRF Helpers ─────────────────────────
+
+        private CookieOptions CreateRefreshTokenCookieOptions(DateTimeOffset? expires = null)
+        {
+            var isDevelopment = _environment.IsDevelopment();
+            return new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = !isDevelopment || Request.IsHttps,
+                SameSite = SameSiteMode.Strict,
+                Path = "/api/auth",
+                Expires = expires ?? DateTimeOffset.UtcNow.AddDays(7)
+            };
+        }
+
+        private void SetRefreshTokenCookie(string refreshToken)
+        {
+            Response.Cookies.Append(RefreshTokenCookieName, refreshToken, CreateRefreshTokenCookieOptions());
+        }
+
+        private void DeleteRefreshTokenCookie()
+        {
+            Response.Cookies.Delete(RefreshTokenCookieName, CreateRefreshTokenCookieOptions(DateTimeOffset.UtcNow.AddDays(-1)));
+        }
+
+        private bool IsWebClient()
+        {
+            if (Request.Headers.TryGetValue("X-Client-Platform", out var platform) &&
+                string.Equals(platform, "web", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            if (Request.Headers.ContainsKey("Origin") || Request.Headers.ContainsKey("Referer"))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        private string? GetRequestOrigin()
+        {
+            if (Request.Headers.TryGetValue("Origin", out var originHeader) && !string.IsNullOrWhiteSpace(originHeader))
+            {
+                return originHeader.ToString();
+            }
+
+            if (Request.Headers.TryGetValue("Referer", out var refererHeader) && !string.IsNullOrWhiteSpace(refererHeader))
+            {
+                if (Uri.TryCreate(refererHeader, UriKind.Absolute, out var refererUri))
+                {
+                    return $"{refererUri.Scheme}://{refererUri.Authority}";
+                }
+            }
+
+            return null;
+        }
+
+        private bool IsAllowedOrigin(string origin)
+        {
+            var configuredOrigins = _configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+                ?? Array.Empty<string>();
+
+            var allowedOrigins = configuredOrigins.Length > 0
+                ? configuredOrigins
+                : (_environment.IsDevelopment()
+                    ? new[]
+                    {
+                        "http://localhost:3000",
+                        "http://localhost:3001",
+                        "http://localhost:3002",
+                        "http://localhost:3007",
+                        "http://localhost:5173"
+                    }
+                    : Array.Empty<string>());
+
+            return allowedOrigins.Any(o => string.Equals(o.TrimEnd('/'), origin.TrimEnd('/'), StringComparison.OrdinalIgnoreCase));
+        }
+
+        private bool HasAntiCsrfHeader()
+        {
+            if (Request.Headers.TryGetValue("X-Client-Platform", out var plat)
+                && string.Equals(plat, "web", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            if (Request.Headers.ContainsKey("X-Requested-With") || Request.Headers.ContainsKey("X-CSRF-Token"))
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 }
