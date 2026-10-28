@@ -40,6 +40,12 @@ public class AddTicketMessageCommandHandler : IRequestHandler<AddTicketMessageCo
             return null;
         }
 
+        // Anti-IDOR: Si no es administrador, solo puede enviar mensajes a sus propios tickets
+        if (!request.IsAdmin && (!ticket.UserId.HasValue || ticket.UserId.Value != request.SenderId))
+        {
+            return null;
+        }
+
         if (request.IsAdmin)
         {
             // Al responder el administrador, cambiar estado a Resuelto para que pase a respondidos

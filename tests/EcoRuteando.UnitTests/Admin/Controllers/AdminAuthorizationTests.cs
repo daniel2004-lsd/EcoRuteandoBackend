@@ -65,4 +65,32 @@ public class AdminAuthorizationTests
         var anonAttr = method.GetCustomAttribute<AllowAnonymousAttribute>();
         Assert.NotNull(anonAttr);
     }
+
+    [Fact]
+    public void ApiCacheController_ShouldRequireAdminOrSuperAdminAtClassLevel()
+    {
+        var authAttr = typeof(EcoRuteando.Modules.Integrations.Presentation.Controllers.ApiCacheController).GetCustomAttribute<AuthorizeAttribute>();
+        Assert.NotNull(authAttr);
+        Assert.Equal(ExpectedRoles, authAttr.Roles);
+    }
+
+    [Fact]
+    public void AirQualityController_Ingest_ShouldRequireAdminOrSuperAdmin()
+    {
+        var method = typeof(EcoRuteando.Modules.Integrations.Presentation.Controllers.AirQualityController).GetMethod("Ingest");
+        Assert.NotNull(method);
+        var authAttr = method.GetCustomAttribute<AuthorizeAttribute>();
+        Assert.NotNull(authAttr);
+        Assert.Equal(ExpectedRoles, authAttr.Roles);
+    }
+
+    [Fact]
+    public void WeatherController_Ingest_ShouldRequireAdminOrSuperAdmin()
+    {
+        var method = typeof(EcoRuteando.Modules.Integrations.Presentation.Controllers.WeatherController).GetMethod("Ingest");
+        Assert.NotNull(method);
+        var authAttr = method.GetCustomAttribute<AuthorizeAttribute>();
+        Assert.NotNull(authAttr);
+        Assert.Equal(ExpectedRoles, authAttr.Roles);
+    }
 }

@@ -67,35 +67,43 @@ public static class JwtAuthenticationExtensions
                         var requestPath = (context.HttpContext.Request.Path.Value ?? string.Empty).TrimEnd('/');
                         var is2FaEndpoint = requestPath.EndsWith("/api/auth/2fa/verify", StringComparison.OrdinalIgnoreCase);
 
-                        if (isTwoFactorTemp && !is2FaEndpoint)
+                        if (isTwoFactorTemp)
                         {
-                            context.Fail("Token temporal de 2FA no autorizado para acceder a este recurso.");
+                            if (!is2FaEndpoint)
+                            {
+                                context.Fail("Token temporal de 2FA no autorizado para acceder a este recurso.");
+                                return;
+                            }
+                            return;
+                        }
+
+                        // Para todos los demás endpoints protegidos, el token DEBE ser un token de acceso explícito ("access")
+                        if (tokenType != "access")
+                        {
+                            context.Fail("Tipo de token no válido como token de acceso.");
                             return;
                         }
 
                         // SEC-03: Validación activa de sesión para tokens de acceso
-                        if (tokenType == "access")
+                        var sessionIdClaim = principal.FindFirst("session_id")?.Value;
+                        if (string.IsNullOrWhiteSpace(sessionIdClaim) || !Guid.TryParse(sessionIdClaim, out var sessionId))
                         {
-                            var sessionIdClaim = principal.FindFirst("session_id")?.Value;
-                            if (string.IsNullOrWhiteSpace(sessionIdClaim) || !Guid.TryParse(sessionIdClaim, out var sessionId))
-                            {
-                                context.Fail("Token de acceso sin identificador de sesión válido.");
-                                return;
-                            }
+                            context.Fail("Token de acceso sin identificador de sesión válido.");
+                            return;
+                        }
 
-                            var sessionRepository = context.HttpContext.RequestServices.GetService<ISessionRepository>();
-                            if (sessionRepository == null)
-                            {
-                                context.Fail("Servicio de validación de sesiones no disponible.");
-                                return;
-                            }
+                        var sessionRepository = context.HttpContext.RequestServices.GetService<ISessionRepository>();
+                        if (sessionRepository == null)
+                        {
+                            context.Fail("Servicio de validación de sesiones no disponible.");
+                            return;
+                        }
 
-                            var session = await sessionRepository.GetByIdAsync(sessionId, context.HttpContext.RequestAborted);
-                            if (session == null || !session.IsActive || session.ExpiresAt < DateTime.UtcNow)
-                            {
-                                context.Fail("La sesión ha sido revocada o ha expirado.");
-                                return;
-                            }
+                        var session = await sessionRepository.GetByIdAsync(sessionId, context.HttpContext.RequestAborted);
+                        if (session == null || !session.IsActive || session.ExpiresAt < DateTime.UtcNow)
+                        {
+                            context.Fail("La sesión ha sido revocada o ha expirado.");
+                            return;
                         }
                     }
                 };

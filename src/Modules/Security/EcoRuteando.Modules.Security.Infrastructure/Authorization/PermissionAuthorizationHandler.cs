@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using EcoRuteando.Modules.Security.Infrastructure.Persistence;
 using EcoRuteando.Shared.Authorization;
 using Microsoft.AspNetCore.Authorization;
@@ -21,9 +21,10 @@ public sealed class PermissionAuthorizationHandler
         AuthorizationHandlerContext context,
         PermissionRequirement requirement)
     {
-        // Reject tokens with two_factor_pending role — user must complete 2FA first
+        // Reject tokens with two_factor_pending role or two_factor_temp token_type — user must complete 2FA first
         var roleClaim = context.User.FindFirst(ClaimTypes.Role);
-        if (roleClaim?.Value == "two_factor_pending")
+        var tokenTypeClaim = context.User.FindFirst("token_type");
+        if (roleClaim?.Value == "two_factor_pending" || tokenTypeClaim?.Value == "two_factor_temp")
         {
             return;
         }
