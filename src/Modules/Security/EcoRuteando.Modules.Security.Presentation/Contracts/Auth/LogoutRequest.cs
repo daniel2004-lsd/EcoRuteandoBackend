@@ -1,4 +1,4 @@
-﻿namespace EcoRuteando.Modules.Security.Presentation.Contracts.Auth;
+namespace EcoRuteando.Modules.Security.Presentation.Contracts.Auth;
 
 public sealed record LogoutRequest(
-    string RefreshToken);
+    string? RefreshToken = null);

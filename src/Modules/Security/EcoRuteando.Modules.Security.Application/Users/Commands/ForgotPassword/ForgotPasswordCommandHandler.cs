@@ -1,4 +1,4 @@
-﻿using System.Security.Cryptography;
+using System.Security.Cryptography;
 using System.Text;
 using EcoRuteando.Modules.Security.Application.Abstractions.Security;
 using EcoRuteando.Modules.Security.Domain.Entities;
@@ -70,10 +70,19 @@ public sealed class ForgotPasswordCommandHandler
             IPAddress.TryParse(request.RequestIp, out requestIp);
         }
 
+        // Invalidar tokens previos activos del usuario (H-60)
+        var previousTokens = await _passwordRecoveryRepository.GetByUserIdAsync(user.Id);
+        foreach (var prev in previousTokens.Where(t => !t.IsUsed))
+        {
+            prev.MarkAsUsed(requestIp);
+            _passwordRecoveryRepository.Update(prev);
+        }
+
+        // Expiración segura de 15 minutos para OTP
         var recovery = new PasswordRecovery(
             user.Id,
             tokenHash,
-            DateTime.UtcNow.AddHours(1),
+            DateTime.UtcNow.AddMinutes(15),
             requestIp);
 
         await _passwordRecoveryRepository.AddAsync(recovery);

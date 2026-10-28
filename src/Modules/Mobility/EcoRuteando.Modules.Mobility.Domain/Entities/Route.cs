@@ -189,4 +189,11 @@ public sealed class Route : Entity<Guid>
         RoutePois.Add(new RoutePoi(Id, poiId, sortOrder));
         UpdatedAt = DateTime.UtcNow;
     }
+    public void ChangeStatus(RouteStatus status)
+    {
+        Status = status;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void Deactivate() => ChangeStatus(RouteStatus.Inactive);
 }

@@ -14,6 +14,7 @@ public sealed class DisableTwoFactorAuthCommandHandler
     private readonly ITotpService _totpService;
     private readonly IEncryptionService _encryptionService;
     private readonly ITwoFactorAuthRepository _twoFactorAuthRepository;
+    private readonly ITrustedDeviceService _trustedDeviceService;
     private readonly ISecurityUnitOfWork _unitOfWork;
     private readonly IAuditLogService _auditLogService;
 
@@ -21,12 +22,14 @@ public sealed class DisableTwoFactorAuthCommandHandler
         ITotpService totpService,
         IEncryptionService encryptionService,
         ITwoFactorAuthRepository twoFactorAuthRepository,
+        ITrustedDeviceService trustedDeviceService,
         ISecurityUnitOfWork unitOfWork,
         IAuditLogService auditLogService)
     {
         _totpService = totpService;
         _encryptionService = encryptionService;
         _twoFactorAuthRepository = twoFactorAuthRepository;
+        _trustedDeviceService = trustedDeviceService;
         _unitOfWork = unitOfWork;
         _auditLogService = auditLogService;
     }
@@ -56,6 +59,9 @@ public sealed class DisableTwoFactorAuthCommandHandler
 
         twoFactorAuth.Disable();
         _twoFactorAuthRepository.Update(twoFactorAuth);
+
+        // Al desactivar 2FA, revocar todos los dispositivos confiables emitidos previamente (H-23 / H-24)
+        await _trustedDeviceService.RevokeAllForUserAsync(request.UserId, cancellationToken);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

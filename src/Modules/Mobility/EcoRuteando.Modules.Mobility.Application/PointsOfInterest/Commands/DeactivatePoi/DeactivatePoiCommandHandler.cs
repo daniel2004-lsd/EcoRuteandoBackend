@@ -32,6 +32,15 @@ public sealed class DeactivatePoiCommandHandler
             throw new NotFoundException("El punto de interés no existe.");
         }
 
+        // Regla de control de acceso y propiedad (H-15 / Anti-IDOR)
+        if (!request.IsAdmin
+            && (poi.CreatedBy is null
+                || poi.CreatedBy != request.RequestedByUserId))
+        {
+            throw new ForbiddenException(
+                "Solo puedes desactivar los puntos de interés que tú mismo creaste.");
+        }
+
         poi.Deactivate();
 
         _pointOfInterestRepository.Update(poi);
