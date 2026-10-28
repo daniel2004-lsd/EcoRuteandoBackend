@@ -1,13 +1,17 @@
 using EcoRuteando.Modules.Mobility.Application.Abstractions.GoogleMaps;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace EcoRuteando.Modules.Mobility.Presentation.Controllers;
 
 /// <summary>
 /// Servicios de Google Maps: Directions, Geocoding y Reverse Geocoding.
+/// Protegido con rate limiting y autenticacion para salvaguardar cuotas.
 /// </summary>
 [ApiController]
 [Route("api/maps")]
+[EnableRateLimiting("api")]
 public sealed class GoogleMapsController : ControllerBase
 {
     private static readonly HashSet<string> AllowedPlaceTypes =
@@ -29,7 +33,9 @@ public sealed class GoogleMapsController : ControllerBase
     /// <summary>
     /// Calcula una ruta entre origen y destino usando Google Directions API.
     /// Modos de transporte: driving, walking, bicycling, transit.
+    /// Requiere autenticación.
     /// </summary>
+    [Authorize]
     [HttpGet("directions")]
     public async Task<IActionResult> GetDirections(
         [FromQuery] double originLat,
@@ -39,8 +45,17 @@ public sealed class GoogleMapsController : ControllerBase
         [FromQuery] string travelMode,
         CancellationToken cancellationToken)
     {
+        if (originLat is < -90 or > 90 || originLng is < -180 or > 180 ||
+            destinationLat is < -90 or > 90 || destinationLng is < -180 or > 180)
+        {
+            return BadRequest(new
+            {
+                message = "Las coordenadas de origen o destino están fuera del rango válido."
+            });
+        }
+
         var validModes = new[] { "driving", "walking", "bicycling", "transit" };
-        if (!validModes.Contains(travelMode.ToLowerInvariant()))
+        if (string.IsNullOrWhiteSpace(travelMode) || !validModes.Contains(travelMode.ToLowerInvariant()))
         {
             return BadRequest(new
             {
@@ -67,7 +82,7 @@ public sealed class GoogleMapsController : ControllerBase
 
         if (result.Status == "ZERO_RESULTS")
         {
-            var (friendlyMode, suggestion) = travelMode switch
+            var (friendlyMode, suggestion) = travelMode.ToLowerInvariant() switch
             {
                 "bicycling" => ("en bicicleta", "Intenta a pie o en automóvil."),
                 "transit" => ("en transporte público", "En Neiva puede que no haya rutas de bus disponibles para este trayecto. Intenta a pie o en automóvil."),
@@ -86,8 +101,9 @@ public sealed class GoogleMapsController : ControllerBase
 
     /// <summary>
     /// Convierte una dirección a coordenadas usando Google Geocoding API.
-    /// Ejemplo: "Neiva, Huila, Colombia"
+    /// Requiere autenticación.
     /// </summary>
+    [Authorize]
     [HttpGet("geocode")]
     public async Task<IActionResult> Geocode(
         [FromQuery] string address,
@@ -101,8 +117,16 @@ public sealed class GoogleMapsController : ControllerBase
             });
         }
 
+        if (address.Trim().Length > 200)
+        {
+            return BadRequest(new
+            {
+                message = "La dirección no puede exceder 200 caracteres."
+            });
+        }
+
         var result = await _googleMapsService.GeocodeAddressAsync(
-            address,
+            address.Trim(),
             cancellationToken);
 
         if (result is null)
@@ -118,13 +142,23 @@ public sealed class GoogleMapsController : ControllerBase
 
     /// <summary>
     /// Convierte coordenadas a dirección usando Google Reverse Geocoding API.
+    /// Requiere autenticación.
     /// </summary>
+    [Authorize]
     [HttpGet("reverse-geocode")]
     public async Task<IActionResult> ReverseGeocode(
         [FromQuery] double lat,
         [FromQuery] double lng,
         CancellationToken cancellationToken)
     {
+        if (lat is < -90 or > 90 || lng is < -180 or > 180)
+        {
+            return BadRequest(new
+            {
+                message = "Las coordenadas están fuera del rango válido."
+            });
+        }
+
         var result = await _googleMapsService.ReverseGeocodeAsync(
             lat,
             lng,
@@ -144,6 +178,7 @@ public sealed class GoogleMapsController : ControllerBase
     /// <summary>
     /// Busca lugares cercanos de un tipo permitido (accesible a invitados, ver CU17).
     /// </summary>
+    [AllowAnonymous]
     [HttpGet("places")]
     public async Task<IActionResult> GetPlacesNearby(
         [FromQuery] double lat,

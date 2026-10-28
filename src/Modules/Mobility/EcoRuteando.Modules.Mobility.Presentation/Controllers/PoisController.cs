@@ -7,12 +7,14 @@ using EcoRuteando.Shared.Authorization;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 
 namespace EcoRuteando.Modules.Mobility.Presentation.Controllers;
 
 [ApiController]
 [Route("api/pois")]
+[EnableRateLimiting("api")]
 public sealed class PoisController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -82,7 +84,13 @@ public sealed class PoisController : ControllerBase
             });
         }
 
-        await _mediator.Send(command, cancellationToken);
+        await _mediator.Send(
+            command with
+            {
+                RequestedByUserId = GetUserId(),
+                IsAdmin = IsAdminUser()
+            },
+            cancellationToken);
 
         return NoContent();
     }
@@ -94,7 +102,10 @@ public sealed class PoisController : ControllerBase
         CancellationToken cancellationToken)
     {
         await _mediator.Send(
-            new DeactivatePoiCommand(id),
+            new DeactivatePoiCommand(
+                id,
+                RequestedByUserId: GetUserId(),
+                IsAdmin: IsAdminUser()),
             cancellationToken);
 
         return NoContent();
@@ -111,4 +122,7 @@ public sealed class PoisController : ControllerBase
 
         return null;
     }
+
+    private bool IsAdminUser() =>
+        User.IsInRole("Admin") || User.IsInRole("SuperAdmin");
 }

@@ -7,7 +7,7 @@ namespace EcoRuteando.Modules.Security.Infrastructure.Persistence.Repositories;
 public sealed class RoleRepository : IRoleRepository
 {
     private readonly SecurityDbContext _dbContext;
-   
+
     public RoleRepository(SecurityDbContext dbContext)
     {
         _dbContext = dbContext;
@@ -38,7 +38,7 @@ public sealed class RoleRepository : IRoleRepository
         CancellationToken cancellationToken = default)
     {
         await _dbContext.Roles.AddAsync(role, cancellationToken);
-       
+
     }
 
     public Task UpdateAsync(
@@ -49,7 +49,7 @@ public sealed class RoleRepository : IRoleRepository
         return Task.CompletedTask;
     }
 
-    public  Task DeleteAsync(
+    public Task DeleteAsync(
         Role role,
         CancellationToken cancellationToken = default)
     {

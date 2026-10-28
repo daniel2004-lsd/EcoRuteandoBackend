@@ -2,6 +2,7 @@ using EcoRuteando.Modules.Admin.Application.Support.Dtos;
 using EcoRuteando.Modules.Admin.Domain.Entities;
 using EcoRuteando.Modules.Admin.Domain.Enums;
 using EcoRuteando.Modules.Admin.Domain.Repositories;
+using EcoRuteando.Shared.Abstractions.Users;
 using MediatR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -15,15 +16,18 @@ namespace EcoRuteando.Modules.Admin.Application.Support.Commands.AddTicketMessag
 public class AddTicketMessageCommandHandler : IRequestHandler<AddTicketMessageCommand, SupportMessageDto?>
 {
     private readonly ISupportTicketRepository _repository;
+    private readonly IUserLookupService _userLookupService;
     private readonly IConfiguration _configuration;
     private readonly ILogger<AddTicketMessageCommandHandler> _logger;
 
     public AddTicketMessageCommandHandler(
         ISupportTicketRepository repository,
+        IUserLookupService userLookupService,
         IConfiguration configuration,
         ILogger<AddTicketMessageCommandHandler> logger)
     {
         _repository = repository;
+        _userLookupService = userLookupService;
         _configuration = configuration;
         _logger = logger;
     }
@@ -32,6 +36,12 @@ public class AddTicketMessageCommandHandler : IRequestHandler<AddTicketMessageCo
     {
         var ticket = await _repository.GetByIdAsync(request.TicketId, includeMessages: false, cancellationToken);
         if (ticket == null)
+        {
+            return null;
+        }
+
+        // Anti-IDOR: Si no es administrador, solo puede enviar mensajes a sus propios tickets
+        if (!request.IsAdmin && (!ticket.UserId.HasValue || ticket.UserId.Value != request.SenderId))
         {
             return null;
         }
@@ -57,7 +67,7 @@ public class AddTicketMessageCommandHandler : IRequestHandler<AddTicketMessageCo
         {
             try
             {
-                var usersMap = await _repository.GetUserDetailsAsync(new[] { ticket.UserId.Value }, cancellationToken);
+                var usersMap = await _userLookupService.GetUsersByIdsAsync(new[] { ticket.UserId.Value }, cancellationToken);
                 if (usersMap.TryGetValue(ticket.UserId.Value, out var u) && !string.IsNullOrWhiteSpace(u.Email))
                 {
                     await SendTicketNotificationEmailAsync(u.Email, u.Name, ticket.Subject, request.Message, cancellationToken);

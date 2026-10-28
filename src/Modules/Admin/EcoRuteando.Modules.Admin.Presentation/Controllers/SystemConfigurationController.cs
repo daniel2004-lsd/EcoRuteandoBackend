@@ -33,7 +33,7 @@ public class SystemConfigurationController : ControllerBase
     /// Actualiza la configuración global del sistema (requiere privilegios administrativos).
     /// </summary>
     [HttpPut]
-    [Authorize]
+    [Authorize(Roles = "Admin,SuperAdmin")]
     public async Task<IActionResult> UpdateConfiguration(
         [FromBody] UpdateSystemConfigurationApiRequest request,
         CancellationToken cancellationToken)

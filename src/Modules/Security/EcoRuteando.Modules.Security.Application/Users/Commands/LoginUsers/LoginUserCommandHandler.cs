@@ -134,16 +134,15 @@ public sealed class LoginUserCommandHandler
 
         if (twoFactorAuth is { IsActive: true })
         {
-            var isTrustedDevice = _trustedDeviceService.ValidateTrustedDeviceToken(
-                request.TrustedDeviceToken, user.Id);
+            var isTrustedDevice = await _trustedDeviceService.ValidateTrustedDeviceTokenAsync(
+                request.TrustedDeviceToken, user.Id, cancellationToken);
 
             if (!isTrustedDevice)
             {
-                // Generate a temporary token for 2FA verification
-                var twoFactorToken = _jwtProvider.GenerateToken(
+                // Generate a temporary token for 2FA verification (5 min TTL, token_type=two_factor_temp)
+                var twoFactorToken = _jwtProvider.GenerateTwoFactorToken(
                     user.Id,
-                    user.Email,
-                    "two_factor_pending");
+                    user.Email);
 
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
 
@@ -163,11 +162,6 @@ public sealed class LoginUserCommandHandler
         }
 
         // No 2FA — proceed with normal login
-        var accessToken = _jwtProvider.GenerateToken(
-            user.Id,
-            user.Email,
-            user.PrimaryRole.Name);
-
         var refreshToken = _refreshTokenService.GenerateRefreshToken();
         var refreshTokenHash = _refreshTokenService.ComputeHash(refreshToken);
 
@@ -194,6 +188,12 @@ public sealed class LoginUserCommandHandler
             DateTime.UtcNow.AddDays(7));
 
         await _sessionRepository.AddAsync(session, cancellationToken);
+
+        var accessToken = _jwtProvider.GenerateToken(
+            user.Id,
+            user.Email,
+            user.PrimaryRole.Name,
+            session.Id);
 
         await _userRepository.UpdateAsync(user, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

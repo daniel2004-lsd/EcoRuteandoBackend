@@ -1,4 +1,4 @@
-﻿using EcoRuteando.Modules.Security.Application.Abstractions.Logging;
+using EcoRuteando.Modules.Security.Application.Abstractions.Logging;
 using System.Security.Cryptography;
 using EcoRuteando.Modules.Security.Application.Users.Commands.SendVerificationEmail;
 using EcoRuteando.Modules.Security.Application.Abstractions.Security;
@@ -93,6 +93,6 @@ public sealed class RegisterUserCommandHandler
             new SendVerificationEmailCommand(user.Id, null, null, verificationCode),
             cancellationToken);
 
-        return new RegisterUserResponse(user.Id, verificationCode);
+        return new RegisterUserResponse(user.Id);
     }
 }

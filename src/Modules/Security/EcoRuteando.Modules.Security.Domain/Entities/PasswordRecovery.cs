@@ -4,7 +4,7 @@ namespace EcoRuteando.Modules.Security.Domain.Entities;
 
 public class PasswordRecovery : Entity<Guid>
 {
-   
+
 
     public Guid UserId { get; private set; }
 

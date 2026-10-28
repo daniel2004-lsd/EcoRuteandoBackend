@@ -51,7 +51,7 @@ public sealed class UserRepository : IUserRepository
                 cancellationToken);
     }
 
-    public  Task UpdateAsync(
+    public Task UpdateAsync(
         User user,
         CancellationToken cancellationToken = default)
     {
@@ -61,13 +61,13 @@ public sealed class UserRepository : IUserRepository
     }
 
 
-    public  Task DeleteAsync(
-    User user,  
+    public Task DeleteAsync(
+    User user,
     CancellationToken cancellationToken = default)
     {
         _dbContext.Users.Remove(user);
         return Task.CompletedTask;
     }
-    
+
 
 }

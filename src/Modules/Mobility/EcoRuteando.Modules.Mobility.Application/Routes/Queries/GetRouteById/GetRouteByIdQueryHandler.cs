@@ -29,6 +29,15 @@ public sealed class GetRouteByIdQueryHandler
             throw new NotFoundException("La ruta no existe.");
         }
 
+        // Si la ruta no está activa, solo su creador o un administrador pueden verla
+        if (route.Status != RouteStatus.Active && !request.IsAdmin)
+        {
+            if (!request.RequestedByUserId.HasValue || route.CreatedBy != request.RequestedByUserId.Value)
+            {
+                throw new NotFoundException("La ruta no existe.");
+            }
+        }
+
         return new GetRouteByIdResponse(
             route.Id,
             route.Name,

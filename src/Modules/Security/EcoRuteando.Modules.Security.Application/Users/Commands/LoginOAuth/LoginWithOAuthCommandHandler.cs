@@ -177,11 +177,6 @@ public sealed class LoginWithOAuthCommandHandler
             throw new DomainException("El usuario no tiene un rol asignado.");
         }
 
-        var accessToken = _jwtProvider.GenerateToken(
-            user.Id,
-            user.Email,
-            user.PrimaryRole.Name);
-
         var refreshToken = _refreshTokenService.GenerateRefreshToken();
         var refreshTokenHash = _refreshTokenService.ComputeHash(refreshToken);
 
@@ -222,6 +217,12 @@ public sealed class LoginWithOAuthCommandHandler
             DateTime.UtcNow.AddDays(7));
 
         await _sessionRepository.AddAsync(newSession, cancellationToken);
+
+        var accessToken = _jwtProvider.GenerateToken(
+            user.Id,
+            user.Email,
+            user.PrimaryRole.Name,
+            newSession.Id);
 
         user.RecordLogin();
         await _userRepository.UpdateAsync(user, cancellationToken);

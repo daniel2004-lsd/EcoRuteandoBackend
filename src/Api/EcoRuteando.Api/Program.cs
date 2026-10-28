@@ -42,6 +42,7 @@ namespace EcoRuteando.Api
             builder.Services.AddAuthorization();
             builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
             builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
+            builder.Services.AddHealthChecks();
 
             // Controllers + Swagger
             builder.Services.AddControllers()
@@ -64,51 +65,96 @@ namespace EcoRuteando.Api
                     {
                         context.HttpContext.Response.Headers.RetryAfter = ((int)retryAfter.TotalSeconds).ToString();
                     }
+
+                    context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+                    context.HttpContext.Response.ContentType = "application/json";
+                    await context.HttpContext.Response.WriteAsync(
+                        "{\"error\":\"Demasiadas solicitudes. Por favor intente más tarde.\"}",
+                        cancellationToken: cancellationToken);
                 };
+
+                // Helper local para resolver la clave de partición por IP:
+                // No confía ciegamente en cabeceras arbitrarias sin validar.
+                // context.Connection.RemoteIpAddress es procesado por Kestrel y ForwardedHeadersMiddleware.
+                static string GetClientPartitionKey(HttpContext httpContext)
+                {
+                    var ip = httpContext.Connection.RemoteIpAddress;
+                    return ip is not null ? ip.ToString() : "unknown_client_ip";
+                }
 
                 // Política para endpoints de auth: 20 requests por 5 min por IP.
                 // El control de reintentos por cuenta (escalonado) vive en la lógica de
-                // LoginUserCommandHandler; este límite por IP es solo una salvaguarda
-                // anti-fuerza-bruta global y no debe "tapar" ese escalonado.
-                options.AddFixedWindowLimiter("auth", opt =>
-                {
-                    opt.PermitLimit = 20;
-                    opt.Window = TimeSpan.FromMinutes(5);
-                    opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-                    opt.QueueLimit = 0;
-                });
+                // LoginUserCommandHandler; este límite por IP es una salvaguarda anti-fuerza-bruta por IP.
+                options.AddPolicy("auth", httpContext =>
+                    RateLimitPartition.GetFixedWindowLimiter(
+                        partitionKey: GetClientPartitionKey(httpContext),
+                        factory: _ => new FixedWindowRateLimiterOptions
+                        {
+                            PermitLimit = 20,
+                            Window = TimeSpan.FromMinutes(5),
+                            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                            QueueLimit = 0
+                        }));
 
-                // Política para forgot-password / send-verification: 3 por hora
-                options.AddFixedWindowLimiter("sensitive", opt =>
-                {
-                    opt.PermitLimit = 3;
-                    opt.Window = TimeSpan.FromHours(1);
-                    opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-                    opt.QueueLimit = 0;
-                });
+                // Política para forgot-password / send-verification / verify-email: 3 por hora por IP
+                options.AddPolicy("sensitive", httpContext =>
+                    RateLimitPartition.GetFixedWindowLimiter(
+                        partitionKey: GetClientPartitionKey(httpContext),
+                        factory: _ => new FixedWindowRateLimiterOptions
+                        {
+                            PermitLimit = 3,
+                            Window = TimeSpan.FromHours(1),
+                            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                            QueueLimit = 0
+                        }));
 
-                // Política general API: 100 por minuto
-                options.AddFixedWindowLimiter("api", opt =>
-                {
-                    opt.PermitLimit = 100;
-                    opt.Window = TimeSpan.FromMinutes(1);
-                    opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-                    opt.QueueLimit = 0;
-                });
+                // Política general API: 100 por minuto por IP
+                options.AddPolicy("api", httpContext =>
+                    RateLimitPartition.GetFixedWindowLimiter(
+                        partitionKey: GetClientPartitionKey(httpContext),
+                        factory: _ => new FixedWindowRateLimiterOptions
+                        {
+                            PermitLimit = 100,
+                            Window = TimeSpan.FromMinutes(1),
+                            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                            QueueLimit = 0
+                        }));
             });
+
+            var configuredOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+                ?? Array.Empty<string>();
+
+            var allowedOrigins = (configuredOrigins.Length > 0)
+                ? configuredOrigins
+                : (builder.Environment.IsDevelopment()
+                    ? new[]
+                    {
+                        "http://localhost:3000",
+                        "http://localhost:3001",
+                        "http://localhost:3002",
+                        "http://localhost:3007",
+                        "http://localhost:5173"
+                    }
+                    : Array.Empty<string>());
+
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("ReactPolicy", policy =>
                 {
-                    policy
-                        .WithOrigins(
-                        "http://localhost:3000",
-                        "http://localhost:3001",
-                        "http://localhost:3007",
-                        "http://localhost:3002")
-                        .WithHeaders("Authorization", "Content-Type")
-                        .WithMethods("GET", "POST", "PUT", "DELETE")
-                        .AllowCredentials();
+                    if (allowedOrigins.Length > 0)
+                    {
+                        policy
+                            .WithOrigins(allowedOrigins)
+                            .WithHeaders("Authorization", "Content-Type", "Accept", "X-Client-Platform", "X-Requested-With", "X-CSRF-Token")
+                            .WithMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
+                            .AllowCredentials();
+                    }
+                    else
+                    {
+                        policy
+                            .WithHeaders("Authorization", "Content-Type", "Accept", "X-Client-Platform", "X-Requested-With", "X-CSRF-Token")
+                            .WithMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS");
+                    }
                 });
             });
             builder.Services.AddEndpointsApiExplorer();
@@ -164,25 +210,80 @@ namespace EcoRuteando.Api
                 await adminBootstrap.EnsureAdminAsync();
             }
 
-            // Detrás del proxy inverso (nginx): reconstruye la IP real del cliente
-            // a partir de X-Forwarded-For para que el rate limiting sea por usuario
-            // y no por la IP compartida del contenedor nginx.
+            // 1. Manejador global de excepciones: captura cualquier fallo en middlewares posteriores
+            app.UseMiddleware<ExceptionMiddleware>();
+
+            // 2. Detrás de proxy inverso (Nginx, Traefik, ingress en nube): procesa X-Forwarded-For y X-Forwarded-Proto.
+            // Para mitigar suplantación de IP (IP spoofing) y evasión de rate limiting:
+            // - Solo se confía en proxies o redes CIDR explícitamente parametrizados (ForwardedHeaders:KnownProxies / KnownNetworks).
+            // - Si se configuran proxies o redes personalizadas, se limpian los defaults y se aplican únicamente los autorizados.
+            // - Si no se especifican proxies externos, se preservan las redes locales de loopback seguras por defecto (127.0.0.1, ::1).
+            // - ForwardedLimit restringe la profundidad de cabeceras evaluadas para evitar cadenas manipuladas.
             var forwardedHeaders = new ForwardedHeadersOptions
             {
                 ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
             };
-            // Dentro de la red Docker el único proxy es nginx:
-            // se limpia la lista de proxies confiables (por defecto solo loopback).
-            forwardedHeaders.KnownNetworks.Clear();
-            forwardedHeaders.KnownProxies.Clear();
+
+            var configuredLimit = builder.Configuration.GetValue<int?>("ForwardedHeaders:ForwardLimit")
+                ?? builder.Configuration.GetValue<int?>("ForwardedHeaders:ForwardedLimit");
+            forwardedHeaders.ForwardLimit = configuredLimit is > 0 ? configuredLimit.Value : 1;
+
+            var configuredProxies = builder.Configuration.GetSection("ForwardedHeaders:KnownProxies").Get<string[]>()
+                ?? Array.Empty<string>();
+            var configuredNetworks = builder.Configuration.GetSection("ForwardedHeaders:KnownNetworks").Get<string[]>()
+                ?? Array.Empty<string>();
+
+            bool hasCustomProxies = configuredProxies.Length > 0;
+            bool hasCustomNetworks = configuredNetworks.Length > 0;
+
+            if (hasCustomProxies || hasCustomNetworks)
+            {
+                forwardedHeaders.KnownProxies.Clear();
+                forwardedHeaders.KnownNetworks.Clear();
+
+                foreach (var proxy in configuredProxies)
+                {
+                    if (System.Net.IPAddress.TryParse(proxy.Trim(), out var ip))
+                    {
+                        forwardedHeaders.KnownProxies.Add(ip);
+                    }
+                }
+
+                foreach (var network in configuredNetworks)
+                {
+                    var trimmed = network.Trim();
+                    if (trimmed.Contains('/'))
+                    {
+                        var parts = trimmed.Split('/');
+                        if (parts.Length == 2
+                            && System.Net.IPAddress.TryParse(parts[0], out var prefix)
+                            && int.TryParse(parts[1], out var prefixLength))
+                        {
+                            forwardedHeaders.KnownNetworks.Add(new IPNetwork(prefix, prefixLength));
+                        }
+                    }
+                    else if (System.Net.IPAddress.TryParse(trimmed, out var singleIp))
+                    {
+                        int prefixLength = singleIp.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork ? 32 : 128;
+                        forwardedHeaders.KnownNetworks.Add(new IPNetwork(singleIp, prefixLength));
+                    }
+                }
+            }
+
             app.UseForwardedHeaders(forwardedHeaders);
+
+            if (!app.Environment.IsDevelopment())
+            {
+                app.UseHsts();
+            }
+
+            app.UseMiddleware<SecurityHeadersMiddleware>();
 
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
-            app.UseMiddleware<ExceptionMiddleware>();
 
             app.UseHttpsRedirection();
 
@@ -194,9 +295,9 @@ namespace EcoRuteando.Api
 
             app.UseRateLimiter();
 
+            app.MapHealthChecks("/health").AllowAnonymous();
+
             app.MapControllers();
-
-
 
             app.Run();
         }

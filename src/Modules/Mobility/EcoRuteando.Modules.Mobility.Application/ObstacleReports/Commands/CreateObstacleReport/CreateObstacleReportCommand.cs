@@ -8,5 +8,6 @@ public sealed record CreateObstacleReportCommand(
     double Latitude,
     double Longitude,
     string? AddressText,
-    Guid UserId)
+    Guid UserId,
+    string? PhotoUrl = null)
     : IRequest<Guid>;

@@ -12,7 +12,7 @@ namespace EcoRuteando.Modules.Admin.Presentation.Controllers;
 
 [ApiController]
 [Route("api/admin/exports")]
-[Authorize]
+[Authorize(Roles = "Admin,SuperAdmin")]
 public class ExportsController : ControllerBase
 {
     private readonly IMediator _mediator;

@@ -52,6 +52,41 @@ public sealed class RouteRepository : IRouteRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Route>> GetRoutesAsync(
+        TransportType? transportType = null,
+        bool includeInactive = false,
+        Guid? createdBy = null,
+        int page = 1,
+        int pageSize = 50,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _dbContext.Routes.AsNoTracking();
+
+        if (!includeInactive)
+        {
+            query = query.Where(r => r.Status == RouteStatus.Active);
+        }
+
+        if (transportType.HasValue)
+        {
+            query = query.Where(r => r.TransportType == transportType.Value);
+        }
+
+        if (createdBy.HasValue)
+        {
+            query = query.Where(r => r.CreatedBy == createdBy.Value);
+        }
+
+        var clampedPage = Math.Max(1, page);
+        var clampedPageSize = Math.Clamp(pageSize, 1, 100);
+
+        return await query
+            .OrderByDescending(r => r.CreatedAt)
+            .Skip((clampedPage - 1) * clampedPageSize)
+            .Take(clampedPageSize)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<bool> ExistsByNameAsync(
         string name,
         Guid? excludeId = null,

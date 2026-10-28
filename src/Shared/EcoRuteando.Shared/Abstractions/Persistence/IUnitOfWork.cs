@@ -1,6 +1,6 @@
-﻿    namespace EcoRuteando.Shared.Abstractions.Persistence;
+﻿namespace EcoRuteando.Shared.Abstractions.Persistence;
 
-    public interface IUnitOfWork
-    {
-        Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
-    }
+public interface IUnitOfWork
+{
+    Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+}

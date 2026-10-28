@@ -19,19 +19,13 @@ public sealed class GetRoutesQueryHandler
         GetRoutesQuery request,
         CancellationToken cancellationToken)
     {
-        var routes = request.IncludeInactive
-            ? await _routeRepository.GetAllAsync(cancellationToken)
-            : await _routeRepository.GetActiveAsync(
-                request.TransportType,
-                cancellationToken);
-
-        // Filtrar por usuario si se solicita (mine=true)
-        if (request.CreatedBy.HasValue)
-        {
-            routes = routes
-                .Where(r => r.CreatedBy == request.CreatedBy.Value)
-                .ToList();
-        }
+        var routes = await _routeRepository.GetRoutesAsync(
+            request.TransportType,
+            request.IncludeInactive,
+            request.CreatedBy,
+            request.Page,
+            request.PageSize,
+            cancellationToken);
 
         return routes
             .Select(r => new GetRoutesResponse(

@@ -25,7 +25,7 @@ public sealed record WeatherPointResponse
     public bool? IsDaytime { get; init; }
     public string? TimeZone { get; init; }
 
-    public static implicit operator WeatherPointResponse(WeatherConditionsResponse? conditions)
+    public static implicit operator WeatherPointResponse?(WeatherConditionsResponse? conditions)
         => conditions is null
             ? null
             : new WeatherPointResponse
