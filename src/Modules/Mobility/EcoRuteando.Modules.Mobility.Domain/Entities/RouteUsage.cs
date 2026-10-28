@@ -87,7 +87,7 @@ public sealed class RouteUsage : Entity<Guid>
         JsonDocument? gpsData = null)
     {
         if (EndedAt is not null)
-            throw new DomainException("El trayecto ya fue finalizado.");
+            return; // Idempotente: si ya fue finalizado no lanza error 400
 
         if (actualDistanceKm < 0)
             throw new DomainException("La distancia real no puede ser negativa.");

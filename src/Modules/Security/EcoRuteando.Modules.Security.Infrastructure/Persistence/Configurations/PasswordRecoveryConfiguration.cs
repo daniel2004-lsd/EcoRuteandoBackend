@@ -44,11 +44,11 @@ public class PasswordRecoveryConfiguration : IEntityTypeConfiguration<PasswordRe
 
         builder.Property(x => x.CreatedAt)
             .HasColumnName("created_at");
-           
+
 
         builder.Property(x => x.UpdatedAt)
             .HasColumnName("updated_at");
-           
+
 
         builder.HasOne(x => x.User)
             .WithMany()

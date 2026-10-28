@@ -7,7 +7,7 @@ using EcoRuteando.Modules.Security.Domain.Entities;
 
 namespace EcoRuteando.Modules.Security.Domain.Repositories
 {
-    
+
     public interface IUserRepository
     {
         Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);

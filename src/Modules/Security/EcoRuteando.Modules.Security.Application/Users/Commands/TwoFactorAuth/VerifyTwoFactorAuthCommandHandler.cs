@@ -79,12 +79,6 @@ public sealed class VerifyTwoFactorAuthCommandHandler
             throw new NotFoundException("Usuario no encontrado.");
         }
 
-        var roleName = user.PrimaryRole?.Name ?? "user";
-        var accessToken = _jwtProvider.GenerateToken(
-            user.Id,
-            user.Email,
-            roleName);
-
         var refreshToken = _refreshTokenService.GenerateRefreshToken();
         var refreshTokenHash = _refreshTokenService.ComputeHash(refreshToken);
 
@@ -106,12 +100,20 @@ public sealed class VerifyTwoFactorAuthCommandHandler
 
         await _sessionRepository.AddAsync(session, cancellationToken);
 
+        var roleName = user.PrimaryRole?.Name ?? "user";
+        var accessToken = _jwtProvider.GenerateToken(
+            user.Id,
+            user.Email,
+            roleName,
+            session.Id);
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         string? trustedDeviceToken = null;
         if (request.RememberDevice)
         {
-            trustedDeviceToken = _trustedDeviceService.GenerateTrustedDeviceToken(user.Id, 30);
+            trustedDeviceToken = await _trustedDeviceService.GenerateTrustedDeviceTokenAsync(
+                user.Id, 30, cancellationToken);
         }
 
         return new VerifyTwoFactorAuthResponse(

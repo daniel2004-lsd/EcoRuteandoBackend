@@ -51,5 +51,5 @@ public sealed class RefreshTokenRepository
             .Where(rt => rt.UserId == userId)
             .ToListAsync(cancellationToken);
     }
-  
+
 }

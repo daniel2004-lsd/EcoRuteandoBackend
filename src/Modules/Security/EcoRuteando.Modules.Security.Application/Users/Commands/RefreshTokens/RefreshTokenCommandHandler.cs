@@ -1,4 +1,4 @@
-﻿using EcoRuteando.Modules.Security.Application.Abstractions.Security;
+using EcoRuteando.Modules.Security.Application.Abstractions.Security;
 using EcoRuteando.Modules.Security.Application.Users.Commands.LoginUsers;
 using EcoRuteando.Modules.Security.Domain.Repositories;
 using EcoRuteando.Shared.Abstractions.Persistence;
@@ -35,7 +35,7 @@ public sealed class RefreshTokenCommandHandler
         CancellationToken cancellationToken)
     {
         var refreshTokenHash =
-    _refreshTokenService.ComputeHash(request.RefreshToken);
+            _refreshTokenService.ComputeHash(request.RefreshToken);
 
         var refreshToken = await _refreshTokenRepository.GetByHashAsync(
             refreshTokenHash,
@@ -51,6 +51,19 @@ public sealed class RefreshTokenCommandHandler
             throw new UnauthorizedException("Refresh token expirado o revocado.");
         }
 
+        // Comprobar si existe sesión asociada y si aún sigue activa (H-23 / H-24)
+        var session = await _sessionRepository.GetByRefreshTokenHashAsync(
+            refreshTokenHash, cancellationToken);
+
+        if (session is not null && !session.IsActive)
+        {
+            refreshToken.Revoke(revokedByIp: null, replacedByRefreshTokenHash: null);
+            await _refreshTokenRepository.UpdateAsync(refreshToken, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            throw new UnauthorizedException("La sesión ha sido revocada.");
+        }
+
         var user = refreshToken.User;
 
         if (user.PrimaryRole is null)
@@ -58,25 +71,15 @@ public sealed class RefreshTokenCommandHandler
             throw new DomainException("El usuario no tiene un rol asignado.");
         }
 
-        var accessToken = _jwtProvider.GenerateToken(
-            user.Id,
-            user.Email,
-            user.PrimaryRole.Name);
-
         var newRefreshToken =
             _refreshTokenService.GenerateRefreshToken();
 
         var newRefreshTokenHash =
             _refreshTokenService.ComputeHash(newRefreshToken);
 
-
         refreshToken.Revoke(
-        revokedByIp: null,
-        replacedByRefreshTokenHash: newRefreshTokenHash);
-
-        // Update session
-        var session = await _sessionRepository.GetByRefreshTokenHashAsync(
-            refreshTokenHash, cancellationToken);
+            revokedByIp: null,
+            replacedByRefreshTokenHash: newRefreshTokenHash);
 
         if (session is not null)
         {
@@ -91,7 +94,7 @@ public sealed class RefreshTokenCommandHandler
             DateTime.UtcNow.AddDays(7),
             null);
 
-        // Create new session
+        // Crear nueva sesión vinculada
         var newSession = new EcoRuteando.Modules.Security.Domain.Entities.Session(
             user.Id,
             newRefreshTokenHash,
@@ -102,20 +105,22 @@ public sealed class RefreshTokenCommandHandler
 
         await _sessionRepository.AddAsync(newSession, cancellationToken);
 
-        // Guardarlo
         await _refreshTokenRepository.AddAsync(
             refreshTokenEntity,
             cancellationToken);
 
-        // Actualizar el token anterior
+        var accessToken = _jwtProvider.GenerateToken(
+            user.Id,
+            user.Email,
+            user.PrimaryRole.Name,
+            newSession.Id);
+
         await _refreshTokenRepository.UpdateAsync(
             refreshToken,
             cancellationToken);
 
-        // Guardar cambios
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // Devolver los nuevos tokens
         return new LoginResponse(
             accessToken,
             newRefreshToken);

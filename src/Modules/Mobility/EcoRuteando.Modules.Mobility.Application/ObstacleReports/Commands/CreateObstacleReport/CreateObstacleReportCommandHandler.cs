@@ -36,7 +36,8 @@ public sealed class CreateObstacleReportCommandHandler
             request.ReportType,
             request.Description,
             location,
-            request.AddressText);
+            request.AddressText,
+            request.PhotoUrl);
 
         await _reportRepository.AddAsync(report, cancellationToken);
 
