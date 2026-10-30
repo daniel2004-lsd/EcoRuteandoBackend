@@ -1,35 +1,71 @@
-FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
-WORKDIR /app
-EXPOSE 8080
+# ==============================================================================
+# EcoRuteando.Api — Dockerfile Endurecido (H-45 / H-46)
+# ==============================================================================
 
+# ETAPA 1: BUILD & PUBLISH
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
-
 WORKDIR /src
 
-COPY . .
+# Copiar solución y csproj para maximizar el uso de capas de caché de restore
+COPY EcoRuteando.sln .
+COPY src/Shared/EcoRuteando.Shared/EcoRuteando.Shared.csproj src/Shared/EcoRuteando.Shared/
+COPY src/Modules/Security/EcoRuteando.Modules.Security.Domain/EcoRuteando.Modules.Security.Domain.csproj src/Modules/Security/EcoRuteando.Modules.Security.Domain/
+COPY src/Modules/Security/EcoRuteando.Modules.Security.Application/EcoRuteando.Modules.Security.Application.csproj src/Modules/Security/EcoRuteando.Modules.Security.Application/
+COPY src/Modules/Security/EcoRuteando.Modules.Security.Infrastructure/EcoRuteando.Modules.Security.Infrastructure.csproj src/Modules/Security/EcoRuteando.Modules.Security.Infrastructure/
+COPY src/Modules/Security/EcoRuteando.Modules.Security.Presentation/EcoRuteando.Modules.Security.Presentation.csproj src/Modules/Security/EcoRuteando.Modules.Security.Presentation/
+COPY src/Modules/Security/EcoRuteando.Modules.Security/EcoRuteando.Modules.Security.csproj src/Modules/Security/EcoRuteando.Modules.Security/
+COPY src/Modules/Mobility/EcoRuteando.Modules.Mobility.Domain/EcoRuteando.Modules.Mobility.Domain.csproj src/Modules/Mobility/EcoRuteando.Modules.Mobility.Domain/
+COPY src/Modules/Mobility/EcoRuteando.Modules.Mobility.Application/EcoRuteando.Modules.Mobility.Application.csproj src/Modules/Mobility/EcoRuteando.Modules.Mobility.Application/
+COPY src/Modules/Mobility/EcoRuteando.Modules.Mobility.Infrastructure/EcoRuteando.Modules.Mobility.Infrastructure.csproj src/Modules/Mobility/EcoRuteando.Modules.Mobility.Infrastructure/
+COPY src/Modules/Mobility/EcoRuteando.Modules.Mobility.Presentation/EcoRuteando.Modules.Mobility.Presentation.csproj src/Modules/Mobility/EcoRuteando.Modules.Mobility.Presentation/
+COPY src/Modules/Notifications/EcoRuteando.Modules.Notifications.Domain/EcoRuteando.Modules.Notifications.Domain.csproj src/Modules/Notifications/EcoRuteando.Modules.Notifications.Domain/
+COPY src/Modules/Notifications/EcoRuteando.Modules.Notifications.Application/EcoRuteando.Modules.Notifications.Application.csproj src/Modules/Notifications/EcoRuteando.Modules.Notifications.Application/
+COPY src/Modules/Notifications/EcoRuteando.Modules.Notifications.Infrastructure/EcoRuteando.Modules.Notifications.Infrastructure.csproj src/Modules/Notifications/EcoRuteando.Modules.Notifications.Infrastructure/
+COPY src/Modules/Notifications/EcoRuteando.Modules.Notifications.Presentation/EcoRuteando.Modules.Notifications.Presentation.csproj src/Modules/Notifications/EcoRuteando.Modules.Notifications.Presentation/
+COPY src/Modules/Admin/EcoRuteando.Modules.Admin.Domain/EcoRuteando.Modules.Admin.Domain.csproj src/Modules/Admin/EcoRuteando.Modules.Admin.Domain/
+COPY src/Modules/Admin/EcoRuteando.Modules.Admin.Application/EcoRuteando.Modules.Admin.Application.csproj src/Modules/Admin/EcoRuteando.Modules.Admin.Application/
+COPY src/Modules/Admin/EcoRuteando.Modules.Admin.Infrastructure/EcoRuteando.Modules.Admin.Infrastructure.csproj src/Modules/Admin/EcoRuteando.Modules.Admin.Infrastructure/
+COPY src/Modules/Admin/EcoRuteando.Modules.Admin.Presentation/EcoRuteando.Modules.Admin.Presentation.csproj src/Modules/Admin/EcoRuteando.Modules.Admin.Presentation/
+COPY src/Modules/Integrations/EcoRuteando.Modules.Integrations.Domain/EcoRuteando.Modules.Integrations.Domain.csproj src/Modules/Integrations/EcoRuteando.Modules.Integrations.Domain/
+COPY src/Modules/Integrations/EcoRuteando.Modules.Integrations.Application/EcoRuteando.Modules.Integrations.Application.csproj src/Modules/Integrations/EcoRuteando.Modules.Integrations.Application/
+COPY src/Modules/Integrations/EcoRuteando.Modules.Integrations.Infrastructure/EcoRuteando.Modules.Integrations.Infrastructure.csproj src/Modules/Integrations/EcoRuteando.Modules.Integrations.Infrastructure/
+COPY src/Modules/Integrations/EcoRuteando.Modules.Integrations.Presentation/EcoRuteando.Modules.Integrations.Presentation.csproj src/Modules/Integrations/EcoRuteando.Modules.Integrations.Presentation/
+COPY src/Api/EcoRuteando.Api/EcoRuteando.Api.csproj src/Api/EcoRuteando.Api/
 
-WORKDIR /src/src/Api/EcoRuteando.Api
+RUN dotnet restore src/Api/EcoRuteando.Api/EcoRuteando.Api.csproj
 
-RUN dotnet restore "EcoRuteando.Api.csproj"
+COPY src ./src
 
-RUN dotnet build "EcoRuteando.Api.csproj" \
-    -c $BUILD_CONFIGURATION \
-    -o /app/build \
-    --no-restore
-
-FROM build AS publish
-ARG BUILD_CONFIGURATION=Release
-
-RUN dotnet publish "EcoRuteando.Api.csproj" \
+RUN dotnet publish src/Api/EcoRuteando.Api/EcoRuteando.Api.csproj \
     -c $BUILD_CONFIGURATION \
     -o /app/publish \
     /p:UseAppHost=false \
     --no-restore
 
-FROM base AS final
+# ETAPA 2: RUNTIME SIN PRIVILEGIOS Y CON HEALTHCHECK NATIVO
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
 WORKDIR /app
 
-COPY --from=publish /app/publish .
+# Garantizar la existencia del usuario no privilegiado 'app' (UID 1654 o fallback)
+USER root
+RUN id -u app >/dev/null 2>&1 || (groupadd -g 1654 app && useradd -u 1654 -g app -s /bin/sh -m app)
 
+COPY --from=build --chown=app:app /app/publish /app
+
+# Asignar permisos diferenciados y mínimos necesarios:
+# Directorios: 755 (lectura, ejecución y travesía para el usuario 'app')
+# Archivos regulares: 550 (lectura y ejecución sin permisos de escritura)
+RUN chown -R app:app /app \
+    && find /app -type d -exec chmod 755 {} + \
+    && find /app -type f -exec chmod 550 {} +
+
+EXPOSE 8080 5124
+ENV ASPNETCORE_URLS=http://+:8080;http://+:5124
+
+# Healthcheck nativo sin requerir utilitarios externos adicionales (curl/wget)
+HEALTHCHECK --interval=15s --timeout=5s --start-period=10s --retries=3 \
+    CMD /bin/bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080 && echo -e "GET /api/admin/system-configuration HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n" >&3 && grep -q "200 OK" <&3' || exit 1
+
+USER app
 ENTRYPOINT ["dotnet", "EcoRuteando.Api.dll"]
