@@ -31,11 +31,12 @@ public sealed class GoogleMapsController : ControllerBase
     }
 
     /// <summary>
-    /// Calcula una ruta entre origen y destino usando Google Directions API.
-    /// Modos de transporte: driving, walking, bicycling, transit.
-    /// Requiere autenticación.
+    /// Calcula una ruta real entre origen y destino usando Google Directions API.
+    /// Modos de transporte aprobados: driving (automóvil particular), walking (caminata).
+    /// Endpoint público: accesible de forma anónima y autenticada.
+    /// Protegido con rate limiting general por IP.
     /// </summary>
-    [Authorize]
+    [AllowAnonymous]
     [HttpGet("directions")]
     public async Task<IActionResult> GetDirections(
         [FromQuery] double originLat,
@@ -54,13 +55,13 @@ public sealed class GoogleMapsController : ControllerBase
             });
         }
 
-        var validModes = new[] { "driving", "walking", "bicycling", "transit" };
+        var validModes = new[] { "driving", "walking" };
         if (string.IsNullOrWhiteSpace(travelMode) || !validModes.Contains(travelMode.ToLowerInvariant()))
         {
             return BadRequest(new
             {
                 message = $"El modo de transporte '{travelMode}' no es válido. " +
-                          "Valores permitidos: driving, walking, bicycling, transit."
+                          "Valores permitidos: driving, walking."
             });
         }
 
@@ -84,8 +85,6 @@ public sealed class GoogleMapsController : ControllerBase
         {
             var (friendlyMode, suggestion) = travelMode.ToLowerInvariant() switch
             {
-                "bicycling" => ("en bicicleta", "Intenta a pie o en automóvil."),
-                "transit" => ("en transporte público", "En Neiva puede que no haya rutas de bus disponibles para este trayecto. Intenta a pie o en automóvil."),
                 "driving" => ("en automóvil", "Intenta caminando."),
                 _ => ("a pie", "Intenta en automóvil.")
             };
