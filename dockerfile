@@ -50,33 +50,33 @@ RUN dotnet publish src/Api/EcoRuteando.Api/EcoRuteando.Api.csproj \
 
 
 # =========================
-# ETAPA 2: RUNTIME
+# ETAPA 2: RUNTIME SIN PRIVILEGIOS Y CON HEALTHCHECK NATIVO
 # =========================
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
 
 WORKDIR /app
 
-# Instalar curl para healthchecks nativos de contenedor
+# Garantizar la existencia del usuario no privilegiado 'app' (UID 1654 o fallback)
 USER root
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl \
-    && rm -rf /var/lib/apt/lists/*
+RUN id -u app >/dev/null 2>&1 || (groupadd -g 1654 app && useradd -u 1654 -g app -s /bin/sh -m app)
 
 # Copiar aplicación publicada
 COPY --from=build /app/publish .
 
-# Asegurar permisos para el usuario no privilegiado app (preconfigurado en aspnet:9.0)
-RUN chown -R app:app /app
+# Asignar permisos diferenciados y mínimos necesarios
+RUN chown -R app:app /app \
+    && find /app -type d -exec chmod 755 {} + \
+    && find /app -type f -exec chmod 550 {} +
 
-# Puerto de la API
+# Puerto canónico de la API
 EXPOSE 5124
 
-# Configurar ASP.NET Core
+# Configurar ASP.NET Core en puerto 5124
 ENV ASPNETCORE_URLS=http://+:5124
 
-# Healthcheck nativo
+# Healthcheck nativo sobre GET /health (sin requerir curl/wget ni endpoints administrativos)
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-    CMD curl -f http://localhost:5124/health || exit 1
+    CMD /bin/bash -c 'exec 3<>/dev/tcp/127.0.0.1/5124 && echo -e "GET /health HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n" >&3 && grep -q -E "^HTTP/1\.[01] 200([[:space:]]|$)" <&3' || exit 1
 
 # Ejecutar como usuario no privilegiado
 USER app
