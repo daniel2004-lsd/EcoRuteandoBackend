@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.2" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
     <PackageReference Include="Moq" Version="4.21.0" />
@@ -35,6 +39,7 @@
     <ProjectReference Include="..\..\src\Modules\Notifications\EcoRuteando.Modules.Notifications.Application\EcoRuteando.Modules.Notifications.Application.csproj" />
     <ProjectReference Include="..\..\src\Modules\Integrations\EcoRuteando.Modules.Integrations.Domain\EcoRuteando.Modules.Integrations.Domain.csproj" />
     <ProjectReference Include="..\..\src\Modules\Integrations\EcoRuteando.Modules.Integrations.Application\EcoRuteando.Modules.Integrations.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Integrations\EcoRuteando.Modules.Integrations.Presentation\EcoRuteando.Modules.Integrations.Presentation.csproj" />
     <ProjectReference Include="..\..\src\Api\EcoRuteando.Api\EcoRuteando.Api.csproj" />
   </ItemGroup>
 

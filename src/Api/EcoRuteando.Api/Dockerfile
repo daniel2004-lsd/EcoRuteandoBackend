@@ -33,14 +33,18 @@ COPY src/Modules/Integrations/EcoRuteando.Modules.Integrations.Infrastructure/Ec
 COPY src/Modules/Integrations/EcoRuteando.Modules.Integrations.Presentation/EcoRuteando.Modules.Integrations.Presentation.csproj src/Modules/Integrations/EcoRuteando.Modules.Integrations.Presentation/
 COPY src/Api/EcoRuteando.Api/EcoRuteando.Api.csproj src/Api/EcoRuteando.Api/
 
+# Restaurar dependencias de la API y sus módulos
 RUN dotnet restore src/Api/EcoRuteando.Api/EcoRuteando.Api.csproj
 
 COPY src ./src
 
+# Compilar
+RUN dotnet build src/Api/EcoRuteando.Api/EcoRuteando.Api.csproj -c Release --no-restore
+
+# Publicar la API
 RUN dotnet publish src/Api/EcoRuteando.Api/EcoRuteando.Api.csproj \
-    -c $BUILD_CONFIGURATION \
+    -c Release \
     -o /app/publish \
-    /p:UseAppHost=false \
     --no-restore
 
 # ETAPA 2: RUNTIME SIN PRIVILEGIOS Y CON HEALTHCHECK NATIVO

@@ -33,14 +33,14 @@ COPY src/Modules/Integrations/EcoRuteando.Modules.Integrations.Infrastructure/Ec
 COPY src/Modules/Integrations/EcoRuteando.Modules.Integrations.Presentation/EcoRuteando.Modules.Integrations.Presentation.csproj src/Modules/Integrations/EcoRuteando.Modules.Integrations.Presentation/
 COPY src/Api/EcoRuteando.Api/EcoRuteando.Api.csproj src/Api/EcoRuteando.Api/
 
-# Restaurar dependencias
-RUN dotnet restore EcoRuteando.sln
+# Restaurar dependencias de la API y sus módulos
+RUN dotnet restore src/Api/EcoRuteando.Api/EcoRuteando.Api.csproj
 
 # Copiar el código fuente completo
 COPY src ./src
 
 # Compilar
-RUN dotnet build EcoRuteando.sln -c Release --no-restore
+RUN dotnet build src/Api/EcoRuteando.Api/EcoRuteando.Api.csproj -c Release --no-restore
 
 # Publicar la API
 RUN dotnet publish src/Api/EcoRuteando.Api/EcoRuteando.Api.csproj \

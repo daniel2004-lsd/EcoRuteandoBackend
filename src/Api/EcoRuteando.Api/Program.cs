@@ -42,6 +42,7 @@ namespace EcoRuteando.Api
             builder.Services.AddAuthorization();
             builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
             builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
+            builder.Services.AddHealthChecks();
 
             // Health Checks (Liveness)
             builder.Services.AddHealthChecks();
@@ -212,25 +213,66 @@ namespace EcoRuteando.Api
                 await adminBootstrap.EnsureAdminAsync();
             }
 
-            // Detrás del proxy inverso (ej. nginx): procesa X-Forwarded-For y X-Forwarded-Proto.
-            // Para evitar suplantación de IP (IP spoofing), sólo confía en proxies configurados
-            // o en las redes/proxies confiables locales por defecto de ASP.NET Core.
+            // 1. Manejador global de excepciones: captura cualquier fallo en middlewares posteriores
+            app.UseMiddleware<ExceptionMiddleware>();
+
+            // 2. Detrás de proxy inverso (Nginx, Traefik, ingress en nube): procesa X-Forwarded-For y X-Forwarded-Proto.
+            // Para mitigar suplantación de IP (IP spoofing) y evasión de rate limiting:
+            // - Solo se confía en proxies o redes CIDR explícitamente parametrizados (ForwardedHeaders:KnownProxies / KnownNetworks).
+            // - Si se configuran proxies o redes personalizadas, se limpian los defaults y se aplican únicamente los autorizados.
+            // - Si no se especifican proxies externos, se preservan las redes locales de loopback seguras por defecto (127.0.0.1, ::1).
+            // - ForwardedLimit restringe la profundidad de cabeceras evaluadas para evitar cadenas manipuladas.
             var forwardedHeaders = new ForwardedHeadersOptions
             {
                 ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
             };
-            var configuredProxies = builder.Configuration.GetSection("ForwardedHeaders:KnownProxies").Get<string[]>();
-            if (configuredProxies is { Length: > 0 })
+
+            var configuredLimit = builder.Configuration.GetValue<int?>("ForwardedHeaders:ForwardLimit")
+                ?? builder.Configuration.GetValue<int?>("ForwardedHeaders:ForwardedLimit");
+            forwardedHeaders.ForwardLimit = configuredLimit is > 0 ? configuredLimit.Value : 1;
+
+            var configuredProxies = builder.Configuration.GetSection("ForwardedHeaders:KnownProxies").Get<string[]>()
+                ?? Array.Empty<string>();
+            var configuredNetworks = builder.Configuration.GetSection("ForwardedHeaders:KnownNetworks").Get<string[]>()
+                ?? Array.Empty<string>();
+
+            bool hasCustomProxies = configuredProxies.Length > 0;
+            bool hasCustomNetworks = configuredNetworks.Length > 0;
+
+            if (hasCustomProxies || hasCustomNetworks)
             {
                 forwardedHeaders.KnownProxies.Clear();
+                forwardedHeaders.KnownNetworks.Clear();
+
                 foreach (var proxy in configuredProxies)
                 {
-                    if (System.Net.IPAddress.TryParse(proxy, out var ip))
+                    if (System.Net.IPAddress.TryParse(proxy.Trim(), out var ip))
                     {
                         forwardedHeaders.KnownProxies.Add(ip);
                     }
                 }
+
+                foreach (var network in configuredNetworks)
+                {
+                    var trimmed = network.Trim();
+                    if (trimmed.Contains('/'))
+                    {
+                        var parts = trimmed.Split('/');
+                        if (parts.Length == 2
+                            && System.Net.IPAddress.TryParse(parts[0], out var prefix)
+                            && int.TryParse(parts[1], out var prefixLength))
+                        {
+                            forwardedHeaders.KnownNetworks.Add(new IPNetwork(prefix, prefixLength));
+                        }
+                    }
+                    else if (System.Net.IPAddress.TryParse(trimmed, out var singleIp))
+                    {
+                        int prefixLength = singleIp.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork ? 32 : 128;
+                        forwardedHeaders.KnownNetworks.Add(new IPNetwork(singleIp, prefixLength));
+                    }
+                }
             }
+
             app.UseForwardedHeaders(forwardedHeaders);
 
             if (!app.Environment.IsDevelopment())
@@ -238,14 +280,13 @@ namespace EcoRuteando.Api
                 app.UseHsts();
             }
 
+            app.UseMiddleware<SecurityHeadersMiddleware>();
+
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
-
-            app.UseMiddleware<ExceptionMiddleware>();
-            app.UseMiddleware<SecurityHeadersMiddleware>();
 
             app.UseHttpsRedirection();
 
@@ -263,8 +304,6 @@ namespace EcoRuteando.Api
             }).AllowAnonymous();
 
             app.MapControllers();
-
-
 
             app.Run();
         }
