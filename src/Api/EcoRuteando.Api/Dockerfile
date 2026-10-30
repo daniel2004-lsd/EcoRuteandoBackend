@@ -1,5 +1,5 @@
 # ==============================================================================
-# EcoRuteando.Api — Dockerfile Endurecido (H-45 / H-46)
+# EcoRuteando.Api — Dockerfile Endurecido (NET 9 / Producción / Render)
 # ==============================================================================
 
 # ETAPA 1: BUILD & PUBLISH
@@ -56,16 +56,15 @@ COPY --from=build --chown=app:app /app/publish /app
 # Asignar permisos diferenciados y mínimos necesarios:
 # Directorios: 755 (lectura, ejecución y travesía para el usuario 'app')
 # Archivos regulares: 550 (lectura y ejecución sin permisos de escritura)
-RUN chown -R app:app /app \
-    && find /app -type d -exec chmod 755 {} + \
+RUN find /app -type d -exec chmod 755 {} + \
     && find /app -type f -exec chmod 550 {} +
 
-EXPOSE 8080 5124
-ENV ASPNETCORE_URLS=http://+:8080;http://+:5124
+EXPOSE 5124
+ENV ASPNETCORE_URLS=http://+:5124
 
-# Healthcheck nativo sin requerir utilitarios externos adicionales (curl/wget)
-HEALTHCHECK --interval=15s --timeout=5s --start-period=10s --retries=3 \
-    CMD /bin/bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080 && echo -e "GET /api/admin/system-configuration HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n" >&3 && grep -q "200 OK" <&3' || exit 1
+# Healthcheck nativo sobre GET /health (sin requerir curl/wget ni endpoints administrativos)
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+    CMD /bin/bash -c 'exec 3<>/dev/tcp/127.0.0.1/5124 && echo -e "GET /health HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n" >&3 && grep -q -E "^HTTP/1\.[01] 200([[:space:]]|$)" <&3' || exit 1
 
 USER app
 ENTRYPOINT ["dotnet", "EcoRuteando.Api.dll"]

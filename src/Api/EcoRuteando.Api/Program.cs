@@ -43,6 +43,9 @@ namespace EcoRuteando.Api
             builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
             builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
 
+            // Health Checks (Liveness)
+            builder.Services.AddHealthChecks();
+
             // Controllers + Swagger
             builder.Services.AddControllers()
                 .AddJsonOptions(options =>
@@ -253,6 +256,11 @@ namespace EcoRuteando.Api
             app.UseAuthorization();
 
             app.UseRateLimiter();
+
+            app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+            {
+                AllowCachingResponses = false
+            }).AllowAnonymous();
 
             app.MapControllers();
 
