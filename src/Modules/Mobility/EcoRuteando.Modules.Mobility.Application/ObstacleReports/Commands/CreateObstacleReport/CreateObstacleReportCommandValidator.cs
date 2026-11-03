@@ -38,8 +38,9 @@ public sealed class CreateObstacleReportCommandValidator
         RuleFor(x => x.PhotoUrl)
             .MaximumLength(500)
             .WithMessage("La URL de la fotografía no puede superar 500 caracteres.")
-            .Must(uri => Uri.TryCreate(uri, UriKind.Absolute, out var parsed) &&
-                         (parsed.Scheme == Uri.UriSchemeHttp || parsed.Scheme == Uri.UriSchemeHttps))
+            .Must(uri => (Uri.TryCreate(uri, UriKind.Absolute, out var parsed) &&
+                          (parsed.Scheme == Uri.UriSchemeHttp || parsed.Scheme == Uri.UriSchemeHttps)) ||
+                         (uri != null && (uri.StartsWith("/uploads/") || uri.StartsWith("uploads/"))))
             .WithMessage("La URL de la fotografía debe ser una URL HTTP o HTTPS válida.")
             .When(x => !string.IsNullOrEmpty(x.PhotoUrl));
     }
