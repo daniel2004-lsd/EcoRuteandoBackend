@@ -289,6 +289,7 @@ namespace EcoRuteando.Api
             }
 
             app.UseHttpsRedirection();
+            app.UseStaticFiles();
 
             app.UseCors("ReactPolicy");
 
