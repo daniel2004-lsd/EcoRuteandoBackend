@@ -44,7 +44,8 @@ public sealed class GoogleMapsController : ControllerBase
         [FromQuery] double destinationLat,
         [FromQuery] double destinationLng,
         [FromQuery] string travelMode,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken = default,
+        [FromQuery] string? language = "es")
     {
         if (originLat is < -90 or > 90 || originLng is < -180 or > 180 ||
             destinationLat is < -90 or > 90 || destinationLng is < -180 or > 180)
@@ -65,13 +66,34 @@ public sealed class GoogleMapsController : ControllerBase
             });
         }
 
-        var result = await _googleMapsService.GetDirectionsAsync(
-            originLat,
-            originLng,
-            destinationLat,
-            destinationLng,
-            travelMode.ToLowerInvariant(),
-            cancellationToken);
+        if (!string.IsNullOrWhiteSpace(language))
+        {
+            var trimmedLang = language.Trim();
+            if (trimmedLang.Length > 10 || !System.Text.RegularExpressions.Regex.IsMatch(trimmedLang, @"^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,4})?$"))
+            {
+                return BadRequest(new
+                {
+                    message = $"El código de idioma '{language}' no es válido. Formato esperado: es, en, pt-BR, etc."
+                });
+            }
+        }
+
+        var result = string.IsNullOrWhiteSpace(language) || language.Equals("es", StringComparison.OrdinalIgnoreCase)
+            ? await _googleMapsService.GetDirectionsAsync(
+                originLat,
+                originLng,
+                destinationLat,
+                destinationLng,
+                travelMode.ToLowerInvariant(),
+                cancellationToken)
+            : await _googleMapsService.GetDirectionsAsync(
+                originLat,
+                originLng,
+                destinationLat,
+                destinationLng,
+                travelMode.ToLowerInvariant(),
+                language.Trim().ToLowerInvariant(),
+                cancellationToken);
 
         if (result is null)
         {

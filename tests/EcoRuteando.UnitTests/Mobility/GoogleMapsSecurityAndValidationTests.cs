@@ -230,4 +230,39 @@ public class GoogleMapsSecurityAndValidationTests
         var authAttr = method.GetCustomAttribute<AuthorizeAttribute>();
         Assert.Null(authAttr);
     }
+
+    [Fact]
+    public async Task GetDirections_CustomLanguage_ForwardsLanguageToService()
+    {
+        var mockResponse = new DirectionsResponse
+        {
+            Status = "OK",
+            EncodedPolyline = "polyline_en",
+            Distance = new DistanceInfo { Text = "2 km", ValueMeters = 2000 },
+            Duration = new DurationInfo { Text = "5 mins", ValueSeconds = 300 }
+        };
+
+        _mapsServiceMock
+            .Setup(s => s.GetDirectionsAsync(2.92, -75.28, 2.94, -75.29, "driving", "en", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(mockResponse);
+
+        var result = await _controller.GetDirections(2.92, -75.28, 2.94, -75.29, "driving", CancellationToken.None, "en");
+        var okRes = Assert.IsType<OkObjectResult>(result);
+        var val = Assert.IsType<DirectionsResponse>(okRes.Value);
+
+        Assert.Equal("OK", val.Status);
+        Assert.Equal("polyline_en", val.EncodedPolyline);
+    }
+
+    [Theory]
+    [InlineData("es;DROP TABLE Users")]
+    [InlineData("<script>alert(1)</script>")]
+    [InlineData("invalid_very_long_language_code_that_exceeds_limits")]
+    [InlineData("123")]
+    public async Task GetDirections_InvalidLanguage_ReturnsBadRequest(string invalidLang)
+    {
+        var result = await _controller.GetDirections(2.92, -75.28, 2.94, -75.29, "driving", CancellationToken.None, invalidLang);
+        var badRes = Assert.IsType<BadRequestObjectResult>(result);
+        Assert.NotNull(badRes.Value);
+    }
 }

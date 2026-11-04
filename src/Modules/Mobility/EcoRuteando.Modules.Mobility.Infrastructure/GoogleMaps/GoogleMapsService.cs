@@ -26,24 +26,36 @@ public sealed class GoogleMapsService : IGoogleMapsService
     private static string Fmt(double value) =>
         value.ToString(CultureInfo.InvariantCulture);
 
+    public Task<DirectionsResponse?> GetDirectionsAsync(
+        double originLat,
+        double originLng,
+        double destinationLat,
+        double destinationLng,
+        string travelMode,
+        CancellationToken cancellationToken = default) =>
+        GetDirectionsAsync(originLat, originLng, destinationLat, destinationLng, travelMode, "es", cancellationToken);
+
     public async Task<DirectionsResponse?> GetDirectionsAsync(
         double originLat,
         double originLng,
         double destinationLat,
         double destinationLng,
         string travelMode,
+        string language,
         CancellationToken cancellationToken = default)
     {
         try
         {
             var origin = $"{Fmt(originLat)},{Fmt(originLng)}";
             var destination = $"{Fmt(destinationLat)},{Fmt(destinationLng)}";
+            var lang = string.IsNullOrWhiteSpace(language) ? "es" : Uri.EscapeDataString(language.Trim().ToLowerInvariant());
 
             var url = $"{_options.DirectionsBaseUrl}" +
                       $"?origin={origin}" +
                       $"&destination={destination}" +
                       $"&mode={travelMode}" +
                       $"&alternatives=true" +
+                      $"&language={lang}" +
                       $"&key={_options.ApiKey}";
 
             var response = await _httpClient.GetAsync(url, cancellationToken);
@@ -177,6 +189,7 @@ public sealed class GoogleMapsService : IGoogleMapsService
         {
             var url = $"{_options.GeocodeBaseUrl}" +
                       $"?address={Uri.EscapeDataString(address)}" +
+                      $"&language=es" +
                       $"&key={_options.ApiKey}";
 
             var response = await _httpClient.GetAsync(url, cancellationToken);
@@ -244,6 +257,7 @@ public sealed class GoogleMapsService : IGoogleMapsService
         {
             var url = $"{_options.GeocodeBaseUrl}" +
                       $"?latlng={Fmt(lat)},{Fmt(lng)}" +
+                      $"&language=es" +
                       $"&key={_options.ApiKey}";
 
             var response = await _httpClient.GetAsync(url, cancellationToken);
@@ -383,6 +397,7 @@ public sealed class GoogleMapsService : IGoogleMapsService
                       $"?location={location}" +
                       $"&radius={radius.ToString("F0", CultureInfo.InvariantCulture)}" +
                       $"&type={type}" +
+                      $"&language=es" +
                       $"&key={_options.ApiKey}";
 
             var response = await _httpClient.GetAsync(url, cancellationToken);
