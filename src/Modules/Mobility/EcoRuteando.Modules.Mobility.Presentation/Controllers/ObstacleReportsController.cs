@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using System.IO;
+using EcoRuteando.Modules.Mobility.Application.Abstractions.Storage;
 using EcoRuteando.Modules.Mobility.Application.ObstacleReports.Commands.CreateObstacleReport;
 using EcoRuteando.Modules.Mobility.Application.ObstacleReports.Commands.ValidateObstacleReport;
 using EcoRuteando.Modules.Mobility.Application.ObstacleReports.Commands.VoteObstacleReport;
@@ -8,6 +9,7 @@ using EcoRuteando.Modules.Mobility.Application.ObstacleReports.Queries.GetMyObst
 using EcoRuteando.Modules.Mobility.Application.ObstacleReports.Queries.GetObstacleReportsForValidation;
 using EcoRuteando.Modules.Mobility.Domain.Enums;
 using EcoRuteando.Shared.Authorization;
+using EcoRuteando.Shared.Exceptions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -22,10 +24,14 @@ namespace EcoRuteando.Modules.Mobility.Presentation.Controllers;
 public sealed class ObstacleReportsController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly IPhotoStorageService _photoStorageService;
 
-    public ObstacleReportsController(IMediator mediator)
+    public ObstacleReportsController(
+        IMediator mediator,
+        IPhotoStorageService photoStorageService)
     {
         _mediator = mediator;
+        _photoStorageService = photoStorageService;
     }
 
     /// <summary>
@@ -76,16 +82,15 @@ public sealed class ObstacleReportsController : ControllerBase
     }
 
     /// <summary>
-    /// CU07: el ciudadano reporta un obstáculo o problema en las rutas.
-    /// El reporte queda almacenado en estado 'pending' en espera de validación.
-    /// </summary>
-    /// <summary>
-    /// Sube una fotografía de evidencia para un reporte de obstáculo (HU-16 / CU07).
-    /// Guarda el archivo en wwwroot/uploads/reports de forma segura y devuelve la URL accesible.
+    /// Sube una fotografía de evidencia para un reporte de obstáculo (H-04 / HU-16 / CU07).
+    /// Valida tamaño (máx. 5 MB), extensión, MIME y firma binaria real, almacena el archivo en Cloudinary
+    /// (carpeta ecoruteando/reports) y devuelve su URL HTTPS pública persistente.
     /// </summary>
     [HttpPost("photo")]
     [Authorize]
     [HasPermission("reports.create")]
+    [RequestSizeLimit(ImageFileValidator.MaxFileSizeBytes)]
+    [Consumes("multipart/form-data")]
     public async Task<IActionResult> UploadPhoto(
         IFormFile? file,
         CancellationToken cancellationToken)
@@ -95,52 +100,43 @@ public sealed class ObstacleReportsController : ControllerBase
             return BadRequest(new { message = "El archivo de imagen es obligatorio." });
         }
 
-        const long maxFileSize = 5 * 1024 * 1024; // 5 MB
-        if (file.Length > maxFileSize)
+        var metaValidation = ImageFileValidator.ValidateMetadata(
+            file.Length,
+            file.FileName,
+            file.ContentType);
+
+        if (!metaValidation.IsValid)
         {
-            return BadRequest(new { message = "El tamaño de la imagen no puede exceder 5 MB." });
+            return BadRequest(new { message = metaValidation.ErrorMessage });
         }
 
-        var allowedExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            ".jpg", ".jpeg", ".png", ".webp"
-        };
+        var userId = GetRequiredUserId();
 
-        var ext = Path.GetExtension(file.FileName);
-        if (string.IsNullOrWhiteSpace(ext) || !allowedExtensions.Contains(ext))
+        try
         {
-            return BadRequest(new { message = "Formato de imagen no soportado. Formatos válidos: JPG, PNG, WEBP." });
+            await using var stream = file.OpenReadStream();
+
+            var uploadResult = await _photoStorageService.UploadReportPhotoAsync(
+                stream,
+                file.FileName,
+                file.ContentType,
+                userId,
+                cancellationToken);
+
+            return StatusCode(StatusCodes.Status201Created, new
+            {
+                url = uploadResult.Url,
+                fileName = uploadResult.FileName
+            });
         }
-
-        var allowedMimes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        catch (DomainException ex)
         {
-            "image/jpeg", "image/png", "image/webp"
-        };
-        if (!allowedMimes.Contains(file.ContentType))
-        {
-            return BadRequest(new { message = "El tipo de contenido no corresponde a una imagen válida." });
+            return BadRequest(new { message = ex.Message });
         }
-
-        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "reports");
-        Directory.CreateDirectory(uploadsFolder);
-
-        var safeFileName = $"{Guid.NewGuid():N}{ext.ToLowerInvariant()}";
-        var filePath = Path.Combine(uploadsFolder, safeFileName);
-
-        await using (var stream = new FileStream(filePath, FileMode.Create))
+        catch (PhotoStorageException ex)
         {
-            await file.CopyToAsync(stream, cancellationToken);
+            return StatusCode(ex.StatusCode, new { message = ex.Message });
         }
-
-        var scheme = Request.Scheme;
-        var host = Request.Host.Value;
-        var absoluteUrl = $"{scheme}://{host}/uploads/reports/{safeFileName}";
-
-        return StatusCode(StatusCodes.Status201Created, new
-        {
-            url = absoluteUrl,
-            fileName = safeFileName
-        });
     }
 
     /// <summary>
@@ -156,11 +152,28 @@ public sealed class ObstacleReportsController : ControllerBase
     {
         var userId = GetRequiredUserId();
 
-        var reportId = await _mediator.Send(
-            command with { UserId = userId },
-            cancellationToken);
+        try
+        {
+            var reportId = await _mediator.Send(
+                command with { UserId = userId },
+                cancellationToken);
 
-        return StatusCode(StatusCodes.Status201Created, new { reportId });
+            _photoStorageService.MarkPhotoCommitted(command.PhotoUrl);
+
+            return StatusCode(StatusCodes.Status201Created, new { reportId });
+        }
+        catch
+        {
+            if (!string.IsNullOrWhiteSpace(command.PhotoUrl))
+            {
+                await _photoStorageService.TryDeleteUncommittedPhotoAsync(
+                    command.PhotoUrl,
+                    userId,
+                    CancellationToken.None);
+            }
+
+            throw;
+        }
     }
 
     /// <summary>
