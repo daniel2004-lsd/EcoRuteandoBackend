@@ -196,10 +196,11 @@ public sealed class ObstacleReportsController : ControllerBase
 
     /// <summary>
     /// Listado administrativo de reportes (filtrable por estado).
+    /// Requiere permiso 'reports.validate' para evitar que usuarios estándar accedan a la cola administrativa.
     /// </summary>
     [HttpGet]
     [Authorize]
-    [HasPermission("reports.read")]
+    [HasPermission("reports.validate")]
     public async Task<IActionResult> GetAll(
         string? status,
         CancellationToken cancellationToken)
