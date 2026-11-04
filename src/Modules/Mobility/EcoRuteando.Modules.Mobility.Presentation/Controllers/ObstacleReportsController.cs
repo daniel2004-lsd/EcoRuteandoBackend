@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Http;
+using System.IO;
 using EcoRuteando.Modules.Mobility.Application.ObstacleReports.Commands.CreateObstacleReport;
 using EcoRuteando.Modules.Mobility.Application.ObstacleReports.Commands.ValidateObstacleReport;
 using EcoRuteando.Modules.Mobility.Application.ObstacleReports.Commands.VoteObstacleReport;
@@ -77,6 +79,74 @@ public sealed class ObstacleReportsController : ControllerBase
     /// CU07: el ciudadano reporta un obstáculo o problema en las rutas.
     /// El reporte queda almacenado en estado 'pending' en espera de validación.
     /// </summary>
+    /// <summary>
+    /// Sube una fotografía de evidencia para un reporte de obstáculo (HU-16 / CU07).
+    /// Guarda el archivo en wwwroot/uploads/reports de forma segura y devuelve la URL accesible.
+    /// </summary>
+    [HttpPost("photo")]
+    [Authorize]
+    [HasPermission("reports.create")]
+    public async Task<IActionResult> UploadPhoto(
+        IFormFile? file,
+        CancellationToken cancellationToken)
+    {
+        if (file is null || file.Length == 0)
+        {
+            return BadRequest(new { message = "El archivo de imagen es obligatorio." });
+        }
+
+        const long maxFileSize = 5 * 1024 * 1024; // 5 MB
+        if (file.Length > maxFileSize)
+        {
+            return BadRequest(new { message = "El tamaño de la imagen no puede exceder 5 MB." });
+        }
+
+        var allowedExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ".jpg", ".jpeg", ".png", ".webp"
+        };
+
+        var ext = Path.GetExtension(file.FileName);
+        if (string.IsNullOrWhiteSpace(ext) || !allowedExtensions.Contains(ext))
+        {
+            return BadRequest(new { message = "Formato de imagen no soportado. Formatos válidos: JPG, PNG, WEBP." });
+        }
+
+        var allowedMimes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "image/jpeg", "image/png", "image/webp"
+        };
+        if (!allowedMimes.Contains(file.ContentType))
+        {
+            return BadRequest(new { message = "El tipo de contenido no corresponde a una imagen válida." });
+        }
+
+        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "reports");
+        Directory.CreateDirectory(uploadsFolder);
+
+        var safeFileName = $"{Guid.NewGuid():N}{ext.ToLowerInvariant()}";
+        var filePath = Path.Combine(uploadsFolder, safeFileName);
+
+        await using (var stream = new FileStream(filePath, FileMode.Create))
+        {
+            await file.CopyToAsync(stream, cancellationToken);
+        }
+
+        var scheme = Request.Scheme;
+        var host = Request.Host.Value;
+        var absoluteUrl = $"{scheme}://{host}/uploads/reports/{safeFileName}";
+
+        return StatusCode(StatusCodes.Status201Created, new
+        {
+            url = absoluteUrl,
+            fileName = safeFileName
+        });
+    }
+
+    /// <summary>
+    /// CU07: el ciudadano reporta un obstáculo o problema en las rutas.
+    /// El reporte queda almacenado en estado 'pending' en espera de validación.
+    /// </summary>
     [HttpPost]
     [Authorize]
     [HasPermission("reports.create")]
@@ -90,7 +160,7 @@ public sealed class ObstacleReportsController : ControllerBase
             command with { UserId = userId },
             cancellationToken);
 
-        return Ok(new { reportId });
+        return StatusCode(StatusCodes.Status201Created, new { reportId });
     }
 
     /// <summary>
