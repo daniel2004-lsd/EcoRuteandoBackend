@@ -42,7 +42,6 @@ namespace EcoRuteando.Api
             builder.Services.AddAuthorization();
             builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
             builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
-            builder.Services.AddHealthChecks();
 
             // Health Checks (Liveness)
             builder.Services.AddHealthChecks();
