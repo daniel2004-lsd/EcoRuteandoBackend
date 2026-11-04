@@ -10,6 +10,15 @@ public interface IGoogleMapsService
         string travelMode,
         CancellationToken cancellationToken = default);
 
+    Task<DirectionsResponse?> GetDirectionsAsync(
+        double originLat,
+        double originLng,
+        double destinationLat,
+        double destinationLng,
+        string travelMode,
+        string language,
+        CancellationToken cancellationToken = default);
+
     Task<GeocodingResponse?> GeocodeAddressAsync(
         string address,
         CancellationToken cancellationToken = default);
