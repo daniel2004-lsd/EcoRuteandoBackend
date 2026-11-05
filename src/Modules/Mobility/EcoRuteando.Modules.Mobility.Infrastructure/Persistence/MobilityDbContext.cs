@@ -58,6 +58,11 @@ public class MobilityDbContext : DbContext, IMobilityDbContext
             "report_status",
             new[] { "pending", "under_review", "validated", "rejected" });
 
+        modelBuilder.HasPostgresEnum(
+            "mobility",
+            "search_type",
+            new[] { "search", "origin", "destination" });
+
         modelBuilder.ApplyConfiguration(new RouteConfiguration());
         modelBuilder.ApplyConfiguration(new PointOfInterestConfiguration());
         modelBuilder.ApplyConfiguration(new RoutePoiConfiguration());
@@ -68,5 +73,6 @@ public class MobilityDbContext : DbContext, IMobilityDbContext
         modelBuilder.ApplyConfiguration(new RatingConfiguration());
         modelBuilder.ApplyConfiguration(new ObstacleReportConfiguration());
         modelBuilder.ApplyConfiguration(new ReportVoteConfiguration());
+        modelBuilder.ApplyConfiguration(new AddressHistoryConfiguration());
     }
 }
