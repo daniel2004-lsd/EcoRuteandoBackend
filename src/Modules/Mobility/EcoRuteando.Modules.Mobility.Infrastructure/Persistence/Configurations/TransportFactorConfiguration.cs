@@ -18,7 +18,8 @@ public sealed class TransportFactorConfiguration
 
         builder.Property(tf => tf.TransportType)
             .HasColumnName("transport_type")
-            .HasColumnType("transport_type")
+            .HasColumnType("mobility.transport_type")
+            .HasConversion<string>()
             .IsRequired();
 
         builder.Property(tf => tf.Co2FactorKgKm)
