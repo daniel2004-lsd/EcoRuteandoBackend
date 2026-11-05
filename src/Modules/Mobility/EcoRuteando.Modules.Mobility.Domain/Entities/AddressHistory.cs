@@ -5,7 +5,7 @@ using NetTopologySuite.Geometries;
 namespace EcoRuteando.Modules.Mobility.Domain.Entities;
 
 /// <summary>
-/// Entrada del historial de direcciones del usuario (HU-23).
+/// Entrada del historial de direcciones del usuario (HU-23 / CU27).
 /// Guarda búsquedas de ubicaciones para reutilizarlas al planificar rutas.
 /// </summary>
 public sealed class AddressHistory : Entity<Guid>
@@ -14,7 +14,7 @@ public sealed class AddressHistory : Entity<Guid>
 
     public string SearchText { get; private set; } = string.Empty;
 
-    public Guid? PlaceId { get; private set; }
+    public string? PlaceId { get; private set; }
 
     public Point Location { get; private set; } = default!;
 
@@ -27,7 +27,7 @@ public sealed class AddressHistory : Entity<Guid>
     public AddressHistory(
         Guid userId,
         string searchText,
-        Guid? placeId,
+        string? placeId,
         Point location,
         string searchType)
     {
@@ -37,8 +37,8 @@ public sealed class AddressHistory : Entity<Guid>
         if (string.IsNullOrWhiteSpace(searchText))
             throw new DomainException("El texto de búsqueda es obligatorio.");
 
-        if (searchText.Trim().Length > 200)
-            throw new DomainException("El texto de búsqueda no puede superar 200 caracteres.");
+        if (searchText.Trim().Length > 300)
+            throw new DomainException("El texto de búsqueda no puede superar 300 caracteres.");
 
         if (location is null)
             throw new DomainException("La ubicación es obligatoria.");
@@ -49,7 +49,7 @@ public sealed class AddressHistory : Entity<Guid>
         Id = Guid.NewGuid();
         UserId = userId;
         SearchText = searchText.Trim();
-        PlaceId = placeId;
+        PlaceId = string.IsNullOrWhiteSpace(placeId) ? null : placeId.Trim();
         Location = location;
         SearchType = searchType.Trim();
         CreatedAt = DateTime.UtcNow;
