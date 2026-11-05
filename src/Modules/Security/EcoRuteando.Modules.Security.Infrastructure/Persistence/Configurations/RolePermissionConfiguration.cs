@@ -1,6 +1,8 @@
-﻿using EcoRuteando.Modules.Security.Domain.Entities;
+using EcoRuteando.Modules.Security.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace EcoRuteando.Modules.Security.Infrastructure.Persistence.Configurations;
 
 public sealed class RolePermissionConfiguration
     : IEntityTypeConfiguration<RolePermission>
