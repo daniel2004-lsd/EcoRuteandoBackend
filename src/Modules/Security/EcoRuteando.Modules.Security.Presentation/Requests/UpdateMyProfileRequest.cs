@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 
+namespace EcoRuteando.Modules.Security.Presentation.Requests;
+
 public sealed record UpdateMyProfileRequest(
     [Required] string FirstName,
     string? LastName,
