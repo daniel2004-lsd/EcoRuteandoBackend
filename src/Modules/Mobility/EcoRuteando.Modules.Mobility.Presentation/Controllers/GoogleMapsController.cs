@@ -69,7 +69,7 @@ public sealed class GoogleMapsController : ControllerBase
         if (!string.IsNullOrWhiteSpace(language))
         {
             var trimmedLang = language.Trim();
-            if (trimmedLang.Length > 10 || !System.Text.RegularExpressions.Regex.IsMatch(trimmedLang, @"^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,4})?$"))
+            if (trimmedLang.Length > 10 || !System.Text.RegularExpressions.Regex.IsMatch(trimmedLang, @"^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,4})?$", System.Text.RegularExpressions.RegexOptions.None, TimeSpan.FromMilliseconds(250)))
             {
                 return BadRequest(new
                 {

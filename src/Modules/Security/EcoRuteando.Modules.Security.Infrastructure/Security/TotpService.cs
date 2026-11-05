@@ -75,7 +75,9 @@ public sealed class TotpService : ITotpService
             Array.Reverse(timeBytes);
         }
 
+#pragma warning disable S4790 // RFC 6238 standard specifies HMACSHA1 for cross-platform TOTP compatibility
         using var hmac = new HMACSHA1(secretBytes);
+#pragma warning restore S4790
         var hash = hmac.ComputeHash(timeBytes);
 
         var offset = hash[^1] & 0x0F;
