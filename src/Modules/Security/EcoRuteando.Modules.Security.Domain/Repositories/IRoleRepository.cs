@@ -1,4 +1,6 @@
-﻿using EcoRuteando.Modules.Security.Domain.Entities;
+using EcoRuteando.Modules.Security.Domain.Entities;
+
+namespace EcoRuteando.Modules.Security.Domain.Repositories;
 
 public interface IRoleRepository
 {
