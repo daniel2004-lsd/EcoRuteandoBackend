@@ -20,10 +20,14 @@ public sealed class TransportFactorRepository : ITransportFactorRepository
     {
         var now = DateTime.UtcNow;
 
+        // Cast al enum de Admin si se compara con la entidad base
+        var adminType = (EcoRuteando.Modules.Admin.Domain.Enums.TransportType)(int)transportType;
+
         return await _dbContext.TransportFactors
-            .Where(tf => tf.TransportType == transportType)
-            .Where(tf => tf.ValidFrom <= now)
-            .Where(tf => tf.ValidUntil == null || tf.ValidUntil > now)
+            .AsNoTracking()
+            .Where(tf => tf.TransportType == adminType
+                         && tf.ValidFrom <= now
+                         && (tf.ValidUntil == null || tf.ValidUntil > now))
             .OrderByDescending(tf => tf.ValidFrom)
             .FirstOrDefaultAsync(cancellationToken);
     }
