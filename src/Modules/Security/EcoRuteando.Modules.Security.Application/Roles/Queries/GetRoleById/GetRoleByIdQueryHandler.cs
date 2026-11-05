@@ -1,7 +1,9 @@
-﻿using EcoRuteando.Modules.Security.Application.Roles.Queries.GetRoleById;
 using EcoRuteando.Modules.Security.Application.Roles.Queries.GetRoles;
+using EcoRuteando.Modules.Security.Domain.Repositories;
 using EcoRuteando.Shared.Exceptions;
 using MediatR;
+
+namespace EcoRuteando.Modules.Security.Application.Roles.Queries.GetRoleById;
 
 public sealed class GetRoleByIdQueryHandler
     : IRequestHandler<GetRoleByIdQuery, RoleResponse>

@@ -10,6 +10,7 @@ using EcoRuteando.Modules.Security.Application.Users.Queries.GetCurrentUser;
 using EcoRuteando.Modules.Security.Domain.Entities;
 using EcoRuteando.Modules.Security.Infrastructure.Persistence;
 using EcoRuteando.Modules.Security.Presentation.Contracts.Auth;
+using EcoRuteando.Modules.Security.Presentation.Requests;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
