@@ -53,7 +53,7 @@ public sealed class ForgotPasswordCommandHandler
         // Lanza TooManyRequestsException (429) si está bloqueado o excede el máximo.
         _rateLimiter.RegisterAttempt(request.Email);
 
-        var user = await _userRepository.GetByEmailAsync(request.Email);
+        var user = await _userRepository.GetByEmailAsync(request.Email, cancellationToken);
 
         if (user is null)
             return;

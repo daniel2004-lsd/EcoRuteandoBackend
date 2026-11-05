@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -45,7 +45,9 @@ namespace EcoRuteando.Modules.Security.Application.Behaviors
                 }
             }
 
+#pragma warning disable S8949 // RequestHandlerDelegate in MediatR takes no parameters
             return await next();
+#pragma warning restore S8949
         }
     }
 
