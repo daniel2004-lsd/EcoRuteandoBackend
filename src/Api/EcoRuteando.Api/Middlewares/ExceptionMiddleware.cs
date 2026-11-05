@@ -183,6 +183,7 @@ public sealed class ExceptionMiddleware
         }
 
         await context.Response.WriteAsync(
-            JsonSerializer.Serialize(problem));
+            JsonSerializer.Serialize(problem),
+            context.RequestAborted);
     }
 }

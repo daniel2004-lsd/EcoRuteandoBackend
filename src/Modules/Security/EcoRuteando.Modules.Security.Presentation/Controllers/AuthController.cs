@@ -539,11 +539,10 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
 
         private CookieOptions CreateRefreshTokenCookieOptions(DateTimeOffset? expires = null)
         {
-            var isDevelopment = _environment.IsDevelopment();
             return new CookieOptions
             {
                 HttpOnly = true,
-                Secure = !isDevelopment || Request.IsHttps,
+                Secure = true,
                 SameSite = SameSiteMode.Strict,
                 Path = "/api/auth",
                 Expires = expires ?? DateTimeOffset.UtcNow.AddDays(7)
@@ -560,6 +559,7 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
             Response.Cookies.Delete(RefreshTokenCookieName, CreateRefreshTokenCookieOptions(DateTimeOffset.UtcNow.AddDays(-1)));
         }
 
+#pragma warning disable S6932 // Raw header inspection is necessary for programmatic CSRF and client platform origin detection
         private bool IsWebClient()
         {
             if (Request.Headers.TryGetValue("X-Client-Platform", out var platform) &&
@@ -630,5 +630,6 @@ namespace EcoRuteando.Modules.Security.Presentation.Controllers
 
             return false;
         }
+#pragma warning restore S6932
     }
 }
