@@ -1,7 +1,7 @@
 namespace EcoRuteando.Modules.Mobility.Application.AddressHistory;
 
 /// <summary>
-/// Respuesta del historial de direcciones del usuario (HU-23).
+/// Respuesta del historial de direcciones del usuario (HU-23 / CU27).
 /// </summary>
 public sealed record GetUserAddressHistoryResponse
 {
@@ -9,7 +9,7 @@ public sealed record GetUserAddressHistoryResponse
 
     public string? SearchText { get; init; }
 
-    public Guid? PlaceId { get; init; }
+    public string? PlaceId { get; init; }
 
     public decimal Latitude { get; init; }
 
