@@ -41,11 +41,13 @@ public sealed class BrevoEmailService : IEmailService
             {
                 try
                 {
+#pragma warning disable S5332 // Explicit TLS configuration for Brevo SMTP
                     using var smtp = new System.Net.Mail.SmtpClient(_settings.Host, _settings.Port)
                     {
                         Credentials = new System.Net.NetworkCredential(_settings.Username, _settings.Password),
-                        EnableSsl = _settings.EnableSsl
+                        EnableSsl = true
                     };
+#pragma warning restore S5332
                     var mail = new System.Net.Mail.MailMessage
                     {
                         From = new System.Net.Mail.MailAddress(_settings.FromEmail, _settings.FromName),

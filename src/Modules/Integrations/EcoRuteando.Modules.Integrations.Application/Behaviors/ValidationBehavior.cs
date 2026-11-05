@@ -39,6 +39,8 @@ public sealed class ValidationBehavior<TRequest, TResponse>
             }
         }
 
+#pragma warning disable S8949 // RequestHandlerDelegate in MediatR takes no parameters
         return await next();
+#pragma warning restore S8949
     }
 }

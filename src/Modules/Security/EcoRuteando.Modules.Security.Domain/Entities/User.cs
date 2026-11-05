@@ -110,7 +110,7 @@ namespace EcoRuteando.Modules.Security.Domain.Entities
 
             if (primaryColor is not null
                 && !System.Text.RegularExpressions.Regex.IsMatch(
-                    primaryColor, "^#[0-9A-Fa-f]{6}$"))
+                    primaryColor, "^#[0-9A-Fa-f]{6}$", System.Text.RegularExpressions.RegexOptions.None, TimeSpan.FromMilliseconds(250)))
             {
                 throw new DomainException(
                     "El color primario debe ser un hexadecimal válido (ej. #1ABC9C).");
