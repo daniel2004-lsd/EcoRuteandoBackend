@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Http;
+using EcoRuteando.Modules.Mobility.Application.AddressHistory;
 using EcoRuteando.Modules.Mobility.Application.RoutePois.Commands.AddPoiToRoute;
 using EcoRuteando.Modules.Mobility.Application.RoutePois.Commands.RemovePoiFromRoute;
 using EcoRuteando.Modules.Mobility.Application.Routes.Commands.CreateRoute;
@@ -188,6 +190,54 @@ public sealed class RoutesController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// HU-23 / CU27: Obtiene el historial de direcciones guardadas del usuario autenticado.
+    /// </summary>
+    [HttpGet("history/addresses")]
+    [HasPermission("routes.read")]
+    public async Task<IActionResult> GetAddressHistory(CancellationToken cancellationToken)
+    {
+        var userId = GetUserId();
+        if (!userId.HasValue)
+        {
+            return Unauthorized(new { message = "Usuario no identificado." });
+        }
+
+        var result = await _mediator.Send(
+            new GetUserAddressHistoryQuery(userId.Value),
+            cancellationToken);
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// HU-23 / CU27: Guarda una nueva dirección en el historial del usuario.
+    /// </summary>
+    [HttpPost("history/addresses")]
+    [HasPermission("routes.write")]
+    public async Task<IActionResult> SaveAddressHistory(
+        [FromBody] SaveAddressHistoryApiRequest request,
+        CancellationToken cancellationToken)
+    {
+        var userId = GetUserId();
+        if (!userId.HasValue)
+        {
+            return Unauthorized(new { message = "Usuario no identificado." });
+        }
+
+        var id = await _mediator.Send(
+            new SaveAddressHistoryCommand(
+                userId.Value,
+                request.SearchText ?? string.Empty,
+                request.Latitude,
+                request.Longitude,
+                request.PlaceId,
+                request.SearchType ?? "search"),
+            cancellationToken);
+
+        return StatusCode(StatusCodes.Status201Created, new { id });
+    }
+
     private Guid? GetUserId()
     {
         var claim = User.FindFirst(ClaimTypes.NameIdentifier);
@@ -202,4 +252,16 @@ public sealed class RoutesController : ControllerBase
 
     private bool IsAdminUser() =>
         User.IsInRole("Admin") || User.IsInRole("SuperAdmin");
+}
+
+/// <summary>
+/// Cuerpo de petición para guardar una dirección frecuente / historial (CU27).
+/// </summary>
+public sealed class SaveAddressHistoryApiRequest
+{
+    public string? SearchText { get; init; }
+    public decimal Latitude { get; init; }
+    public decimal Longitude { get; init; }
+    public string? PlaceId { get; init; }
+    public string? SearchType { get; init; }
 }
