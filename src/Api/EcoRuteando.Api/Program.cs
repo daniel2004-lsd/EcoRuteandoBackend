@@ -281,10 +281,20 @@ namespace EcoRuteando.Api
 
             app.UseMiddleware<SecurityHeadersMiddleware>();
 
-            if (app.Environment.IsDevelopment())
+            var enableSwagger = app.Environment.IsDevelopment() ||
+                                app.Configuration.GetValue<bool>("Swagger:Enabled", true);
+
+            if (enableSwagger)
             {
-                app.UseSwagger();
-                app.UseSwaggerUI();
+                app.UseSwagger(options =>
+                {
+                    options.RouteTemplate = "swagger/{documentName}/swagger.json";
+                });
+                app.UseSwaggerUI(options =>
+                {
+                    options.SwaggerEndpoint("/swagger/v1/swagger.json", "EcoRuteando API v1");
+                    options.RoutePrefix = "swagger";
+                });
             }
 
             app.UseHttpsRedirection();

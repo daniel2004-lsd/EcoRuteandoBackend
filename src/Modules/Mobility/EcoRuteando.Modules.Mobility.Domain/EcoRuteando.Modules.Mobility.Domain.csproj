@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\Shared\EcoRuteando.Shared\EcoRuteando.Shared.csproj" />
+    <ProjectReference Include="..\..\Admin\EcoRuteando.Modules.Admin.Domain\EcoRuteando.Modules.Admin.Domain.csproj" />
   </ItemGroup>
 
 </Project>

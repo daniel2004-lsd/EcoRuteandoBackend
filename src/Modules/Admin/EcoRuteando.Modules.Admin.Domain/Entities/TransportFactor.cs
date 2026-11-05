@@ -2,18 +2,22 @@ using EcoRuteando.Modules.Admin.Domain.Enums;
 
 namespace EcoRuteando.Modules.Admin.Domain.Entities;
 
+/// <summary>
+/// Factor de conversión por modo de transporte (tabla admin.transport_factors).
+/// Definición canónica única en el sistema (H-18).
+/// </summary>
 public class TransportFactor
 {
-    public Guid Id { get; private set; }
-    public TransportType TransportType { get; private set; }
-    public decimal Co2FactorKgKm { get; private set; }
-    public decimal? CalorieFactorKm { get; private set; }
-    public DateTime ValidFrom { get; private set; } = DateTime.UtcNow;
-    public DateTime? ValidUntil { get; private set; }
-    public string? Source { get; private set; }
-    public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
+    public Guid Id { get; protected set; }
+    public TransportType TransportType { get; protected set; }
+    public decimal Co2FactorKgKm { get; protected set; }
+    public decimal? CalorieFactorKm { get; protected set; }
+    public DateTime ValidFrom { get; protected set; } = DateTime.UtcNow;
+    public DateTime? ValidUntil { get; protected set; }
+    public string? Source { get; protected set; }
+    public DateTime CreatedAt { get; protected set; } = DateTime.UtcNow;
 
-    private TransportFactor() { }
+    public TransportFactor() { }
 
     public static TransportFactor Create(
         TransportType transportType,
