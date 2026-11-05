@@ -1,4 +1,6 @@
-﻿using EcoRuteando.Modules.Security.Application.Abstractions.Email;
+using EcoRuteando.Modules.Security.Application.Abstractions.Email;
+
+namespace EcoRuteando.Modules.Security.Infrastructure.Email;
 
 public sealed class EmailTemplateService : IEmailTemplateService
 {
