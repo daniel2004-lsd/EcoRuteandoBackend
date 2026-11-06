@@ -22,9 +22,14 @@ public static class DependencyInjection
                 npgsqlOptions.MapEnum<EcoRuteando.Modules.Admin.Domain.Enums.SupportTicketStatus>("support_status", "admin");
             }));
 
+        services.AddScoped<IAdminUnitOfWork>(sp =>
+            sp.GetRequiredService<AdminDbContext>());
+
         services.AddScoped<ISupportTicketRepository, SupportTicketRepository>();
         services.AddScoped<ISystemConfigurationRepository, SystemConfigurationRepository>();
         services.AddScoped<ITransportFactorRepository, TransportFactorRepository>();
+        services.AddScoped<ICompanyRepository, CompanyRepository>();
+        services.AddScoped<ICarbonCompensationRepository, CarbonCompensationRepository>();
         services.AddScoped<IDailyStatisticRepository, DailyStatisticRepository>();
         services.AddScoped<IAdminExportRepository, AdminExportRepository>();
 
