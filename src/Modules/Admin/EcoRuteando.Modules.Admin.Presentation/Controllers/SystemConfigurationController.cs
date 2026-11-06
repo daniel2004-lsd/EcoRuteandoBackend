@@ -30,6 +30,26 @@ public class SystemConfigurationController : ControllerBase
     }
 
     /// <summary>
+    /// Consulta pública de la política de tratamiento de datos personales conforme a la Ley 1581 de 2012 (H-31).
+    /// </summary>
+    [HttpGet("privacy-policy")]
+    [AllowAnonymous]
+    public IActionResult GetPrivacyPolicy()
+    {
+        return Ok(new
+        {
+            title = "Política de Tratamiento de Datos Personales — EcoRuteando",
+            legalFramework = "Ley Estatutaria 1581 de 2012 y Decreto 1377 de 2013 (Colombia)",
+            responsibleParty = "EcoRuteando (Sena ADSO Neiva)",
+            contactEmail = "privacidad@ecoruteando.org",
+            rights = new[] { "Conocer", "Actualizar", "Rectificar", "Suprimir", "Revocar autorización" },
+            securityMeasures = "BCrypt factor 12, AES-256-GCM para 2FA, JWT con rotación y HTTPS.",
+            version = "1.0",
+            lastUpdated = "2026-10-31"
+        });
+    }
+
+    /// <summary>
     /// Actualiza la configuración global del sistema (requiere privilegios administrativos).
     /// </summary>
     [HttpPut]
