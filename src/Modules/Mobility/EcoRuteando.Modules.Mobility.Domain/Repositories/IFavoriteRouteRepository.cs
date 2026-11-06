@@ -18,4 +18,11 @@ public interface IFavoriteRouteRepository
         CancellationToken cancellationToken = default);
 
     void Delete(FavoriteRoute favoriteRoute);
+
+    /// <summary>
+    /// Cuenta el número total de rutas favoritas marcadas por el usuario.
+    /// </summary>
+    Task<int> CountByUserAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default);
 }

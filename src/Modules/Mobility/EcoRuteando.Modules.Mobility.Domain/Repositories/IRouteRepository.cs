@@ -48,4 +48,12 @@ public interface IRouteRepository
     void Update(Route route);
 
     void Delete(Route route);
+
+    /// <summary>
+    /// Cuenta el número total de rutas creadas por un usuario en base de datos sin truncamiento por paginación.
+    /// </summary>
+    Task<int> CountCreatedByUserAsync(
+        Guid userId,
+        bool includeInactive = false,
+        CancellationToken cancellationToken = default);
 }

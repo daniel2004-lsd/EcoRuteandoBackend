@@ -117,4 +117,21 @@ public sealed class RouteRepository : IRouteRepository
     {
         _dbContext.Routes.Remove(route);
     }
+
+    public async Task<int> CountCreatedByUserAsync(
+        Guid userId,
+        bool includeInactive = false,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _dbContext.Routes
+            .AsNoTracking()
+            .Where(r => r.CreatedBy == userId);
+
+        if (!includeInactive)
+        {
+            query = query.Where(r => r.Status == RouteStatus.Active);
+        }
+
+        return await query.CountAsync(cancellationToken);
+    }
 }

@@ -36,4 +36,11 @@ public interface IRouteUsageRepository
         CancellationToken cancellationToken = default);
 
     void Update(RouteUsage routeUsage);
+
+    /// <summary>
+    /// Obtiene las métricas consolidadas de viajes del usuario (registrados, completados, en progreso, CO₂ y distancia).
+    /// </summary>
+    Task<UserTripStats> GetUserTripStatsAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default);
 }

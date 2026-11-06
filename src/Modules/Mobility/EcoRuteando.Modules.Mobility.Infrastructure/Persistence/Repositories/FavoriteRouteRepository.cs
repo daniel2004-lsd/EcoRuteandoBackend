@@ -48,4 +48,13 @@ public sealed class FavoriteRouteRepository : IFavoriteRouteRepository
     {
         _dbContext.FavoriteRoutes.Remove(favoriteRoute);
     }
+
+    public async Task<int> CountByUserAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.FavoriteRoutes
+            .AsNoTracking()
+            .CountAsync(f => f.UserId == userId, cancellationToken);
+    }
 }

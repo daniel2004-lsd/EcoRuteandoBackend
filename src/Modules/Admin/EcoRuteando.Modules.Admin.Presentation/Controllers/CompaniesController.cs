@@ -29,7 +29,7 @@ public sealed class CompaniesController : ControllerBase
     /// <param name="cancellationToken">Token de cancelación</param>
     /// <returns>Certificado y detalle de la compensación registrada</returns>
     [HttpPost("{id:guid}/compensate")]
-    [Authorize(Roles = "admin,gestor_ambiental")]
+    [Authorize(Roles = "Admin,SuperAdmin,admin,gestor_ambiental")]
     [ProducesResponseType(typeof(CompensateCompanyCarbonResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

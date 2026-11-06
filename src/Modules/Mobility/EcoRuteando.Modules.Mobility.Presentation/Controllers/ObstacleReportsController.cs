@@ -1,3 +1,6 @@
+using Microsoft.AspNetCore.Http;
+using System.IO;
+using EcoRuteando.Modules.Mobility.Application.Abstractions.Storage;
 using EcoRuteando.Modules.Mobility.Application.ObstacleReports.Commands.CreateObstacleReport;
 using EcoRuteando.Modules.Mobility.Application.ObstacleReports.Commands.ValidateObstacleReport;
 using EcoRuteando.Modules.Mobility.Application.ObstacleReports.Commands.VoteObstacleReport;
@@ -6,6 +9,7 @@ using EcoRuteando.Modules.Mobility.Application.ObstacleReports.Queries.GetMyObst
 using EcoRuteando.Modules.Mobility.Application.ObstacleReports.Queries.GetObstacleReportsForValidation;
 using EcoRuteando.Modules.Mobility.Domain.Enums;
 using EcoRuteando.Shared.Authorization;
+using EcoRuteando.Shared.Exceptions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,10 +24,14 @@ namespace EcoRuteando.Modules.Mobility.Presentation.Controllers;
 public sealed class ObstacleReportsController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly IPhotoStorageService _photoStorageService;
 
-    public ObstacleReportsController(IMediator mediator)
+    public ObstacleReportsController(
+        IMediator mediator,
+        IPhotoStorageService photoStorageService)
     {
         _mediator = mediator;
+        _photoStorageService = photoStorageService;
     }
 
     /// <summary>
@@ -74,6 +82,64 @@ public sealed class ObstacleReportsController : ControllerBase
     }
 
     /// <summary>
+    /// Sube una fotografía de evidencia para un reporte de obstáculo (H-04 / HU-16 / CU07).
+    /// Valida tamaño (máx. 5 MB), extensión, MIME y firma binaria real, almacena el archivo en Cloudinary
+    /// (carpeta ecoruteando/reports) y devuelve su URL HTTPS pública persistente.
+    /// </summary>
+    [HttpPost("photo")]
+    [Authorize]
+    [HasPermission("reports.create")]
+    [RequestSizeLimit(ImageFileValidator.MaxFileSizeBytes)]
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> UploadPhoto(
+        IFormFile? file,
+        CancellationToken cancellationToken)
+    {
+        if (file is null || file.Length == 0)
+        {
+            return BadRequest(new { message = "El archivo de imagen es obligatorio." });
+        }
+
+        var metaValidation = ImageFileValidator.ValidateMetadata(
+            file.Length,
+            file.FileName,
+            file.ContentType);
+
+        if (!metaValidation.IsValid)
+        {
+            return BadRequest(new { message = metaValidation.ErrorMessage });
+        }
+
+        var userId = GetRequiredUserId();
+
+        try
+        {
+            await using var stream = file.OpenReadStream();
+
+            var uploadResult = await _photoStorageService.UploadReportPhotoAsync(
+                stream,
+                file.FileName,
+                file.ContentType,
+                userId,
+                cancellationToken);
+
+            return StatusCode(StatusCodes.Status201Created, new
+            {
+                url = uploadResult.Url,
+                fileName = uploadResult.FileName
+            });
+        }
+        catch (DomainException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (PhotoStorageException ex)
+        {
+            return StatusCode(ex.StatusCode, new { message = ex.Message });
+        }
+    }
+
+    /// <summary>
     /// CU07: el ciudadano reporta un obstáculo o problema en las rutas.
     /// El reporte queda almacenado en estado 'pending' en espera de validación.
     /// </summary>
@@ -86,11 +152,28 @@ public sealed class ObstacleReportsController : ControllerBase
     {
         var userId = GetRequiredUserId();
 
-        var reportId = await _mediator.Send(
-            command with { UserId = userId },
-            cancellationToken);
+        try
+        {
+            var reportId = await _mediator.Send(
+                command with { UserId = userId },
+                cancellationToken);
 
-        return Ok(new { reportId });
+            _photoStorageService.MarkPhotoCommitted(command.PhotoUrl);
+
+            return StatusCode(StatusCodes.Status201Created, new { reportId });
+        }
+        catch
+        {
+            if (!string.IsNullOrWhiteSpace(command.PhotoUrl))
+            {
+                await _photoStorageService.TryDeleteUncommittedPhotoAsync(
+                    command.PhotoUrl,
+                    userId,
+                    CancellationToken.None);
+            }
+
+            throw;
+        }
     }
 
     /// <summary>
@@ -113,10 +196,11 @@ public sealed class ObstacleReportsController : ControllerBase
 
     /// <summary>
     /// Listado administrativo de reportes (filtrable por estado).
+    /// Requiere permiso 'reports.validate' para evitar que usuarios estándar accedan a la cola administrativa.
     /// </summary>
     [HttpGet]
     [Authorize]
-    [HasPermission("reports.read")]
+    [HasPermission("reports.validate")]
     public async Task<IActionResult> GetAll(
         string? status,
         CancellationToken cancellationToken)

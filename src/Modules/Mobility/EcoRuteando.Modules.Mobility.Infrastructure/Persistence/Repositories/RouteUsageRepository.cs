@@ -140,4 +140,40 @@ public sealed class RouteUsageRepository : IRouteUsageRepository
     {
         _dbContext.RouteUsages.Update(routeUsage);
     }
+
+    public async Task<UserTripStats> GetUserTripStatsAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var rows = await _dbContext.RouteUsages
+            .AsNoTracking()
+            .Where(ru => ru.UserId == userId)
+            .Select(ru => new
+            {
+                ru.Completed,
+                ru.Interrupted,
+                ru.EndedAt,
+                ActualCo2Kg = ru.ActualCo2Kg ?? 0m,
+                ActualDistanceKm = ru.ActualDistanceKm ?? 0m,
+                ActualDurationMin = ru.ActualDurationMin ?? 0
+            })
+            .ToListAsync(cancellationToken);
+
+        var registered = rows.Count;
+        var completed = rows.Count(r => r.Completed && !r.Interrupted);
+        var inProgress = rows.Count(r => !r.Completed && r.EndedAt == null);
+        var interrupted = rows.Count(r => r.Interrupted);
+        var totalCo2 = rows.Where(r => r.Completed).Sum(r => r.ActualCo2Kg);
+        var totalDistance = rows.Where(r => r.Completed).Sum(r => r.ActualDistanceKm);
+        var totalDuration = rows.Where(r => r.Completed).Sum(r => r.ActualDurationMin);
+
+        return new UserTripStats(
+            registered,
+            completed,
+            inProgress,
+            interrupted,
+            totalCo2,
+            totalDistance,
+            totalDuration);
+    }
 }
