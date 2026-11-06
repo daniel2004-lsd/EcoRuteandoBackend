@@ -10,6 +10,7 @@ namespace EcoRuteando.Modules.Admin.Presentation.Controllers;
 
 [ApiController]
 [Route("api/v1/admin/companies")]
+[Route("api/admin/companies")]
 public sealed class CompaniesController : ControllerBase
 {
     private readonly IMediator _mediator;
